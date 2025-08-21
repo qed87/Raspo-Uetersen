@@ -1,0 +1,29 @@
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.Authentication.OpenIdConnect
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+<div class="container text-right">
+    <AuthorizeView>   
+        <Authorized>    
+            <div>
+                Hallo, @context.User.Identity!.Name   
+                <a class="btn btn-primary" href="#" role="button" @onclick="SignOut">Log out</a>    
+            </div>
+        </Authorized>
+        <NotAuthorized>.   
+            <a class="btn btn-primary" href="#" role="button" @onclick="SignIn">Log in/Sign up</a>    
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    private void SignOut(MouseEventArgs args)
+    {
+        Navigation.NavigateTo("account/logout", forceLoad: true);
+    }
+    
+    private void SignIn(MouseEventArgs args)
+    {
+        Navigation.NavigateTo("account/login", forceLoad: true);
+    }
+}

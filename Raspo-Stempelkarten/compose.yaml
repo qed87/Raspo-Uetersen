@@ -1,0 +1,13 @@
+﻿services:
+  raspo-stempelkarten:
+    image: raspo-stempelkarten
+    build:
+      context: .
+      dockerfile: Raspo-Stempelkarten/Dockerfile
+
+  raspo-stempelkarten-backend:
+    image: raspo-stempelkarten-backend
+    build:
+      context: .
+      dockerfile: Raspo-Stempelkarten-Backend/Dockerfile
+

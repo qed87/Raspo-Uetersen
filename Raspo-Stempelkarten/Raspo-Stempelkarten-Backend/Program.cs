@@ -1,11 +1,10 @@
-using System.Text.Json;
 using FluentValidation;
 using KurrentDB.Client;
 using LiteBus.Commands.Extensions.MicrosoftDependencyInjection;
 using LiteBus.Messaging.Extensions.MicrosoftDependencyInjection;
 using Mapster;
-using Raspo_Stempelkarten_Backend.Dtos;
-using Raspo_Stempelkarten_Backend.Events;
+using Raspo_Stempelkarten_Backend.Commands.Shared;
+using StempelkartenModelLoader = Raspo_Stempelkarten_Backend.Commands.Shared.StempelkartenModelLoader;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,11 +13,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddMapster();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IStempelkartenModelLoader, StempelkartenModelLoader>();
 builder.Services.AddTransient<KurrentDBClient>(_ => new KurrentDBClient(
     KurrentDBClientSettings.Create(builder.Configuration.GetConnectionString("KurrentDb")!)));
 builder.Services.AddTransient<KurrentDBProjectionManagementClient>(_ => new KurrentDBProjectionManagementClient(
     KurrentDBClientSettings.Create(builder.Configuration.GetConnectionString("KurrentDb")!)));
-builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly, ServiceLifetime.Transient);
 builder.Services.AddLiteBus(registry =>
 {
     registry.AddCommandModule(moduleBuilder => moduleBuilder.RegisterFromAssembly(typeof(Program).Assembly));

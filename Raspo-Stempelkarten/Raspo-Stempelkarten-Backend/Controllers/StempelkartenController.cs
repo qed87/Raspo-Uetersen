@@ -1,17 +1,17 @@
-using System.Text.Json;
-using System.Text.RegularExpressions;
+using System.Web;
 using FluentValidation;
-using KurrentDB.Client;
+using LiteBus.Commands.Abstractions;
 using Microsoft.AspNetCore.Mvc;
+using Raspo_Stempelkarten_Backend.Commands.StempelkarteCreate;
+using Raspo_Stempelkarten_Backend.Commands.StempelkarteDelete;
+using Raspo_Stempelkarten_Backend.Commands.StempelkarteStamp;
 using Raspo_Stempelkarten_Backend.Dtos;
-using Raspo_Stempelkarten_Backend.Events;
-using Raspo_Stempelkarten_Backend.Model;
 
 namespace Raspo_Stempelkarten_Backend.Controllers;
 
-[Route("api/[controller]")]
-public partial class StempelkartenController(
-    KurrentDBClient kurrenDbClient, 
+[Route("api/team/{team}/saison/{season}/[controller]/")]
+public class StempelkartenController(
+    ICommandMediator commandMediator,
     IValidator<StampCardCreateDto> createDtoValidator) 
     : ControllerBase
 {
@@ -30,49 +30,20 @@ public partial class StempelkartenController(
     }
     
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] StampCardCreateDto stampCardCreateDto)
+    public async Task<IActionResult> Create([FromBody] StampCardCreateDto stampCardCreateDto, string team, string season)
     {
+        stampCardCreateDto.Team = HttpUtility.UrlDecode(team);
+        stampCardCreateDto.Season = HttpUtility.UrlDecode(season);
         await createDtoValidator.ValidateAsync(stampCardCreateDto);
         
         // create model and perform update
-        var model = await LoadStempelkartenModelAsync(
-            stampCardCreateDto.Team, stampCardCreateDto.Season);
-        var stempelkarte = model.AddStempelkarte(
-            stampCardCreateDto.Recipient, 
-            HttpContext.User.Identity?.Name ?? "dbo",
-            stampCardCreateDto.AdditionalOwner, 
-            stampCardCreateDto.MinStamps, 
-            stampCardCreateDto.MaxStamps);
-        
-        await kurrenDbClient.AppendToStreamAsync(
-            $"Stempelkarten-{SpecialCharRegex().Replace(stampCardCreateDto.Team, "_")}-{SpecialCharRegex().Replace(stampCardCreateDto.Season, "_")}", 
-            StreamState.Any,
-            model.GetChanges());
-        
-        return Ok(stempelkarte.Id);
-    }
-
-    private async Task<StempelkartenAggregate> LoadStempelkartenModelAsync(
-        string team, string season)
-    {
-        var stempelkarten = new StempelkartenAggregate
+        var response = await commandMediator.SendAsync(new StempelkartenCreateCommand(stampCardCreateDto));
+        if (response.IsSuccess)
         {
-            Team = team,
-            Season = season
-        };
-        
-        var result = kurrenDbClient.ReadStreamAsync(
-            Direction.Forwards,
-            $"Stempelkarten-{SpecialCharRegex().Replace(team, "_")}-{SpecialCharRegex().Replace(season, "_")}",
-            StreamPosition.Start);
-        await foreach (var resolvedEvent in result)
-        {
-            stempelkarten.Replay(resolvedEvent);
+            return Ok(response.Value);    
         }
 
-        stempelkarten.SetLoaded(result.LastStreamPosition);
-
-        return stempelkarten;
+        return Problem("Fehler beim Anlegen der Stempelkarte aufgetreten.");
     }
 
     [HttpPut]
@@ -81,18 +52,35 @@ public partial class StempelkartenController(
         return Ok("Test Update");
     }
     
-    [HttpDelete]
-    public IActionResult Delete()
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(string team, string season, Guid id, [FromQuery] ulong? version)
     {
-        return Ok("Test Delete");
+        team = HttpUtility.UrlDecode(team);
+        season = HttpUtility.UrlDecode(season);
+        
+        // create model and perform update
+        var response = await commandMediator.SendAsync(new StempelkartenDeleteCommand(team, season, id, version));
+        if (response.IsSuccess)
+        {
+            return Ok();    
+        }
+
+        return Problem("Stempelkarte konnte nicht gelöscht werden!");
     }
     
-    [HttpPost("{id}/stamp")]
-    public IActionResult Stamp()
+    [HttpPost("{id:guid}/stamp")]
+    public async Task<IActionResult> Stamp(string team, string season, Guid id)
     {
-        return Ok("Test Create");
-    }
+        team = HttpUtility.UrlDecode(team);
+        season = HttpUtility.UrlDecode(season);
+        
+        // create model and perform update
+        var response = await commandMediator.SendAsync(new StempelkartenStampCommand(team, season, id));
+        if (response.IsSuccess)
+        {
+            return Ok();    
+        }
 
-    [GeneratedRegex(@"[\s/]+")]
-    private static partial Regex SpecialCharRegex();
+        return Problem("Stempelkarte konnte nicht gelöscht werden!");
+    }
 }

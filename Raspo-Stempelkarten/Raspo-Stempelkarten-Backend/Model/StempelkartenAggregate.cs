@@ -1,25 +1,29 @@
-using System.Collections.Immutable;
 using System.Text.Json;
+using FluentResults;
 using KurrentDB.Client;
 using Raspo_Stempelkarten_Backend.Events;
 
 namespace Raspo_Stempelkarten_Backend.Model;
 
-internal class StempelkartenAggregate
+public class StempelkartenAggregate
 {
     private readonly Dictionary<Guid, Stempelkarte> _stempelkarten = [];
-    private List<UserEvent> _changes = [];
-    private bool _isLoaded = false;
-
-    public string Team { get; set; }
     
-    public string Season { get; set; }
-    
-    public long Position { get; set; }
+    private readonly List<UserEvent> _changes = [];
 
+    private bool _isLoaded;
+
+    public string Team { get; set; } = null!;
+
+    public string Season { get; set; } = null!;
+    
+    public ulong? StreamRevision { get; set; }
+    
+    public IEnumerable<Stempelkarte> Stempelkarten => _stempelkarten.Values;
+    
     public IEnumerable<EventData> GetChanges()
     {
-        List<UserEvent> changes = _changes.ToList();
+        var changes = _changes.ToList();
         foreach (var stempelkarte in _stempelkarten.Values)
         {
             changes.AddRange(stempelkarte.GetChanges());
@@ -27,7 +31,7 @@ internal class StempelkartenAggregate
         return changes.Select(@event => new EventData(
             Uuid.NewUuid(), 
             @event.GetType().Name,
-            JsonSerializer.SerializeToUtf8Bytes(@event)));
+            JsonSerializer.SerializeToUtf8Bytes(@event, @event.GetType())));
     }
     
     public void Replay(ResolvedEvent[] resolvedEvents)
@@ -49,7 +53,7 @@ internal class StempelkartenAggregate
             var stempelkarte = new Stempelkarte(
                 stampCardCreated.Id, 
                 stampCardCreated.Recipient, 
-                stampCardCreated.Owner,
+                stampCardCreated.Owner ?? "dbo",
                 stampCardCreated.MaxStamps, 
                 stampCardCreated.MinStamps);
             _stempelkarten.Add(stempelkarte.Id, stempelkarte);
@@ -108,34 +112,41 @@ internal class StempelkartenAggregate
         }
     }
 
-    public void SetLoaded(StreamPosition? streamPosition)
+    public void SetLoaded(ulong? streamRevision)
     {
-        Position = streamPosition?.ToInt64() ?? 0;
-        _isLoaded = true;
+        StreamRevision = streamRevision;
         foreach (var stempelkarte in _stempelkarten.Values)
         {
             stempelkarte.SetLoaded();
         }
+        _isLoaded = true;
     }
 
-    public Stempelkarte AddStempelkarte(
+    public Result<Stempelkarte> AddStempelkarte(
         string recipient, 
         string owner, 
         string[] additionalOwners, 
         int minStamps, 
         int maxStamps)
     {
+        if (_stempelkarten.Values.Any(stempelkarte => stempelkarte.Recipient == recipient))
+        {
+            return Result.Fail($"Es liegt bereits eine Stempelkarte für den Empfänger '{recipient}' vor!");
+        }
+        
         var stempelkarte = new Stempelkarte(
             Guid.NewGuid(),  
             recipient, 
             owner, 
-            minStamps, 
             maxStamps,
+            minStamps,
             additionalOwners);
         _changes.Add(new StampCardCreated
         {
+            Id = stempelkarte.Id,
             Team = Team, 
             Season = Season, 
+            Owner = owner,
             Recipient = recipient, 
             MaxStamps = maxStamps, 
             MinStamps = minStamps
@@ -149,5 +160,26 @@ internal class StempelkartenAggregate
                 Name = additionalOwner
             });
         return stempelkarte;
+    }
+
+    public Result RemoveStempelkarte(Guid id, string userName)
+    {
+        if (!_stempelkarten.TryGetValue(id, out var stempelkarte))
+        {
+            return Result.Fail("Stempelkarte wurde nicht gefunden!");
+        }
+        
+        if (stempelkarte.Owner != userName && stempelkarte.AdditionalOwners.All(owner => owner != userName))
+        {
+            return Result.Fail("Stempelkarten können nur von Besitzern gelöscht werden.");
+        }
+        
+        if (!_stempelkarten.Remove(id))
+        {
+            return Result.Fail("Problem beim Löschen.");
+        }
+        
+        _changes.Add(new StampCardDeleted { Id = id });
+        return Result.Ok();
     }
 }

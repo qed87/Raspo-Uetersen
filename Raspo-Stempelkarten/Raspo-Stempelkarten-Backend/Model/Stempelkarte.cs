@@ -2,13 +2,13 @@ using Raspo_Stempelkarten_Backend.Events;
 
 namespace Raspo_Stempelkarten_Backend.Model;
 
-internal class Stempelkarte(
+public class Stempelkarte(
     Guid id, 
     string recipient, 
     string owner,
     int maxStamps, 
     int minStamps,
-    string[] additionalOwners = null)
+    string[]? additionalOwners = null)
 {
     private StampCardUpdated? _cardUpdated;
     private List<UserEvent> _changes = [];
@@ -21,7 +21,9 @@ internal class Stempelkarte(
     
     public string Owner { get; } = owner;
     
-    public List<string> AdditionalOwners { get; set; } = additionalOwners.ToList();
+    public List<string> AdditionalOwners { get; } = additionalOwners?.ToList() ?? [];
+    
+    public IEnumerable<Stamp> Stamps => _stamps;
 
     private int _maxStamps = maxStamps;
     public int MaxStamps

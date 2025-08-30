@@ -1,12 +1,14 @@
+using Microsoft.AspNetCore.Mvc;
+
 namespace Raspo_Stempelkarten_Backend.Dtos;
 
 public class StampCardCreateDto
 {
     public required string Recipient { get; set; } = null!;
 
-    public required string Team { get; set; } = null!;
+    [FromRoute(Name = "Team")] public string Team { get; set; } = null!;
 
-    public required string Season { get; set; } = null!;
+    [FromRoute(Name = "Season")] public string Season { get; set; } = null!;
     
     public string[] AdditionalOwner { get; set; } = [];
 

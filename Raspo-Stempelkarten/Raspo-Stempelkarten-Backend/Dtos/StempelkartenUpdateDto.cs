@@ -1,6 +1,6 @@
 namespace Raspo_Stempelkarten_Backend.Dtos;
 
-public class StampCardUpdateDto
+public class StempelkartenUpdateDto
 {
     public required Guid Id { get; set; }
 

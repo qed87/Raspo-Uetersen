@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Raspo_Stempelkarten_Backend.Dtos;
 
-public class StampCardCreateDto
+public class StempelkartenCreateDto
 {
     public required string Recipient { get; set; } = null!;
 

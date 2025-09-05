@@ -1,17 +1,17 @@
-using Raspo_Stempelkarten_Backend.Events;
+using Raspo_Stempelkarten_Backend.Model.Data;
 
 namespace Raspo_Stempelkarten_Backend.Model;
 
-public class Stamp(Guid id, string issuedBy, string reason)
+public sealed class Stamp(StampData data)
 {
-    public Guid Id { get; set; } = id;
-    
-    public string IssuedBy { get; set; } = issuedBy;
-    
-    public string Reason { get; } = reason;
-
-    public IEnumerable<UserEvent> GetChanges()
+    public Stamp(Guid id, string issuedBy, string? reason)
+    : this(new StampData { Id = id, IssuedBy = issuedBy, Reason = reason })
     {
-        return [];
     }
+
+    public Guid Id => data.Id;
+    
+    public string IssuedBy => data.IssuedBy;
+
+    public string? Reason => data.Reason;
 }

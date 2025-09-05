@@ -1,64 +1,46 @@
 using FluentResults;
 using JetBrains.Annotations;
-using KurrentDB.Client;
 using LiteBus.Commands.Abstractions;
-using Polly;
 using Raspo_Stempelkarten_Backend.Commands.Shared;
 
 namespace Raspo_Stempelkarten_Backend.Commands.StempelkarteCreate;
 
 [UsedImplicitly]
 public class StempelkartenCreateCommandHandler(
-    KurrentDBClient kurrentDbClient, 
-    IHttpContextAccessor contextAccessor, 
-    IStempelkartenModelLoader modelLoader) 
+    StampCardChangeTracker stampCardChangeTracker,
+    IStempelkartenModelLoader modelLoader,
+    IStempelkartenModelStorage modelStorage, 
+    IHttpContextAccessor contextAccessor) 
     : ICommandHandler<StempelkartenCreateCommand, Result<StempelkartenCreateResponse>>
 {
-
     public async Task<Result<StempelkartenCreateResponse>> HandleAsync(
         StempelkartenCreateCommand message, 
         CancellationToken cancellationToken = default)
     {
         var model = await modelLoader.LoadModelAsync(
             message.Dto.Team, message.Dto.Season);
-        var result = model.AddStempelkarte(
+        stampCardChangeTracker.Enable();
+        var stempelkarteResult = await model.AddStampCard(
             message.Dto.Recipient, 
             contextAccessor.HttpContext?.User.Identity?.Name ?? "dbo",
-            message.Dto.AdditionalOwner, 
             message.Dto.MinStamps, 
             message.Dto.MaxStamps);
-
-        if (result.IsFailed)
+        var changes = stampCardChangeTracker.GetChanges().ToList();
+        if (stempelkarteResult.IsFailed)
         {
             return Result.Fail("Stempelkarte konnte nicht angelegt werden!");
         }
         
-        if (!model.GetChanges().Any())
+        if (!changes.Any())
         {
             return Result.Ok();
         }
-        
-        IWriteResult writeResult;
-        try
-        {
-            writeResult = await Policy
-                .Handle<Exception>()
-                .WaitAndRetryAsync(3, i => TimeSpan.FromMilliseconds(250 * i))
-                .ExecuteAsync(async () => await kurrentDbClient.AppendToStreamAsync(
-                    $"Stempelkarten-{StempelkartenModelLoader.SpecialCharRegex().Replace(message.Dto.Team, "_")}-{StempelkartenModelLoader.SpecialCharRegex().Replace(message.Dto.Season, "_")}",
-                    model.StreamRevision is null
-                        ? StreamState.NoStream
-                        : StreamState.StreamRevision(model.StreamRevision.Value),
-                    model.GetChanges(),
-                    cancellationToken: cancellationToken));
-        }
-        catch (Exception ex)
-        {
-            return Result.Fail("Stempelkarte konnte nicht erstellt werden.");
-        }
 
+        var result = await modelStorage.StoreAsync(message.Dto.Team, message.Dto.Season, 
+            model.ConcurrencyToken, changes, cancellationToken);
+ 
         return Result.Ok(new StempelkartenCreateResponse(
-            result.Value.Id, 
-            writeResult.NextExpectedStreamState.ToInt64()));
+            stempelkarteResult.Value.Id, 
+            (ulong) result.Value));
     }
 }

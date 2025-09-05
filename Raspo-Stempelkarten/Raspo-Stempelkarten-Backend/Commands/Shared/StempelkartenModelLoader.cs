@@ -1,46 +1,42 @@
-using System.Text.RegularExpressions;
-using FluentValidation;
 using KurrentDB.Client;
+using LiteBus.Events.Abstractions;
 using Raspo_Stempelkarten_Backend.Model;
 
 namespace Raspo_Stempelkarten_Backend.Commands.Shared;
 
-internal partial class StempelkartenModelLoader(KurrentDBClient kurrentDbClient, IValidator<StempelkartenAggregate> validator) : IStempelkartenModelLoader
+internal class StempelkartenModelLoader(
+    IEventMediator mediator,
+    KurrentDBClient kurrentDbClient, 
+    IStreamNameProvider streamNameProvider) : IStempelkartenModelLoader
 {
-    [GeneratedRegex(@"[\s/]+")]
-    public static partial Regex SpecialCharRegex();
-    
-    public async Task<StempelkartenAggregate> LoadModelAsync(
+    /// <summary>
+    /// Load <see cref="StampCardAggregate"/> from storage.
+    /// </summary>
+    /// <param name="team">The team name.</param>
+    /// <param name="season">The season.</param>
+    /// <returns>The loaded <see cref="StampCardAggregate" />.</returns>
+    public async Task<IStampCardAggregate> LoadModelAsync(
         string team, string season)
     {
-        var stempelkarten = new StempelkartenAggregate
-        {
-            Team = team,
-            Season = season
-        };
-        
         var result = kurrentDbClient.ReadStreamAsync(
             Direction.Forwards,
-            $"Stempelkarten-{SpecialCharRegex().Replace(team, "_")}-{SpecialCharRegex().Replace(season, "_")}",
+            streamNameProvider.GetStreamName(team, season),
             StreamPosition.Start);
+        
+        var replayer = new StempelkartenReplayer(mediator, team, season);
         ulong? streamRevision = null;
         if (await result.ReadState == ReadState.Ok)
         {
             await foreach (var resolvedEvent in result)
             {
-                stempelkarten.Replay(resolvedEvent);
+                replayer.Replay(resolvedEvent);
                 streamRevision = resolvedEvent.OriginalEventNumber.ToUInt64();
             }
         }
-        
-        var validationResult = await validator.ValidateAsync(stempelkarten);
-        if (!validationResult.IsValid)
-        {
-            throw new ValidationException(validationResult.Errors);
-        }
 
-        
-        stempelkarten.SetLoaded(streamRevision);
-        return stempelkarten;
+        var modelAggregate = replayer.GetModel();
+        modelAggregate.ConcurrencyToken = streamRevision;
+        var decoratedAggregate =  new StampCardAggregateEventDetectorDecorator(modelAggregate, mediator);
+        return decoratedAggregate;
     }
 }

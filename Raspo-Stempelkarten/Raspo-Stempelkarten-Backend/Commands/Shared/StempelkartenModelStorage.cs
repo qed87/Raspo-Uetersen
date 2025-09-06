@@ -15,11 +15,11 @@ public class StempelkartenModelStorage(KurrentDBClient kurrentDbClient, IStreamN
     /// <param name="team">The team name.</param>
     /// <param name="season">The season.</param>
     /// <param name="concurrencyToken">The concurrency token.</param>
-    /// <param name="eventData">The events to store.</param>
+    /// <param name="events">The events to store.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result object with updated concurrency token.</returns>
     public async Task<Result<long>> StoreAsync(string team, string season, ulong? concurrencyToken, 
-        IEnumerable<EventData> eventData, CancellationToken cancellationToken = default)
+        IEnumerable<EventData> events, CancellationToken cancellationToken = default)
     {
         IWriteResult writeResult;
         try
@@ -32,7 +32,7 @@ public class StempelkartenModelStorage(KurrentDBClient kurrentDbClient, IStreamN
                     !concurrencyToken.HasValue
                         ? StreamState.NoStream
                         : StreamState.StreamRevision(concurrencyToken!.Value),
-                    eventData,
+                    events,
                     cancellationToken: cancellationToken));
         }
         catch (Exception)

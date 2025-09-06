@@ -1,7 +1,6 @@
 using System.Web;
+using DispatchR;
 using FluentValidation;
-using LiteBus.Commands.Abstractions;
-using LiteBus.Queries.Abstractions;
 using Microsoft.AspNetCore.Mvc;
 using Raspo_Stempelkarten_Backend.Commands.StempelkarteCreate;
 using Raspo_Stempelkarten_Backend.Commands.StempelkarteDelete;
@@ -13,8 +12,7 @@ namespace Raspo_Stempelkarten_Backend.Controllers;
 
 [Route("api/teams/{team}/saisons/{season}/[controller]/")]
 public class StempelkartenController(
-    ICommandMediator commandMediator,
-    IQueryMediator queryMediator,
+    IMediator mediator,
     IValidator<StempelkartenCreateDto> createDtoValidator) 
     : ControllerBase
 {
@@ -26,11 +24,13 @@ public class StempelkartenController(
     }
     
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get(string team, string season, Guid id)
+    public IActionResult Get(string team, string season, Guid id)
     {
         team = HttpUtility.UrlDecode(team);
         season = HttpUtility.UrlDecode(season);
-        var stempelkartenDetailsResult = await queryMediator.QueryAsync(new StempelkartenGetByIdQuery(team, season, id));
+        var stempelkartenDetailsResult = mediator.Send(
+            new StempelkartenGetByIdQuery(team, season, id), 
+            CancellationToken.None);
         if (stempelkartenDetailsResult.IsFailed) return Problem("Stempelkarte konnte nicht geladen werden!");
         return Ok(stempelkartenDetailsResult.Value);
     }
@@ -44,7 +44,9 @@ public class StempelkartenController(
         await createDtoValidator.ValidateAsync(stempelkartenCreateDto);
         
         // create model and perform update
-        var response = await commandMediator.SendAsync(new StempelkartenCreateCommand(stempelkartenCreateDto));
+        var response = await mediator.Send(
+            new StempelkartenCreateCommand(stempelkartenCreateDto), 
+            CancellationToken.None);
         return response.IsSuccess ? Ok(response.Value) : Problem("Fehler beim Anlegen der Stempelkarte aufgetreten.");
     }
 
@@ -61,7 +63,9 @@ public class StempelkartenController(
         season = HttpUtility.UrlDecode(season);
         
         // create model and perform update
-        var response = await commandMediator.SendAsync(new StempelkartenDeleteCommand(team, season, id, version));
+        var response = await mediator.Send(
+            new StempelkartenDeleteCommand(team, season, id, version), 
+            CancellationToken.None);
         if (response.IsSuccess)
         {
             return Ok();    
@@ -78,7 +82,9 @@ public class StempelkartenController(
         reason = HttpUtility.UrlDecode(reason ?? "");
         
         // create model and perform update
-        var response = await commandMediator.SendAsync(new StempelkartenStampCommand(team, season, id, reason));
+        var response = await mediator.Send(
+            new StempelkartenStampCommand(team, season, id, reason), 
+            CancellationToken.None);
         if (response.IsSuccess)
         {
             return Ok();    

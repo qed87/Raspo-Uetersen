@@ -1,6 +1,7 @@
+using DispatchR.Abstractions.Send;
 using FluentResults;
-using LiteBus.Commands.Abstractions;
 
 namespace Raspo_Stempelkarten_Backend.Commands.StempelkarteDelete;
 
-public record StempelkartenDeleteCommand(string Team, string Season, Guid Id, ulong? Version) : ICommand<Result>;
+public record StempelkartenDeleteCommand(string Team, string Season, Guid Id, ulong? Version) 
+    : IRequest<StempelkartenDeleteCommand, Task<Result>>;

@@ -1,6 +1,6 @@
+using DispatchR.Abstractions.Send;
 using FluentResults;
 using JetBrains.Annotations;
-using LiteBus.Commands.Abstractions;
 using Raspo_Stempelkarten_Backend.Commands.Shared;
 
 namespace Raspo_Stempelkarten_Backend.Commands.StempelkarteDelete;
@@ -10,17 +10,13 @@ public class StempelkartenDeleteCommandHandler(
     IStempelkartenModelStorage storage,
     IHttpContextAccessor contextAccessor, 
     IStempelkartenModelLoader modelLoader,
-    StampCardChangeTracker stampCardChangeTracker) 
-    : ICommandHandler<StempelkartenDeleteCommand, Result>
+    IStampCardChangeTracker changeTracker) 
+    : IRequestHandler<StempelkartenDeleteCommand, Task<Result>>
 {
-
-    public async Task<Result> HandleAsync(
-        StempelkartenDeleteCommand message, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> Handle(StempelkartenDeleteCommand message, CancellationToken cancellationToken)
     {
         var model = await modelLoader.LoadModelAsync(
             message.Team, message.Season);
-        stampCardChangeTracker.Enable();
         var result = await model.RemoveStampCard(
             message.Id,
             contextAccessor.HttpContext?.User.Identity?.Name ?? "dbo");
@@ -28,7 +24,7 @@ public class StempelkartenDeleteCommandHandler(
         {
             return Result.Fail("Stempelkarte konnte nicht gelöscht werden!");
         }
-        var changes = stampCardChangeTracker.GetChanges().ToList();
+        var changes = changeTracker.GetChanges().ToList();
         if (!changes.Any())
         {
             return Result.Fail("Stempelkarte konnte nicht gelöscht werden!");

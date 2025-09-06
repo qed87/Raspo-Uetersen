@@ -12,7 +12,7 @@ public sealed class StampCardAggregate : IStampCardAggregate
     {
         Team = team;
         Season = season;
-        foreach (var stampCardData in loadContext.StampCards)
+        foreach (var stampCardData in loadContext.StampCards ?? Enumerable.Empty<StampCardData>())
         {
             var stampData = loadContext.Stamps.Where(data => data.StampCardId == stampCardData.Id).ToList();
             _stampCards.Add(stampCardData.Id, new StampCard(stampCardData, stampData));

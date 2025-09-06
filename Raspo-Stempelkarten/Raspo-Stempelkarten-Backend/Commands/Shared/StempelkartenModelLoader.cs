@@ -1,11 +1,11 @@
+using DispatchR;
 using KurrentDB.Client;
-using LiteBus.Events.Abstractions;
 using Raspo_Stempelkarten_Backend.Model;
 
 namespace Raspo_Stempelkarten_Backend.Commands.Shared;
 
 internal class StempelkartenModelLoader(
-    IEventMediator mediator,
+    IMediator mediator,
     KurrentDBClient kurrentDbClient, 
     IStreamNameProvider streamNameProvider) : IStempelkartenModelLoader
 {
@@ -23,7 +23,7 @@ internal class StempelkartenModelLoader(
             streamNameProvider.GetStreamName(team, season),
             StreamPosition.Start);
         
-        var replayer = new StempelkartenReplayer(mediator, team, season);
+        var replayer = new StempelkartenReplayer(team, season);
         ulong? streamRevision = null;
         if (await result.ReadState == ReadState.Ok)
         {

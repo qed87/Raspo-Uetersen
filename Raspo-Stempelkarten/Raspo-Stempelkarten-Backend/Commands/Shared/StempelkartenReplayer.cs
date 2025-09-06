@@ -1,13 +1,12 @@
 using System.Text.Json;
 using KurrentDB.Client;
-using LiteBus.Events.Abstractions;
 using Raspo_Stempelkarten_Backend.Events;
 using Raspo_Stempelkarten_Backend.Model;
 using Raspo_Stempelkarten_Backend.Model.Data;
 
 namespace Raspo_Stempelkarten_Backend.Commands.Shared;
 
-public class StempelkartenReplayer(IEventMediator mediator, string team, string season) : IStempelkartenReplayer
+public class StempelkartenReplayer(string team, string season) : IStempelkartenReplayer
 {
     private readonly StampCardLoadContext _loadContext = new();
 

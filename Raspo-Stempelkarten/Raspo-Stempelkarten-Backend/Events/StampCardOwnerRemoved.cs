@@ -1,6 +1,8 @@
+using DispatchR.Abstractions.Notification;
+
 namespace Raspo_Stempelkarten_Backend.Events;
 
-public class StampCardOwnerRemoved
+public class StampCardOwnerRemoved : INotification
 {
     public Guid StampCardId { get; set; }
     

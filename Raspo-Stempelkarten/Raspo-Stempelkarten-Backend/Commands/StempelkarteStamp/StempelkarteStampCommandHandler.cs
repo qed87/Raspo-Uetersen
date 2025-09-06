@@ -1,6 +1,6 @@
+using DispatchR.Abstractions.Send;
 using FluentResults;
 using JetBrains.Annotations;
-using LiteBus.Commands.Abstractions;
 using Raspo_Stempelkarten_Backend.Commands.Shared;
 
 namespace Raspo_Stempelkarten_Backend.Commands.StempelkarteStamp;
@@ -10,18 +10,15 @@ public class StempelkarteStampCommandHandler(
     IStempelkartenModelStorage storage,
     IHttpContextAccessor contextAccessor, 
     IStempelkartenModelLoader modelLoader,
-    StampCardChangeTracker stampCardChangeTracker)
-    : ICommandHandler<StempelkartenStampCommand, Result<StempelkartenStampResponse>>
+    IStampCardChangeTracker changeTracker)
+    : IRequestHandler<StempelkartenStampCommand, Task<Result<StempelkartenStampResponse>>>
 {
-    public async Task<Result<StempelkartenStampResponse>> HandleAsync(
-        StempelkartenStampCommand message, 
-        CancellationToken cancellationToken = new())
+    public async Task<Result<StempelkartenStampResponse>> Handle(StempelkartenStampCommand message, CancellationToken cancellationToken)
     {
         var model = await modelLoader.LoadModelAsync(
             message.Team, message.Season);
-        stampCardChangeTracker.Enable();
         var stampResult = await model.Stamp(message.StempelkartenId, contextAccessor.HttpContext?.User.Identity?.Name ?? "dbo", message.Reason);
-        var changes = stampCardChangeTracker.GetChanges().ToList();
+        var changes = changeTracker.GetChanges().ToList();
         if (stampResult.IsFailed)
         {
             return Result.Fail<StempelkartenStampResponse>(stampResult.Errors);

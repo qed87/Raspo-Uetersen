@@ -1,6 +1,8 @@
+using DispatchR.Abstractions.Notification;
+
 namespace Raspo_Stempelkarten_Backend.Events;
 
-public class StampCardPropertyChanged
+public class StampCardPropertyChanged : INotification
 {
     public required Guid StampCardId { get; set; }
     

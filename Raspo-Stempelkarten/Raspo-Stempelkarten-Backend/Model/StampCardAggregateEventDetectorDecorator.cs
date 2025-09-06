@@ -1,12 +1,12 @@
+using DispatchR;
 using FluentResults;
 using JetBrains.Annotations;
-using LiteBus.Events.Abstractions;
 using Raspo_Stempelkarten_Backend.Events;
 
 namespace Raspo_Stempelkarten_Backend.Model;
 
 [UsedImplicitly]
-public class StampCardAggregateEventDetectorDecorator(IStampCardAggregate inner, IEventMediator eventMediator) 
+public class StampCardAggregateEventDetectorDecorator(IStampCardAggregate inner, IMediator mediator) 
     : IStampCardAggregate
 {
     public Task<IEnumerable<StampCard>> GetStampCards()
@@ -18,14 +18,15 @@ public class StampCardAggregateEventDetectorDecorator(IStampCardAggregate inner,
     {
         var result = await inner.AddStampCard(recipient, issuedBy, minStamps, maxStamps);
         if (result.IsFailed) return result;
-        await eventMediator.PublishAsync(
+        await mediator.Publish(
             new StampCardCreated
             {
                 Id = result.Value.Id,
                 IssuedBy = result.Value.IssuedBy,
                 MinStamps = result.Value.MinStamps, 
                 MaxStamps = result.Value.MaxStamps, 
-            });
+            }, 
+            CancellationToken.None);
         return result;
     }
 
@@ -33,12 +34,13 @@ public class StampCardAggregateEventDetectorDecorator(IStampCardAggregate inner,
     {
         var result = await inner.RemoveStampCard(id,  issuedBy);
         if (result.IsFailed) return result;
-        await eventMediator.PublishAsync(
+        await mediator.Publish(
             new StampCardDeleted
             {
                 Id = result.Value.Id,
                 IssuedBy = result.Value.IssuedBy
-            });
+            }, 
+            CancellationToken.None);
         return result;
     }
 
@@ -48,22 +50,24 @@ public class StampCardAggregateEventDetectorDecorator(IStampCardAggregate inner,
         if (result.IsFailed) return result;
         foreach (var addedOwner in result.Value.AddedOwners)
         {
-            await eventMediator.PublishAsync(
+            await mediator.Publish(
                 new StampCardOwnerAdded
                 {
                     Name = addedOwner,
                     StampCardId = stampCardId
-                });    
+                }, 
+                CancellationToken.None);    
         }
         
         foreach (var removedOwner in result.Value.RemovedOwners)
         {
-            await eventMediator.PublishAsync(
+            await mediator.Publish(
                 new StampCardOwnerAdded
                 {
                     Name = removedOwner,
                     StampCardId = stampCardId
-                });    
+                }, 
+                CancellationToken.None);    
         }
         
         return result;
@@ -73,14 +77,15 @@ public class StampCardAggregateEventDetectorDecorator(IStampCardAggregate inner,
     {
         var result = await inner.Stamp(stampCardId, issuedBy, reason);
         if (result.IsFailed) return result;
-        await eventMediator.PublishAsync(
+        await mediator.Publish(
             new StampCardStamped
             {
                 Id = result.Value.Id,
                 IssuedBy = result.Value.IssuedBy,
                 Reason = result.Value.Reason,
                 StampCardId = stampCardId
-            });
+            }, 
+            CancellationToken.None);
         return result;
     }
 
@@ -88,13 +93,14 @@ public class StampCardAggregateEventDetectorDecorator(IStampCardAggregate inner,
     {
         var result = await inner.EraseStamp(stampCardId, stampId, issuedBy);
         if (result.IsFailed) return result;
-        await eventMediator.PublishAsync(
+        await mediator.Publish(
             new StampCardStampErased
             {
                 Id = result.Value.Id,
                 StampCardId = stampCardId,
                 IssuedBy = result.Value.IssuedBy
-            });
+            },
+            CancellationToken.None);
         return result;
     }
 

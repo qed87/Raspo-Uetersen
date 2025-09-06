@@ -1,31 +1,30 @@
+using DispatchR.Abstractions.Send;
 using FluentResults;
 using JetBrains.Annotations;
-using LiteBus.Commands.Abstractions;
 using Raspo_Stempelkarten_Backend.Commands.Shared;
 
 namespace Raspo_Stempelkarten_Backend.Commands.StempelkarteCreate;
 
 [UsedImplicitly]
 public class StempelkartenCreateCommandHandler(
-    StampCardChangeTracker stampCardChangeTracker,
+    IStampCardChangeTracker changeTracker,
     IStempelkartenModelLoader modelLoader,
     IStempelkartenModelStorage modelStorage, 
     IHttpContextAccessor contextAccessor) 
-    : ICommandHandler<StempelkartenCreateCommand, Result<StempelkartenCreateResponse>>
+    : IRequestHandler<StempelkartenCreateCommand, Task<Result<StempelkartenCreateResponse>>>
 {
-    public async Task<Result<StempelkartenCreateResponse>> HandleAsync(
+    public async Task<Result<StempelkartenCreateResponse>> Handle(
         StempelkartenCreateCommand message, 
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var model = await modelLoader.LoadModelAsync(
             message.Dto.Team, message.Dto.Season);
-        stampCardChangeTracker.Enable();
         var stempelkarteResult = await model.AddStampCard(
             message.Dto.Recipient, 
             contextAccessor.HttpContext?.User.Identity?.Name ?? "dbo",
             message.Dto.MinStamps, 
             message.Dto.MaxStamps);
-        var changes = stampCardChangeTracker.GetChanges().ToList();
+        var changes = changeTracker.GetChanges().ToList();
         if (stempelkarteResult.IsFailed)
         {
             return Result.Fail("Stempelkarte konnte nicht angelegt werden!");

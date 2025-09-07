@@ -3,7 +3,7 @@ using KurrentDB.Client;
 
 namespace Raspo_Stempelkarten_Backend.Commands.Shared;
 
-public interface IStempelkartenModelStorage
+public interface IStampCardModelStorage
 {
     /// <summary>
     /// Store user events in the database.

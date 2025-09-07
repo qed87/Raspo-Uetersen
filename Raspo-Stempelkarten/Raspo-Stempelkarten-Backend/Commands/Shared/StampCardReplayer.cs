@@ -6,7 +6,7 @@ using Raspo_Stempelkarten_Backend.Model.Data;
 
 namespace Raspo_Stempelkarten_Backend.Commands.Shared;
 
-public class StempelkartenReplayer(string team, string season) : IStempelkartenReplayer
+public class StampCardReplayer(string team, string season) : IStampCardReplayer
 {
     private readonly StampCardLoadContext _loadContext = new();
 
@@ -104,7 +104,8 @@ public class StempelkartenReplayer(string team, string season) : IStempelkartenR
                 resolvedEvent.Event.Data.ToArray(), 
                 JsonSerializerOptions.Default);
             if (stampCardStamped is null) throw new InvalidDataException();
-            var stampCard = _loadContext.StampCards.Single(stampCardData => stampCardData.Id == stampCardStamped.Id);
+            var stampCard = _loadContext.StampCards.Single(stampCardData => stampCardData.Id == stampCardStamped.StampCardId);
+            if (stampCard is null) throw new InvalidOperationException();
             _loadContext.Stamps.Add(
                 new StampData
                 {

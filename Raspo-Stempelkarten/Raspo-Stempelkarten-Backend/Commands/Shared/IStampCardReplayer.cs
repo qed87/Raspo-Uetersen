@@ -3,7 +3,7 @@ using Raspo_Stempelkarten_Backend.Model;
 
 namespace Raspo_Stempelkarten_Backend.Commands.Shared;
 
-public interface IStempelkartenReplayer
+public interface IStampCardReplayer
 {
     /// <summary>
     /// Replays a set of resolved events.

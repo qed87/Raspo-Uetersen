@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 namespace Raspo_Stempelkarten_Backend.Dtos;
 
 [UsedImplicitly]
-public class StempelkartenReadDetailsDto
+public class StampCardReadDetailsDto
 {
     public Guid Id { get; set; }
     
@@ -22,4 +22,6 @@ public class StempelkartenReadDetailsDto
     public int MaxStamps { get; set; } = 12;
     
     public int ActualStamps { get; set; }
+
+    public List<StampReadDetailsDto> Stamps { get; set; } = null!;
 }

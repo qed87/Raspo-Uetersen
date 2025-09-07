@@ -1,3 +1,0 @@
-namespace Raspo_Stempelkarten_Backend.Commands.StempelkarteStamp;
-
-public record StempelkartenStampResponse(Guid id, ulong ConcurrencyToken);

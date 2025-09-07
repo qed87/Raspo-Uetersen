@@ -14,13 +14,13 @@ public class StampCardChangeHandler
         INotificationHandler<StampCardOwnerRemoved>, INotificationHandler<StampCardStamped>, 
         INotificationHandler<StampCardStampErased>
 {
-    private readonly ConcurrentBag<EventData> _changes = [];
+    private readonly ConcurrentQueue<EventData> _changes = [];
  
     public IEnumerable<EventData> GetChanges() => _changes.ToList();
     
     public ValueTask Handle(StampCardCreated message, CancellationToken cancellationToken)
     {
-        _changes.Add(
+        _changes.Enqueue(
             new EventData(
                 Uuid.NewUuid(), 
                 nameof(StampCardCreated), 
@@ -30,17 +30,7 @@ public class StampCardChangeHandler
 
     public ValueTask Handle(StampCardDeleted message, CancellationToken cancellationToken)
     {
-        _changes.Add(
-            new EventData(
-                Uuid.NewUuid(), 
-                nameof(StampCardPropertyChanged), 
-                JsonSerializer.SerializeToUtf8Bytes(message)));
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask Handle(StampCardPropertyChanged message, CancellationToken cancellationToken)
-    {
-        _changes.Add(
+        _changes.Enqueue(
             new EventData(
                 Uuid.NewUuid(), 
                 nameof(StampCardDeleted), 
@@ -48,9 +38,19 @@ public class StampCardChangeHandler
         return ValueTask.CompletedTask;
     }
 
+    public ValueTask Handle(StampCardPropertyChanged message, CancellationToken cancellationToken)
+    {
+        _changes.Enqueue(
+            new EventData(
+                Uuid.NewUuid(), 
+                nameof(StampCardPropertyChanged), 
+                JsonSerializer.SerializeToUtf8Bytes(message)));
+        return ValueTask.CompletedTask;
+    }
+
     public ValueTask Handle(StampCardOwnerAdded message, CancellationToken cancellationToken)
     {
-        _changes.Add(
+        _changes.Enqueue(
             new EventData(
                 Uuid.NewUuid(), 
                 nameof(StampCardOwnerAdded), 
@@ -60,7 +60,7 @@ public class StampCardChangeHandler
 
     public ValueTask Handle(StampCardOwnerRemoved message, CancellationToken cancellationToken)
     {
-        _changes.Add(
+        _changes.Enqueue(
             new EventData(
                 Uuid.NewUuid(), 
                 nameof(StampCardOwnerRemoved), 
@@ -70,7 +70,7 @@ public class StampCardChangeHandler
 
     public ValueTask Handle(StampCardStamped message, CancellationToken cancellationToken)
     {
-        _changes.Add(
+        _changes.Enqueue(
             new EventData(
                 Uuid.NewUuid(), 
                 nameof(StampCardStamped), 
@@ -80,7 +80,7 @@ public class StampCardChangeHandler
 
     public ValueTask Handle(StampCardStampErased message, CancellationToken cancellationToken)
     {
-        _changes.Add(
+        _changes.Enqueue(
             new EventData(
                 Uuid.NewUuid(), 
                 nameof(StampCardStampErased), 

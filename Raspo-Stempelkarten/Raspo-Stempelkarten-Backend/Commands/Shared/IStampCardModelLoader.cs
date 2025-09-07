@@ -2,7 +2,7 @@ using Raspo_Stempelkarten_Backend.Model;
 
 namespace Raspo_Stempelkarten_Backend.Commands.Shared;
 
-public interface IStempelkartenModelLoader
+public interface IStampCardModelLoader
 {
     /// <summary>
     /// Load <see cref="StampCardAggregate"/> from storage.

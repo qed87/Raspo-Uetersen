@@ -3,18 +3,18 @@ using FluentResults;
 using JetBrains.Annotations;
 using Raspo_Stempelkarten_Backend.Commands.Shared;
 
-namespace Raspo_Stempelkarten_Backend.Commands.StempelkarteCreate;
+namespace Raspo_Stempelkarten_Backend.Commands.StampCardCreate;
 
 [UsedImplicitly]
-public class StempelkartenCreateCommandHandler(
+public class StampCardCreateCommandHandler(
     IStampCardChangeTracker changeTracker,
-    IStempelkartenModelLoader modelLoader,
-    IStempelkartenModelStorage modelStorage, 
+    IStampCardModelLoader modelLoader,
+    IStampCardModelStorage modelStorage, 
     IHttpContextAccessor contextAccessor) 
-    : IRequestHandler<StempelkartenCreateCommand, Task<Result<StempelkartenCreateResponse>>>
+    : IRequestHandler<StampCardCreateCommand, Task<Result<StampCardCreateResponse>>>
 {
-    public async Task<Result<StempelkartenCreateResponse>> Handle(
-        StempelkartenCreateCommand message, 
+    public async Task<Result<StampCardCreateResponse>> Handle(
+        StampCardCreateCommand message, 
         CancellationToken cancellationToken)
     {
         var model = await modelLoader.LoadModelAsync(
@@ -38,7 +38,7 @@ public class StempelkartenCreateCommandHandler(
         var result = await modelStorage.StoreAsync(message.Dto.Team, message.Dto.Season, 
             model.ConcurrencyToken, changes, cancellationToken);
  
-        return Result.Ok(new StempelkartenCreateResponse(
+        return Result.Ok(new StampCardCreateResponse(
             stempelkarteResult.Value.Id, 
             (ulong) result.Value));
     }

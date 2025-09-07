@@ -4,9 +4,9 @@ using JetBrains.Annotations;
 namespace Raspo_Stempelkarten_Backend.Dtos;
 
 [UsedImplicitly]
-public class StempelkartenCreateDtoValidator : AbstractValidator<StempelkartenCreateDto>
+public class StampCardCreateDtoValidator : AbstractValidator<StampCardCreateDto>
 {
-    public StempelkartenCreateDtoValidator()
+    public StampCardCreateDtoValidator()
     {
         RuleFor(dto => dto.Team).NotNull().NotEmpty().Matches(@".+ \d{4}");
         RuleFor(dto => dto.Season).NotNull().NotEmpty().Matches(@"\d{4}/\d{2}");

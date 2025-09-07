@@ -8,7 +8,12 @@ public class DefaultRegister : IRegister
 {
     public void Register(TypeAdapterConfig config)
     {
-        config.NewConfig<StampCard, StempelkartenReadDetailsDto>()
+        config.NewConfig<StampCard, StampCardReadDetailsDto>()
+            .Map(dest => dest.Stamps, src => src.GetStamps())
             .Map(dest => dest.ActualStamps, src => src.GetStamps().Count());
+        config.NewConfig<Stamp, StampReadDetailsDto>()
+            .TwoWays()
+            .Map(dest => dest.Id, src => src.Id)
+            .Map(dest => dest.Reason, src => src.Reason);
     }
 }

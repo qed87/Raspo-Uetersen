@@ -3,17 +3,17 @@ using FluentResults;
 using JetBrains.Annotations;
 using Raspo_Stempelkarten_Backend.Commands.Shared;
 
-namespace Raspo_Stempelkarten_Backend.Commands.StempelkarteDelete;
+namespace Raspo_Stempelkarten_Backend.Commands.StampCardDelete;
 
 [UsedImplicitly]
-public class StempelkartenDeleteCommandHandler(
-    IStempelkartenModelStorage storage,
+public class StampCardDeleteCommandHandler(
+    IStampCardModelStorage storage,
     IHttpContextAccessor contextAccessor, 
-    IStempelkartenModelLoader modelLoader,
+    IStampCardModelLoader modelLoader,
     IStampCardChangeTracker changeTracker) 
-    : IRequestHandler<StempelkartenDeleteCommand, Task<Result>>
+    : IRequestHandler<StampCardDeleteCommand, Task<Result>>
 {
-    public async Task<Result> Handle(StempelkartenDeleteCommand message, CancellationToken cancellationToken)
+    public async Task<Result> Handle(StampCardDeleteCommand message, CancellationToken cancellationToken)
     {
         var model = await modelLoader.LoadModelAsync(
             message.Team, message.Season);

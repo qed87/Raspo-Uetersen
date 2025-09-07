@@ -6,8 +6,8 @@ using Polly;
 namespace Raspo_Stempelkarten_Backend.Commands.Shared;
 
 [UsedImplicitly]
-public class StempelkartenModelStorage(KurrentDBClient kurrentDbClient, IStreamNameProvider streamNameProvider) 
-    : IStempelkartenModelStorage
+public class StampCardModelStorage(KurrentDBClient kurrentDbClient, IStreamNameProvider streamNameProvider) 
+    : IStampCardModelStorage
 {
     /// <summary>
     /// Store user events in the database.

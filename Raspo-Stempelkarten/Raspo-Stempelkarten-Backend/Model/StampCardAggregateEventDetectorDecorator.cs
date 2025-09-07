@@ -22,11 +22,23 @@ public class StampCardAggregateEventDetectorDecorator(IStampCardAggregate inner,
             new StampCardCreated
             {
                 Id = result.Value.Id,
+                Recipient = result.Value.Recipient,
                 IssuedBy = result.Value.IssuedBy,
                 MinStamps = result.Value.MinStamps, 
                 MaxStamps = result.Value.MaxStamps, 
             }, 
             CancellationToken.None);
+        foreach (var owner in result.Value.GetOwners())
+        {
+            await mediator.Publish(
+                new StampCardOwnerAdded
+                {
+                    StampCardId = result.Value.Id,
+                    Name = owner
+                }, 
+                CancellationToken.None);
+        }
+        
         return result;
     }
 

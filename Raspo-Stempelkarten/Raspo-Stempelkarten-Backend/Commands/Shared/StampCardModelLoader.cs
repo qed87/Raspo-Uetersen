@@ -4,10 +4,10 @@ using Raspo_Stempelkarten_Backend.Model;
 
 namespace Raspo_Stempelkarten_Backend.Commands.Shared;
 
-internal class StempelkartenModelLoader(
+internal class StampCardModelLoader(
     IMediator mediator,
     KurrentDBClient kurrentDbClient, 
-    IStreamNameProvider streamNameProvider) : IStempelkartenModelLoader
+    IStreamNameProvider streamNameProvider) : IStampCardModelLoader
 {
     /// <summary>
     /// Load <see cref="StampCardAggregate"/> from storage.
@@ -23,7 +23,7 @@ internal class StempelkartenModelLoader(
             streamNameProvider.GetStreamName(team, season),
             StreamPosition.Start);
         
-        var replayer = new StempelkartenReplayer(team, season);
+        var replayer = new StampCardReplayer(team, season);
         ulong? streamRevision = null;
         if (await result.ReadState == ReadState.Ok)
         {

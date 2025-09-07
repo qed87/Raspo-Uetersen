@@ -23,7 +23,7 @@ public class StampCard
             Recipient = recipient,
             MaxStamps = maxStamps,
             MinStamps = minStamps,
-            Owners = [..owners ?? Enumerable.Empty<string>()]
+            Owners = [..owners ?? Enumerable.Empty<string>(), issuedBy]
         }, [])
     {
     }
@@ -38,8 +38,8 @@ public class StampCard
             _stamps.Add(new Stamp(stampData));
         }
     }
-    
-    public Guid Id { get; set; }
+
+    public Guid Id => _data.Id; 
     
     public string Recipient 
     {
@@ -92,7 +92,7 @@ public class StampCard
         return Result.Ok(stamp);
     }
 
-    public IEnumerable<string> GetOwners() => _data.Owners.ToList();
+    public IEnumerable<string> GetOwners() => _data.Owners.Distinct().ToList();
 
     public Result<Stamp> Stamp(string issuedBy, string? reason)
     {

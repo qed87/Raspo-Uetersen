@@ -6,7 +6,6 @@ using Mapster;
 using Raspo_Stempelkarten_Backend.Commands.Shared;
 using Raspo_Stempelkarten_Backend.Events;
 using Raspo_Stempelkarten_Backend.Mappings;
-using StempelkartenModelLoader = Raspo_Stempelkarten_Backend.Commands.Shared.StempelkartenModelLoader;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,9 +24,9 @@ builder.Services.AddScoped<INotificationHandler<StampCardOwnerRemoved>, StampCar
 builder.Services.AddScoped<INotificationHandler<StampCardStamped>, StampCardChangeHandler>(cfg => cfg.GetRequiredService<StampCardChangeHandler>());
 builder.Services.AddScoped<INotificationHandler<StampCardStampErased>, StampCardChangeHandler>(cfg => cfg.GetRequiredService<StampCardChangeHandler>());
 builder.Services.AddScoped<IStampCardChangeTracker>(cfg => cfg.GetRequiredService<StampCardChangeHandler>());
-builder.Services.AddScoped<IStempelkartenModelLoader, StempelkartenModelLoader>();
+builder.Services.AddScoped<IStampCardModelLoader, StampCardModelLoader>();
 builder.Services.AddScoped<IStreamNameProvider, StreamNameProvider>();
-builder.Services.AddScoped<IStempelkartenModelStorage, StempelkartenModelStorage>();
+builder.Services.AddScoped<IStampCardModelStorage, StampCardModelStorage>();
 builder.Services.AddTransient<KurrentDBClient>(_ => new KurrentDBClient(
     KurrentDBClientSettings.Create(builder.Configuration.GetConnectionString("KurrentDb")!)));
 builder.Services.AddTransient<KurrentDBProjectionManagementClient>(_ => new KurrentDBProjectionManagementClient(

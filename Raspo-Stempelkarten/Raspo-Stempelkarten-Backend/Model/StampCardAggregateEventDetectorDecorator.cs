@@ -6,7 +6,8 @@ using Raspo_Stempelkarten_Backend.Events;
 namespace Raspo_Stempelkarten_Backend.Model;
 
 [UsedImplicitly]
-public class StampCardAggregateEventDetectorDecorator(IStampCardAggregate inner, IMediator mediator) 
+public class StampCardAggregateEventDetectorDecorator(string team, string season, 
+    IStampCardAggregate inner, IMediator mediator) 
     : IStampCardAggregate
 {
     public Task<IEnumerable<StampCard>> GetStampCards()
@@ -22,6 +23,8 @@ public class StampCardAggregateEventDetectorDecorator(IStampCardAggregate inner,
             new StampCardCreated
             {
                 Id = result.Value.Id,
+                Team = team,
+                Season = season,
                 Recipient = result.Value.Recipient,
                 IssuedBy = result.Value.IssuedBy,
                 MinStamps = result.Value.MinStamps, 
@@ -120,6 +123,22 @@ public class StampCardAggregateEventDetectorDecorator(IStampCardAggregate inner,
     {
         return inner.GetById(id);
     }
+    
+    public Task<IEnumerable<StampCard>> List()
+    {
+        return inner.List();
+    }
+
+    public Task<Stamp?> GetStampById(Guid stampCardId, Guid id)
+    {
+        return inner.GetStampById(stampCardId, id);
+    }
+
+    public Task<IEnumerable<Stamp>> GetStamps(Guid id)
+    {
+        return inner.GetStamps(id);
+    }
 
     public ulong? ConcurrencyToken => inner.ConcurrencyToken;
+   
 }

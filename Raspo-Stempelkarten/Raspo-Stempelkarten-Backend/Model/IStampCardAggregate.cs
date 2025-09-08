@@ -19,4 +19,7 @@ public interface IStampCardAggregate
     Task<Result<Stamp>> EraseStamp(Guid stampCardId, Guid stampId, string issuedBy);
     Task<StampCard?> GetById(Guid id);
     public ulong? ConcurrencyToken { get; }
+    Task<IEnumerable<StampCard>> List();
+    Task<Stamp?> GetStampById(Guid stampCardId, Guid id);
+    Task<IEnumerable<Stamp>> GetStamps(Guid id);
 }

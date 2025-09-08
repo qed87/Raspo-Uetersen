@@ -28,6 +28,24 @@ public sealed class StampCardAggregate : IStampCardAggregate
 
     public ulong? ConcurrencyToken { get; set; }
     
+    public Task<IEnumerable<StampCard>> List()
+    {
+        return Task.FromResult<IEnumerable<StampCard>>(_stampCards.Values.ToList());
+    }
+
+    public Task<Stamp?> GetStampById(Guid stampCardId, Guid id)
+    {
+        var stampCard = _stampCards.Values.SingleOrDefault(stampCard => stampCard.Id == stampCardId);
+        if (stampCard is null) return Task.FromResult((Stamp?)null);
+        return Task.FromResult(stampCard.GetStamps().SingleOrDefault(stamp => stamp.Id == id));
+    }
+
+    public Task<IEnumerable<Stamp>> GetStamps(Guid id)
+    {
+        var stampCard = _stampCards.Values.SingleOrDefault(stampCard => stampCard.Id == id);
+        if (stampCard is null) return Task.FromResult(Enumerable.Empty<Stamp>());
+        return Task.FromResult(stampCard.GetStamps());
+    }
 
     public Task<IEnumerable<StampCard>> GetStampCards() 
         => Task.FromResult<IEnumerable<StampCard>>(_stampCards.Values.ToList());

@@ -1,11 +1,16 @@
 using DispatchR.Abstractions.Notification;
+using DispatchR.Abstractions.Send;
 using DispatchR.Extensions;
+using FluentResults;
 using FluentValidation;
 using KurrentDB.Client;
 using Mapster;
 using Raspo_Stempelkarten_Backend.Commands.Shared;
+using Raspo_Stempelkarten_Backend.Dtos;
 using Raspo_Stempelkarten_Backend.Events;
 using Raspo_Stempelkarten_Backend.Mappings;
+using Raspo_Stempelkarten_Backend.Queries.StampCardGetDetailed;
+using Raspo_Stempelkarten_Backend.Queries.StampCardStamp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +20,10 @@ builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddMapster();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<IRequestHandler<StampCardGetByIdQuery, Task<Result<StampCardReadDto>>>, StampCardGetByIdQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<StampCardDetailedGetByIdQuery, Task<Result<StampCardReadDetailsDto>>>, StampCardGetByIdQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<StampCardStampGetByIdQuery, Task<Result<StampReadDto>>>, StampCardStampQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<StampCardStampListQuery, Task<Result<IEnumerable<StampReadDto>>>>, StampCardStampQueryHandler>();
 builder.Services.AddScoped<StampCardChangeHandler>();
 builder.Services.AddScoped<INotificationHandler<StampCardCreated>, StampCardChangeHandler>(cfg => cfg.GetRequiredService<StampCardChangeHandler>());
 builder.Services.AddScoped<INotificationHandler<StampCardDeleted>, StampCardChangeHandler>(cfg => cfg.GetRequiredService<StampCardChangeHandler>());
@@ -51,21 +60,25 @@ app.MapControllers();
 var kurrentDbProjection = app.Services.GetRequiredService<KurrentDBProjectionManagementClient>();
 await kurrentDbProjection.EnableAsync("$by_category");
 
-// await kurrentDbProjection.CreateContinuousAsync("Stempelkarten-Teams-and-Saisons", """
-// fromCategory('Stempelkarten')
-//     .when({
-//         $init: function () {
-//             return {
-//                 teams: new Set();
-//                 season: new Set();
-//             }
-//         },
-//         StampCardCreated: function (state, event) {
-//             state.teams.add(event.Team);
-//             state.seasons.add(event.Season);
-//         }
-//     })
-//     .outputState()
-// """);
+var projections = kurrentDbProjection.ListContinuousAsync();
+if (!await projections.AnyAsync(projection => projection.Name == "StampCard-Teams-and-Seasons"))
+{
+    await kurrentDbProjection.CreateContinuousAsync("StampCard-Teams-and-Seasons", """
+        fromCategory('StampCard')
+            .when({
+                $init: function () {
+                    return {
+                        teams: new Set(),
+                        season: new Set()
+                    }
+                },
+                StampCardCreated: function (state, event) {
+                    state.teams.add(event.Team);
+                    state.seasons.add(event.Season);
+                }
+            })
+            .outputState()
+        """);
+}
 
 await app.RunAsync();

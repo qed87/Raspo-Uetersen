@@ -11,6 +11,6 @@ public partial class StreamNameProvider : IStreamNameProvider
     
     public string GetStreamName(string team, string season)
     {
-        return $"Stempelkarten-{SpecialCharRegex().Replace(team, "_")}-{SpecialCharRegex().Replace(season, "_")}";
+        return $"StampCard-{SpecialCharRegex().Replace(team, "_")}-{SpecialCharRegex().Replace(season, "_")}";
     }
 }

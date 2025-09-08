@@ -6,6 +6,10 @@ public class StampCardCreated : INotification
 {
     public required Guid Id { get; set; }
     
+    public string Team { get; set; }
+    
+    public string Season { get; set; }
+    
     public string Recipient { get; set; } = null!;
     
     public string IssuedBy { get; set; } = null!;

@@ -11,7 +11,8 @@ public class DefaultRegister : IRegister
         config.NewConfig<StampCard, StampCardReadDetailsDto>()
             .Map(dest => dest.Stamps, src => src.GetStamps())
             .Map(dest => dest.ActualStamps, src => src.GetStamps().Count());
-        config.NewConfig<Stamp, StampReadDetailsDto>()
+        config.NewConfig<StampCard, StampCardReadDto>();
+        config.NewConfig<Stamp, StampReadDto>()
             .TwoWays()
             .Map(dest => dest.Id, src => src.Id)
             .Map(dest => dest.Reason, src => src.Reason);

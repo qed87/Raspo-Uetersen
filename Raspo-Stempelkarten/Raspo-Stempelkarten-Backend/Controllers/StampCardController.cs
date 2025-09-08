@@ -7,7 +7,9 @@ using Raspo_Stempelkarten_Backend.Commands.StampCardDelete;
 using Raspo_Stempelkarten_Backend.Commands.StampCardStamp;
 using Raspo_Stempelkarten_Backend.Commands.StampCardStampErase;
 using Raspo_Stempelkarten_Backend.Dtos;
-using Raspo_Stempelkarten_Backend.Queries.StampCardGetDetails;
+using Raspo_Stempelkarten_Backend.Queries.StampCardGetDetailed;
+using Raspo_Stempelkarten_Backend.Queries.StampCardList;
+using Raspo_Stempelkarten_Backend.Queries.StampCardStamp;
 
 namespace Raspo_Stempelkarten_Backend.Controllers;
 
@@ -18,22 +20,36 @@ public class StampCardController(
     : ControllerBase
 {
     [HttpGet]
-    public IActionResult List()
-    {
-        // return Ok("Test List");
-        throw new NotImplementedException();
-    }
-    
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get(string team, string season, Guid id)
+    public async Task<IActionResult> List(string team, string season)
     {
         team = HttpUtility.UrlDecode(team);
         season = HttpUtility.UrlDecode(season);
         var stempelkartenDetailsResult = await mediator.Send(
+            new StampCardListQuery(team, season), 
+            CancellationToken.None);
+        if (stempelkartenDetailsResult.IsFailed) return Problem("Stempelkarten konnte nicht geladen werden!");
+        return Ok(stempelkartenDetailsResult.Value);
+    }
+    
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> Get(string team, string season, Guid id, bool includeDetails)
+    {
+        team = HttpUtility.UrlDecode(team);
+        season = HttpUtility.UrlDecode(season);
+        if (includeDetails)
+        {
+            var stampCardDetailedResult = await mediator.Send(
+                new StampCardDetailedGetByIdQuery(team, season, id), 
+                CancellationToken.None);
+            if (stampCardDetailedResult.IsFailed) return Problem("Stempelkarte konnte nicht geladen werden!");
+            return Ok(stampCardDetailedResult.Value);
+        }
+
+        var stampCardResult = await mediator.Send(
             new StampCardGetByIdQuery(team, season, id), 
             CancellationToken.None);
-        if (stempelkartenDetailsResult.IsFailed) return Problem("Stempelkarte konnte nicht geladen werden!");
-        return Ok(stempelkartenDetailsResult.Value);
+        if (stampCardResult.IsFailed) return Problem("Stempelkarte konnte nicht geladen werden!");
+        return Ok(stampCardResult.Value);
     }
     
     [HttpPost]
@@ -73,6 +89,30 @@ public class StampCardController(
         }
 
         return Problem("Stempelkarte konnte nicht gelöscht werden!");
+    }
+    
+    [HttpGet("{id:guid}/stamp")]
+    public async Task<IActionResult> ListStamps(string team, string season, Guid id)
+    {
+        team = HttpUtility.UrlDecode(team);
+        season = HttpUtility.UrlDecode(season);
+        var stampCardReadDtos = await mediator.Send(
+            new StampCardStampListQuery(team, season, id), 
+            CancellationToken.None);
+        if (stampCardReadDtos.IsFailed) return Problem("Stempelkarten konnte nicht geladen werden!");
+        return Ok(stampCardReadDtos.Value);
+    }
+    
+    [HttpGet("{stampCardId:guid}/stamp/{id}")]
+    public async Task<IActionResult> GetStampById(string team, string season, Guid stampCardId, Guid id)
+    {
+        team = HttpUtility.UrlDecode(team);
+        season = HttpUtility.UrlDecode(season);
+        var stampCardReadDto = await mediator.Send(
+            new StampCardStampGetByIdQuery(team, season, stampCardId, id), 
+            CancellationToken.None);
+        if (stampCardReadDto.IsFailed) return Problem("Stempelkarten konnte nicht geladen werden!");
+        return Ok(stampCardReadDto.Value);
     }
     
     [HttpPost("{id:guid}/stamp")]

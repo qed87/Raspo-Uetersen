@@ -36,7 +36,7 @@ internal class StampCardModelLoader(
 
         var modelAggregate = replayer.GetModel();
         modelAggregate.ConcurrencyToken = streamRevision;
-        var decoratedAggregate =  new StampCardAggregateEventDetectorDecorator(modelAggregate, mediator);
+        var decoratedAggregate =  new StampCardAggregateEventDetectorDecorator(team, season, modelAggregate, mediator);
         return decoratedAggregate;
     }
 }

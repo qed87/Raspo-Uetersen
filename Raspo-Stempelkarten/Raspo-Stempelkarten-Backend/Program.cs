@@ -65,19 +65,32 @@ if (!await projections.AnyAsync(projection => projection.Name == "StampCard-Team
 {
     await kurrentDbProjection.CreateContinuousAsync("StampCard-Teams-and-Seasons", """
         fromCategory('StampCard')
-            .when({
-                $init: function () {
-                    return {
-                        teams: new Set(),
-                        season: new Set()
-                    }
-                },
-                StampCardCreated: function (state, event) {
-                    state.teams.add(event.Team);
-                    state.seasons.add(event.Season);
+        .when({
+            $init: function () {
+                return {
+                    teams: {}
                 }
-            })
-            .outputState()
+            },
+            StampCardCreated: function (state, event) {
+                if (!event) return state;
+                let teams = Object.keys(state.teams);
+                let teamSet = new Set(teams);
+                teamSet.add(event.data.Team);
+                let newState = { teams: { } } ;
+                for (const team of teamSet) {
+                    let seasonResult = state.teams[team];
+                    if (!seasonResult) {
+                        seasonResult = { seasons: [] };
+                    }
+                    let seasons = new Set(seasonResult.seasons);
+                    seasons.add(event.data.Season);
+                    newState.teams[team] = {};
+                    newState.teams[team].seasons = [...seasons];
+                }
+                return newState;
+            }
+        })
+        .outputState();
         """);
 }
 

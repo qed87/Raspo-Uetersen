@@ -1,0 +1,122 @@
+@page "/stampcards/{Id}"
+@using Raspo.StampCard.Web.Services
+@using System.Web
+@inject NavigationManager NavigationManager
+@inject StampCardService StampCardClient
+
+<h3>Stempelkarte ansehen</h3>
+
+<div class="container-fluid">
+
+    <form>
+        <div class="row">
+            <div class="col">
+                <label>Id</label>
+                <input class="form-control" value="@_stampCard?.Id" aria-label="Id" disabled/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label>Empfänger</label>
+                <input class="form-control" value="@_stampCard?.Recipient" aria-label="Empfänger" disabled/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label>Eigentümer</label>
+                <input class="form-control" value="@_stampCard?.IssuedBy" aria-label="Eigentümer" disabled/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label>Min. Stempel</label>
+                <input class="form-control" value="@_stampCard?.MinStamps" aria-label="Min. Stempel" disabled/>
+            </div>
+            <div class="col">
+                <label>Max. Stempel</label>
+                <input class="form-control" value="@_stampCard?.MaxStamps" aria-label="Max. Stempel" disabled/>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <h5 class="card-title">Besitzer</h5>
+            @if (_stampCard?.Owners.Length > 0)
+            {
+                @foreach (var owner in _stampCard?.Owners ?? Enumerable.Empty<string>())
+                {
+                    <div class="row">
+                        <div class="col">
+                            <input class="form-control" value="@owner" aria-label="Besitzer" disabled/>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="row">
+                    <div class="col">
+                        Keine
+                    </div>
+                </div>
+            }
+        </div>
+  
+        <div class="form-group">
+            <h5 class="card-title">Stempel</h5>
+            @if (_stamps?.Count > 0)
+            {
+                @foreach (var stamp in _stamps ?? Enumerable.Empty<StampReadDto>())
+                {
+                    <div class="row">
+                        <div class="col">
+                            <label>Stempel-Nummer</label>
+                            <input class="form-control" value="@stamp.Id" aria-label="Stempel-Nummer" disabled/>
+                        </div>
+                        <div class="col">
+                            <label>Stempelgrund</label>
+                            <input class="form-control" value="@stamp.Reason" aria-label="Stempelgrund" disabled/>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="row">
+                    <div class="col">
+                        Keine
+                    </div>
+                </div>
+            }
+        </div>
+    </form>
+    
+    <div class="mt-3">
+        <button type="button" class="btn-primary col-1" @onclick="NavigateBack"><Icon Name="IconName.ArrowLeft"/> Zurück</button>
+    </div>
+</div>
+
+@code {
+    private StampCardReadDto? _stampCard;
+    private List<StampReadDto>? _stamps;
+
+    [SupplyParameterFromQuery, Parameter]
+    public required string Team { get; set; }
+    
+    [SupplyParameterFromQuery, Parameter]
+    public required string Season { get; set; }
+    
+    [Parameter]
+    public required string Id { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _stampCard = await StampCardClient.GetStampCardById(HttpUtility.UrlEncode(Season), HttpUtility.UrlEncode(Team), Guid.Parse(Id));
+        _stamps = await StampCardClient.GetStamps(HttpUtility.UrlEncode(Season), HttpUtility.UrlEncode(Team), Guid.Parse(Id));        
+    }
+    
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo(NavigationManager.HistoryEntryState ?? "/");
+    }
+
+}

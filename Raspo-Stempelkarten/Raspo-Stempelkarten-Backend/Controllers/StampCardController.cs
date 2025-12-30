@@ -6,6 +6,7 @@ using Raspo_Stempelkarten_Backend.Commands.StampCardCreate;
 using Raspo_Stempelkarten_Backend.Commands.StampCardDelete;
 using Raspo_Stempelkarten_Backend.Commands.StampCardStamp;
 using Raspo_Stempelkarten_Backend.Commands.StampCardStampErase;
+using Raspo_Stempelkarten_Backend.Commands.StampCardUpdate;
 using Raspo_Stempelkarten_Backend.Dtos;
 using Raspo_Stempelkarten_Backend.Queries.StampCardGetDetailed;
 using Raspo_Stempelkarten_Backend.Queries.StampCardList;
@@ -13,58 +14,87 @@ using Raspo_Stempelkarten_Backend.Queries.StampCardStamp;
 
 namespace Raspo_Stempelkarten_Backend.Controllers;
 
-[Route("api/teams/{team}/seasons/{season}/[controller]/")]
+[Route("api/seasons/{season}/teams/{team}/[controller]/")]
 public class StampCardController(
     IMediator mediator,
-    IValidator<StampCardCreateDto> createDtoValidator) 
+    IValidator<StampCardCreateDto> createDtoValidator,
+    IValidator<StampCardUpdateDto> updateDtoValidator) 
     : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List(string team, string season)
+    public async Task<IActionResult> List(string season, string team)
     {
-        team = HttpUtility.UrlDecode(team);
         season = HttpUtility.UrlDecode(season);
-        var stempelkartenDetailsResult = await mediator.Send(
-            new StampCardListQuery(team, season), 
+        team = HttpUtility.UrlDecode(team);
+        var response = await mediator.Send(
+            new StampCardListQuery(season, team), 
             CancellationToken.None);
-        if (stempelkartenDetailsResult.IsFailed) return Problem("Stempelkarten konnte nicht geladen werden!");
-        return Ok(stempelkartenDetailsResult.Value);
+        return response.IsFailed 
+            ? Problem(string.Join(Environment.NewLine, response.Errors.Select(e => e.Message))) 
+            : Ok(response.Value);
     }
     
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get(string team, string season, Guid id, bool includeDetails)
+    public async Task<IActionResult> Get(string season, string team, Guid id, bool includeDetails)
     {
-        team = HttpUtility.UrlDecode(team);
         season = HttpUtility.UrlDecode(season);
+        team = HttpUtility.UrlDecode(team);
         if (includeDetails)
         {
-            var stampCardDetailedResult = await mediator.Send(
-                new StampCardDetailedGetByIdQuery(team, season, id), 
+            var detailedResponse = await mediator.Send(
+                new StampCardDetailedGetByIdQuery(season, team, id), 
                 CancellationToken.None);
-            if (stampCardDetailedResult.IsFailed) return Problem("Stempelkarte konnte nicht geladen werden!");
-            return Ok(stampCardDetailedResult.Value);
+            return detailedResponse.IsFailed 
+                ? Problem(string.Join(Environment.NewLine, detailedResponse.Errors.Select(error => error.Message))) 
+                : Ok(detailedResponse.Value);
         }
 
-        var stampCardResult = await mediator.Send(
-            new StampCardGetByIdQuery(team, season, id), 
+        var response = await mediator.Send(
+            new StampCardGetByIdQuery(season, team, id), 
             CancellationToken.None);
-        if (stampCardResult.IsFailed) return Problem("Stempelkarte konnte nicht geladen werden!");
-        return Ok(stampCardResult.Value);
+        return response.IsFailed 
+            ? Problem(string.Join(Environment.NewLine, response.Errors.Select(e => e.Message))) 
+            : Ok(response.Value);
     }
     
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] StampCardCreateDto stampCardCreateDto, 
-        string team, string season)
+    public async Task<IActionResult> Create(
+        [FromBody] StampCardCreateDto stampCardCreateDto, 
+        string team, 
+        string season)
     {
-        stampCardCreateDto.Team = HttpUtility.UrlDecode(team);
         stampCardCreateDto.Season = HttpUtility.UrlDecode(season);
-        await createDtoValidator.ValidateAsync(stampCardCreateDto);
-        
-        // create model and perform update
+        stampCardCreateDto.Team = HttpUtility.UrlDecode(team);
+        var validationResult = await createDtoValidator.ValidateAsync(stampCardCreateDto);
+        if (validationResult.Errors.Count != 0) 
+            return Problem(string.Join(Environment.NewLine, validationResult.Errors.Select(failure => failure.ErrorMessage)));
         var response = await mediator.Send(
             new StampCardCreateCommand(stampCardCreateDto), 
             CancellationToken.None);
-        return response.IsSuccess ? Ok(response.Value) : Problem("Fehler beim Anlegen der Stempelkarte aufgetreten.");
+        return response.IsSuccess 
+            ? Ok(response.Value) 
+            : Problem(string.Join(Environment.NewLine, response.Errors.Select(error => error.Message)));
+    }
+    
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(
+        [FromBody] StampCardUpdateDto stampCardUpdateDto,
+        Guid id,
+        string team, 
+        string season)
+    {
+        stampCardUpdateDto.Id = id;
+        stampCardUpdateDto.Season = HttpUtility.UrlDecode(season);
+        stampCardUpdateDto.Team = HttpUtility.UrlDecode(team);
+        var validationResult = await updateDtoValidator.ValidateAsync(stampCardUpdateDto);
+        if (validationResult.Errors.Count != 0) 
+            return Problem(string.Join(Environment.NewLine, validationResult.Errors.Select(failure => failure.ErrorMessage)));
+        var response = await mediator.Send(
+            new StampCardUpdateCommand(stampCardUpdateDto), 
+            CancellationToken.None);
+        return response.IsSuccess 
+            ? Ok(response.Value) 
+            : Problem(string.Join(Environment.NewLine, response.Errors.Select(error => error.Message)));
     }
 
     [HttpPut]
@@ -74,81 +104,77 @@ public class StampCardController(
     }
     
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(string team, string season, Guid id, [FromQuery] ulong? version)
+    public async Task<IActionResult> Delete(string season, string team, Guid id, [FromQuery] ulong? version)
     {
-        team = HttpUtility.UrlDecode(team);
         season = HttpUtility.UrlDecode(season);
+        team = HttpUtility.UrlDecode(team);
         
         // create model and perform update
         var response = await mediator.Send(
-            new StampCardDeleteCommand(team, season, id, version), 
+            new StampCardDeleteCommand(season, team, id, version), 
             CancellationToken.None);
         if (response.IsSuccess)
         {
             return Ok();    
         }
 
-        return Problem("Stempelkarte konnte nicht gelöscht werden!");
+        return Problem(string.Join(Environment.NewLine, response.Errors.Select(error => error.Message)));
     }
     
     [HttpGet("{id:guid}/stamp")]
-    public async Task<IActionResult> ListStamps(string team, string season, Guid id)
+    public async Task<IActionResult> ListStamps(string season, string team, Guid id)
     {
-        team = HttpUtility.UrlDecode(team);
         season = HttpUtility.UrlDecode(season);
-        var stampCardReadDtos = await mediator.Send(
-            new StampCardStampListQuery(team, season, id), 
+        team = HttpUtility.UrlDecode(team);
+        var response = await mediator.Send(
+            new StampCardStampListQuery(season, team, id), 
             CancellationToken.None);
-        if (stampCardReadDtos.IsFailed) return Problem("Stempelkarten konnte nicht geladen werden!");
-        return Ok(stampCardReadDtos.Value);
+        return response.IsFailed 
+            ? Problem(string.Join(Environment.NewLine, response.Errors.Select(error => error.Message))) 
+            : Ok(response.Value);
     }
     
     [HttpGet("{stampCardId:guid}/stamp/{id}")]
-    public async Task<IActionResult> GetStampById(string team, string season, Guid stampCardId, Guid id)
+    public async Task<IActionResult> GetStampById(string season, string team, Guid stampCardId, Guid id)
     {
-        team = HttpUtility.UrlDecode(team);
         season = HttpUtility.UrlDecode(season);
-        var stampCardReadDto = await mediator.Send(
-            new StampCardStampGetByIdQuery(team, season, stampCardId, id), 
+        team = HttpUtility.UrlDecode(team);
+        var response = await mediator.Send(
+            new StampCardStampGetByIdQuery(season, team, stampCardId, id), 
             CancellationToken.None);
-        if (stampCardReadDto.IsFailed) return Problem("Stempelkarten konnte nicht geladen werden!");
-        return Ok(stampCardReadDto.Value);
+        return response.IsFailed 
+            ? Problem(string.Join(Environment.NewLine, response.Errors.Select(error => error.Message))) 
+            : Ok(response.Value);
     }
     
     [HttpPost("{id:guid}/stamp")]
-    public async Task<IActionResult> Stamp(string team, string season, Guid id, [FromQuery] string? reason)
+    public async Task<IActionResult> Stamp(string season, string team, Guid id, [FromQuery] string? reason)
     {
-        team = HttpUtility.UrlDecode(team);
         season = HttpUtility.UrlDecode(season);
+        team = HttpUtility.UrlDecode(team);
         reason = HttpUtility.UrlDecode(reason ?? "");
         
         // create model and perform update
         var response = await mediator.Send(
-            new StampCardStampCommand(team, season, id, reason), 
+            new StampCardStampCommand(season, team, id, reason), 
             CancellationToken.None);
-        if (response.IsSuccess)
-        {
-            return Ok(response.Value);    
-        }
-
-        return Problem("Stempelkarte konnte nicht gelöscht werden!");
+        return response.IsSuccess 
+            ? Ok(response.Value) 
+            : Problem(string.Join(Environment.NewLine, response.Errors.Select(error => error.Message)));
     }
     
     [HttpDelete("{stampCardId:guid}/stamp/{id:guid}")]
-    public async Task<IActionResult> Stamp(string team, string season, Guid stampCardId, Guid id)
+    public async Task<IActionResult> Stamp(string season, string team, Guid stampCardId, Guid id)
     {
-        team = HttpUtility.UrlDecode(team);
         season = HttpUtility.UrlDecode(season);
+        team = HttpUtility.UrlDecode(team);
         
         // create model and perform update
         var response = await mediator.Send(
-            new StampCardStampErasedCommand(team, season, stampCardId, id), 
+            new StampCardStampErasedCommand(season, team, stampCardId, id), 
             CancellationToken.None);
-        if (response.IsSuccess)
-        {
-            return Ok(response.Value);    
-        }
-
-        return Problem("Stempelkarte konnte nicht gelöscht werden!");
+        return response.IsSuccess 
+            ? Ok(response.Value) 
+            : Problem(string.Join(Environment.NewLine, response.Errors.Select(error => error.Message)));
     }
 }

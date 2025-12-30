@@ -16,8 +16,7 @@ public class StampCardStampErasedCommandHandler(
 {
     public async Task<Result<StampCardStampErasedResponse>> Handle(StampCardStampErasedCommand message, CancellationToken cancellationToken)
     {
-        var model = await modelLoader.LoadModelAsync(
-            message.Team, message.Season);
+        var model = await modelLoader.LoadModelAsync(message.Season, message.Team);
         var stampResult = await model.EraseStamp(message.StampCardId, message.Id, contextAccessor.HttpContext?.User.Identity?.Name ?? "dbo");
         var changes = changeTracker.GetChanges().ToList();
         if (stampResult.IsFailed)
@@ -31,8 +30,8 @@ public class StampCardStampErasedCommandHandler(
                 $"Stempel '{message.Id}' konnte nicht von Stempelkarte '{message.StampCardId}' gelöscht werden!");
         }
         
-        var result = await storage.StoreAsync(message.Team, message.Season, model.ConcurrencyToken, 
-            changes, cancellationToken);
+        var result = await storage.StoreAsync(message.Season, message.Team, 
+            model.ConcurrencyToken, changes, cancellationToken);
 
         return Result.Ok(new StampCardStampErasedResponse(stampResult.Value.Id, (ulong) result.Value));
     }

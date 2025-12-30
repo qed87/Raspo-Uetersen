@@ -9,7 +9,8 @@ public interface IStampCardAggregate
         string recipient, 
         string issuedBy,
         int minStamps, 
-        int maxStamps);
+        int maxStamps,
+        string[] additionalOwners);
     Task<Result<StampCard>> RemoveStampCard(Guid id, string issuedBy);
     Task<Result<(IEnumerable<string> AddedOwners, IEnumerable<string> RemovedOwners)>> SetStampCardOwners(
         Guid stampCardId, 
@@ -22,4 +23,6 @@ public interface IStampCardAggregate
     Task<IEnumerable<StampCard>> List();
     Task<Stamp?> GetStampById(Guid stampCardId, Guid id);
     Task<IEnumerable<Stamp>> GetStamps(Guid id);
+    Task<Result<StampCard>> Update(Guid id, string recipient, string issuer, 
+        int minStamps, int maxStamps, string[] owners);
 }

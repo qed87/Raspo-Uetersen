@@ -1,0 +1,206 @@
+﻿@page "/stampcards"
+@page "/"
+@using System.Text
+@using Raspo.StampCard.Web.Services
+@using System.Web
+@inject StampCardService StampCardClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Rasensport Uetersen 1926 e.V. Stempelkarten</PageTitle>
+
+<h1>Übersicht</h1>
+<h2></h2>
+
+<AutoComplete @bind-Value="_selectedSeason"
+  TItem="Season"
+  DataProvider="SeasonDataProvider"
+  PropertyName="Name"
+  Placeholder="Eine Saison suchen..."
+  OnChanged="SeasonUpdated"/>
+
+<AutoComplete @bind-Value="_selectedTeam"
+  TItem="Team"
+  DataProvider="TeamsDataProvider"
+  PropertyName="Name"
+  Placeholder="Ein Team einer Saison suchen..."
+  OnChanged="TeamUpdated"/>
+
+<Grid TItem="StampCardReadDto"
+      bind-SelectedItems="_selectedStampCard"
+      Data="_stampCards"
+      AllowFiltering="true"
+      AllowPaging="false"
+      AllowSorting="true"
+      AllowSelection="false"
+      Class="table table-hover table-bordered table-striped"
+      PageSize="5"
+      Responsive="true"
+      RowKeySelector="stampCardReadDto => stampCardReadDto.Id"
+      SelectionMode="GridSelectionMode.Single">
+    <GridColumns>
+        <GridColumn TItem="StampCardReadDto" HeaderText="Id" PropertyName="Id" SortKeySelector="item => item.Id">
+            @context.Id
+        </GridColumn>
+        <GridColumn TItem="StampCardReadDto" HeaderText="Empfänger" PropertyName="Recipient" FilterTextboxWidth="50" 
+                    FilterTextboxWidthUnit="Unit.Percentage" SortKeySelector="item => item.Recipient">
+            @context.Recipient
+        </GridColumn>
+        <GridColumn TItem="StampCardReadDto" HeaderText="Aussteller" PropertyName="IssuedBy" 
+                    SortKeySelector="item => item.IssuedBy">
+            @context.IssuedBy
+        </GridColumn>
+        <GridColumn TItem="StampCardReadDto" HeaderText="Max. Stempel" PropertyName="MaxStamps" 
+                    SortKeySelector="item => item.MaxStamps">
+            @context.MaxStamps
+        </GridColumn>
+        <GridColumn TItem="StampCardReadDto" HeaderText="Min. Stempel" PropertyName="MinStamps" 
+                    SortKeySelector="item => item.MinStamps">
+            @context.MinStamps
+        </GridColumn>
+        <GridColumn TItem="StampCardReadDto" HeaderText="Actions" >
+            <button @onclick="() => ViewCard(context.Id)"><Icon Name="IconName.CardText" /> Ansehen</button>
+            <button @onclick="() => EditCard(context.Id)"><Icon Name="IconName.Pencil" /> Bearbeiten</button>
+            <button @onclick="() => DeleteStampCard(context.Id)"><Icon Name="IconName.Trash3" /> Löschen</button>
+            <button @onclick="() => OpenStampView(context.Id)"><Icon Name="IconName.TicketPerforated" /> Stempeln</button>
+        </GridColumn>
+    </GridColumns>
+</Grid>
+
+<button type="button" class="btn-primary" @onclick="AddNewStampCard"><Icon Name="IconName.PlusSquare" /> Neue Stempelkarte anlegen</button>
+
+@code 
+{
+    private bool _shouldRender;
+    private SeasonResponseDto? _seasonWithTeams;
+    private List<string> _availableSeasons = [];
+    private string _selectedSeason = null!;
+    private List<string> _availableTeams = [];
+    private string? _selectedTeam;
+    private List<StampCardReadDto>? _stampCards = [];
+    private HashSet<StampCardReadDto> _selectedStampCard;
+
+    protected override bool ShouldRender() => _shouldRender;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var _seasonWithTeams = await StampCardClient.GetSeasonsWithTeams();
+        if (_seasonWithTeams?.Seasons is not null)
+        {
+            _availableSeasons = _seasonWithTeams.Seasons.Keys.ToList();
+            var firstKvp = _seasonWithTeams.Seasons.First();
+            _selectedSeason = firstKvp.Key;
+            _availableTeams = firstKvp.Value.Teams.ToList();
+            _selectedTeam = firstKvp.Value.Teams.FirstOrDefault();
+            await SelectStampCardsAsync();
+        }
+
+        _shouldRender = true;
+    }
+
+    private async Task SelectStampCardsAsync()
+    {
+        _stampCards = [];
+        _stampCards = await StampCardClient.ListStampCards(
+            HttpUtility.UrlEncode(_selectedSeason), 
+            HttpUtility.UrlEncode(_selectedTeam)!);
+    }
+
+    private Task<AutoCompleteDataProviderResult<Team>> TeamsDataProvider(AutoCompleteDataProviderRequest<Team> request)
+    {
+        return Task.FromResult(request.ApplyTo(_availableTeams.Select(value => new Team(value))));
+    }
+    
+    private Task<AutoCompleteDataProviderResult<Season>> SeasonDataProvider(AutoCompleteDataProviderRequest<Season> request)
+    {
+        return Task.FromResult(request.ApplyTo(_availableSeasons.Select(value => new Season(value))));
+    }
+    
+    private async Task TeamUpdated(Team? team)
+    {
+        if (team is null) return;
+        _selectedTeam = team.Name;
+        await SelectStampCardsAsync();
+        StateHasChanged();
+    }
+    
+    private async Task SeasonUpdated(Season? season)
+    {
+        if (season is null) return;
+        if (_seasonWithTeams is null) return;
+        _selectedSeason = season.Name;
+        _availableTeams = _seasonWithTeams.Seasons[season.Name].Teams.ToList();
+        _selectedTeam = _availableTeams.FirstOrDefault();
+        await SelectStampCardsAsync();
+        StateHasChanged();
+    }
+
+    public record Team(string Name);
+
+    public record Season(string Name);
+
+    private void AddNewStampCard(MouseEventArgs obj)
+    {
+        var uriWithQueryParameters = NavigationManager.GetUriWithQueryParameters(
+            $"stampcards/add",
+            new Dictionary<string, object?>
+            {
+                { "season", HttpUtility.UrlEncode(_selectedSeason) },
+                { "team", HttpUtility.UrlEncode(_selectedTeam) }
+            });
+        NavigationManager.NavigateTo(
+            uriWithQueryParameters, 
+            new NavigationOptions { ReplaceHistoryEntry = true, HistoryEntryState = "/stampcards"});
+    }
+
+    private async Task DeleteStampCard(Guid stampCardId)
+    {
+        await StampCardClient.DeleteStampCard(HttpUtility.UrlEncode(_selectedSeason), HttpUtility.UrlEncode(_selectedTeam)!, stampCardId);
+        await SelectStampCardsAsync();
+        StateHasChanged();
+    }
+
+    private Task ViewCard(Guid id)
+    {
+        var uriWithQueryParameters = NavigationManager.GetUriWithQueryParameters(
+            $"stampcards/{id}",
+            new Dictionary<string, object?>
+            {
+                { "season", HttpUtility.UrlEncode(_selectedSeason, Encoding.UTF8) },
+                { "team", HttpUtility.UrlEncode(_selectedTeam, Encoding.UTF8) }
+            });
+        NavigationManager.NavigateTo(
+            uriWithQueryParameters, 
+            new NavigationOptions { ReplaceHistoryEntry = true, HistoryEntryState = "/stampcards"});
+        return Task.CompletedTask;
+    }
+
+    private Task OpenStampView(Guid stampCardId)
+    {
+        var uriWithQueryParameters = NavigationManager.GetUriWithQueryParameters(
+            $"/stampcards/{stampCardId}/stamps",
+            new Dictionary<string, object?>
+            {
+                { "season", HttpUtility.UrlEncode(_selectedSeason, Encoding.UTF8) },
+                { "team", HttpUtility.UrlEncode(_selectedTeam, Encoding.UTF8) }
+            });
+        NavigationManager.NavigateTo(
+            uriWithQueryParameters, 
+            new NavigationOptions { ReplaceHistoryEntry = true, HistoryEntryState = "/stampcards"});
+        return Task.CompletedTask;
+    }
+
+    private Task EditCard(Guid id)
+    {
+        var uriWithQueryParameters = NavigationManager.GetUriWithQueryParameters(
+            $"/stampcards/{id}/edit",
+            new Dictionary<string, object?>
+            {
+                { "season", HttpUtility.UrlEncode(_selectedSeason, Encoding.UTF8) },
+                { "team", HttpUtility.UrlEncode(_selectedTeam, Encoding.UTF8) }
+            });
+        NavigationManager.NavigateTo(
+            uriWithQueryParameters, 
+            new NavigationOptions { ReplaceHistoryEntry = true, HistoryEntryState = "/stampcards"});
+        return Task.CompletedTask;
+    }
+}

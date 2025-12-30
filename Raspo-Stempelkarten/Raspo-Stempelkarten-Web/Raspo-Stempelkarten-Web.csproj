@@ -6,7 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <AssemblyName>$(AssemblyName.Replace(' ', '_'))</AssemblyName>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-        <RootNamespace>Raspo-Stempelkarten</RootNamespace>
+        <RootNamespace>Raspo.StampCard.Web</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,6 +17,8 @@
 
     <ItemGroup>
       <PackageReference Include="Auth0.AspNetCore.Authentication" Version="1.5.0" />
+      <PackageReference Include="Blazor.Bootstrap" Version="3.4.0" />
+      <PackageReference Include="FluentResults" Version="4.0.0" />
       <PackageReference Include="JetBrains.Annotations" Version="2025.2.0" />
     </ItemGroup>
 

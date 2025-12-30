@@ -4,13 +4,13 @@ namespace Raspo_Stempelkarten_Backend.Dtos;
 
 public class StampCardCreateDto
 {
-    public required string Recipient { get; set; } = null!;
+    public string Team { get; set; } = null!;
 
-    [FromRoute(Name = "Team")] public string Team { get; set; } = null!;
-
-    [FromRoute(Name = "Season")] public string Season { get; set; } = null!;
+    public string Season { get; set; } = null!;
     
-    public string[] AdditionalOwner { get; set; } = [];
+    public required string Recipient { get; set; } = null!;
+    
+    public string[] Owners { get; set; } = [];
 
     public int MinStamps { get; set; } = 12;
 

@@ -2,8 +2,19 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+.form-group {
+    border-radius: 15px;
+    border: 1px solid #8080806e;
+    padding: 20px;
+    margin: 1em 0;
+}
+
 a, .btn-link {
     color: #006bb7;
+}
+
+.readonly {
+    color: #929292;
 }
 
 .btn-primary {

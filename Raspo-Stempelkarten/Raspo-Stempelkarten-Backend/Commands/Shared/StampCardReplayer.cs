@@ -6,7 +6,7 @@ using Raspo_Stempelkarten_Backend.Model.Data;
 
 namespace Raspo_Stempelkarten_Backend.Commands.Shared;
 
-public class StampCardReplayer(string team, string season) : IStampCardReplayer
+public class StampCardReplayer(string season, string team) : IStampCardReplayer
 {
     private readonly StampCardLoadContext _loadContext = new();
 
@@ -20,6 +20,7 @@ public class StampCardReplayer(string team, string season) : IStampCardReplayer
     
     public void Replay(ResolvedEvent resolvedEvent)
     {
+        var eventCreated = new DateTimeOffset(resolvedEvent.Event.Created.ToUniversalTime(), TimeSpan.Zero);
         if (resolvedEvent.Event.EventType == nameof(StampCardCreated))
         {
             var stampCardCreated = JsonSerializer.Deserialize<StampCardCreated>(
@@ -33,7 +34,8 @@ public class StampCardReplayer(string team, string season) : IStampCardReplayer
                     Recipient = stampCardCreated.Recipient,
                     MaxStamps = stampCardCreated.MaxStamps,
                     MinStamps = stampCardCreated.MinStamps,
-                    IssuedBy = stampCardCreated.IssuedBy,
+                    CreatedBy = stampCardCreated.IssuedBy,
+                    Created = eventCreated,
                     Team = team,
                     Season = season
                 });
@@ -62,6 +64,8 @@ public class StampCardReplayer(string team, string season) : IStampCardReplayer
                 default:
                     throw new ArgumentOutOfRangeException(stampCardPropertyChanged.Name);
             }
+
+            stampCard.Updated = eventCreated;
         }
         
         if (resolvedEvent.Event.EventType == nameof(StampCardOwnerAdded))
@@ -129,6 +133,6 @@ public class StampCardReplayer(string team, string season) : IStampCardReplayer
 
     public StampCardAggregate GetModel()
     {
-        return new StampCardAggregate(team, season, _loadContext);
+        return new StampCardAggregate(season, team, _loadContext);
     }
 }

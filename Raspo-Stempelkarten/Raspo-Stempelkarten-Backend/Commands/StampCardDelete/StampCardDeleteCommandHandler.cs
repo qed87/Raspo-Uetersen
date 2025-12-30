@@ -15,23 +15,22 @@ public class StampCardDeleteCommandHandler(
 {
     public async Task<Result> Handle(StampCardDeleteCommand message, CancellationToken cancellationToken)
     {
-        var model = await modelLoader.LoadModelAsync(
-            message.Team, message.Season);
+        var model = await modelLoader.LoadModelAsync(message.Season, message.Team);
         var result = await model.RemoveStampCard(
             message.Id,
             contextAccessor.HttpContext?.User.Identity?.Name ?? "dbo");
         if (result.IsFailed)
         {
-            return Result.Fail("Stempelkarte konnte nicht gelöscht werden!");
+            return Result.Fail(result.Errors);
         }
         var changes = changeTracker.GetChanges().ToList();
         if (!changes.Any())
         {
-            return Result.Fail("Stempelkarte konnte nicht gelöscht werden!");
+            return Result.Fail("Stempelkarte ist konnte nicht gelöscht werden!");
         }
 
-        await storage.StoreAsync(message.Team, message.Season, model.ConcurrencyToken, 
-            changes, cancellationToken);
+        await storage.StoreAsync(message.Season, message.Team, 
+            model.ConcurrencyToken, changes, cancellationToken);
 
         return Result.Ok();
     }

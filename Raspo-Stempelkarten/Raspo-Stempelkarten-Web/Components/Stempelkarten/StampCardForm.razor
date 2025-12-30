@@ -1,0 +1,178 @@
+@implements IDisposable
+@inject IServiceProvider ServiceProvider
+
+<div class="container-fluid">
+    <EditForm EditContext="_editContext" OnValidSubmit="Submit">
+        <ValidationSummary />
+        <ValidationMessage For="() => Model" />
+        
+        @if (Model.Id is not null)
+        {
+            <div class="row">
+                <div class="col">
+                    <label>Id</label>
+                    <InputText class="form-control" @bind-Value="Model.Id" placeholder="Id" aria-label="Id" disabled />
+                    <ValidationMessage For="() => Model.Id "/>
+                </div>    
+            </div>    
+        }
+        
+        <div class="row">
+            <div class="col">
+                <label>Saison*</label>
+                <InputText class="form-control" @bind-Value="Model.Season" aria-label="Saison*"/>
+                <ValidationMessage For="() => Model.Season"/>
+            </div>
+            <div class="col">
+                <label>Team*</label>
+                <InputText class="form-control" @bind-Value="Model.Team" aria-label="Team*"/>
+                <ValidationMessage For="() => Model.Team"/>
+            </div>
+        </div>
+    
+        <div class="row">
+            <div class="col">
+                <label>Empfänger*</label>
+                <InputText class="form-control" @bind-Value="Model.Recipient" placeholder="Empfänger" aria-label="Empfänger*"/>
+                <ValidationMessage For="() => Model.Recipient"/>
+            </div>    
+        </div>
+    
+        <div class="form-group">
+            <h5>Besitzer</h5>
+            @foreach (var owner in Model.Owners)
+            {
+                <div class="row">
+                    <div class="col">
+                        <input class="form-control" type="text" value="@owner" disabled/>
+                    </div>
+                    <div class="col-1">
+                        <button class="form-control" type="button" @onclick="@(() => RemoveOwner(owner))"><Icon Name="IconName.Trash3"/> Löschen</button>
+                    </div>
+                </div>
+            }
+            
+            <div class="row">
+                <div class="col">
+                    <label>Name</label>
+                    <InputText class="form-control" @bind-Value="_newOwner" />
+                </div>
+                <div class="col-1">
+                    <label></label>
+                    <button type="button" class="form-control" @onclick="AddOwner"><Icon Name="IconName.PlusSquare"/> Hinzufügen</button>
+                </div>
+            </div>
+        
+            <div class="row">
+                <ValidationMessage For="() => Model.Owners"/>
+            </div>
+        </div>
+   
+        <div class="row">
+            <div class="col">
+                <label>Min. Stempel*</label>
+                <InputNumber class="form-control" id="MinStamps" @bind-Value="Model.MinStamps" aria-label="Min. Stempel*"/>
+                <ValidationMessage For="() => Model.MinStamps"/>
+            </div>
+    
+            <div class="col">
+                <label>Max. Stempel*</label>
+                <InputNumber class="form-control" id="MaxStamps" @bind-Value="Model.MaxStamps" aria-label="Max. Stempel*"/>
+                <ValidationMessage For="() => Model.MaxStamps"/>
+            </div>
+        </div>
+    
+        <div class="row">
+            <div class="col-1">
+                <button class="form-control" type="submit"><Icon Name="IconName.Save"/> Speichern</button>
+            </div>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private Guid Id { get; set; } = Guid.NewGuid();
+    
+    private EditContext? _editContext;
+    
+    private string? _newOwner;
+ 
+    //[SupplyParameterFromForm]
+    [Parameter, EditorRequired]
+    public StampCard Model { get; set; }
+    
+    [Parameter]
+    public EventCallback<Action<string>> OnValidSubmit { get; set; }
+    
+    private ValidationMessageStore? _validationMessages;
+    private IDisposable? _annotationValidationDisposable;
+    private List<string> _errors = [];
+
+    protected override Task OnParametersSetAsync()
+    {
+        _editContext = new EditContext(Model);
+        _annotationValidationDisposable = _editContext.EnableDataAnnotationsValidation(ServiceProvider);
+        _editContext.OnValidationRequested += HandleValidationRequested;
+        _validationMessages = new ValidationMessageStore(_editContext);
+        return Task.CompletedTask;
+    }
+
+    private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs e)
+    {
+        if (_validationMessages is null) 
+            throw new NullReferenceException(nameof(_validationMessages));
+        _validationMessages.Clear();
+
+        if (Model.MinStamps < 0)
+        {
+            _validationMessages.Add(FieldIdentifier.Create(() => Model.MinStamps), "Min. Stempel muss >= 0 sein!");
+        }
+        
+        if (Model.MaxStamps < 0)
+        {
+            _validationMessages.Add(FieldIdentifier.Create(() => Model.MaxStamps), "Max. Stempel muss >= 0 sein!");
+        }
+        
+        if (Model.MinStamps > Model.MaxStamps)
+        {
+            _validationMessages.Add(FieldIdentifier.Create(() => Model.MinStamps), "Min. Stempel muss <= Max. Stempel sein!");
+        }
+        // Custom validation logic
+    }
+    
+    public async Task Submit(EditContext editContext)
+    {
+        if (!editContext.IsModified()) return;
+        await OnValidSubmit.InvokeAsync(ReportError);
+        foreach (var error in _errors)
+        {
+            _validationMessages!.Add(FieldIdentifier.Create(() => Model), error);
+        }
+        StateHasChanged();
+    }
+
+    public void ReportError(string error)
+    {
+        _errors.Add(error);
+    }
+    
+    private void RemoveOwner(string owner)
+    {
+        Model!.Owners.Remove(owner);
+        StateHasChanged();
+    }
+
+    private void AddOwner()
+    {
+        if (_newOwner is null) return;
+        Model!.Owners.Add(_newOwner);
+        _newOwner = null;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _annotationValidationDisposable?.Dispose();
+    }
+
+}

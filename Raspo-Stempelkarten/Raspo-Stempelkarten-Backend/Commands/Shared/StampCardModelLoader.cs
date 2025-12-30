@@ -12,18 +12,17 @@ internal class StampCardModelLoader(
     /// <summary>
     /// Load <see cref="StampCardAggregate"/> from storage.
     /// </summary>
-    /// <param name="team">The team name.</param>
     /// <param name="season">The season.</param>
+    /// <param name="team">The team name.</param>
     /// <returns>The loaded <see cref="StampCardAggregate" />.</returns>
-    public async Task<IStampCardAggregate> LoadModelAsync(
-        string team, string season)
+    public async Task<IStampCardAggregate> LoadModelAsync(string season, string team)
     {
         var result = kurrentDbClient.ReadStreamAsync(
             Direction.Forwards,
-            streamNameProvider.GetStreamName(team, season),
+            streamNameProvider.GetStreamName(season, team),
             StreamPosition.Start);
         
-        var replayer = new StampCardReplayer(team, season);
+        var replayer = new StampCardReplayer(season, team);
         ulong? streamRevision = null;
         if (await result.ReadState == ReadState.Ok)
         {
@@ -36,7 +35,7 @@ internal class StampCardModelLoader(
 
         var modelAggregate = replayer.GetModel();
         modelAggregate.ConcurrencyToken = streamRevision;
-        var decoratedAggregate =  new StampCardAggregateEventDetectorDecorator(team, season, modelAggregate, mediator);
+        var decoratedAggregate =  new StampCardAggregateEventDetectorDecorator(season, team, modelAggregate, mediator);
         return decoratedAggregate;
     }
 }

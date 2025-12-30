@@ -17,7 +17,7 @@ public class StampCardListQueryHandler(IStampCardModelLoader stampCardModelLoade
         StampCardListQuery message, 
         CancellationToken cancellationToken)
     {
-        var stampCardAggregate = await stampCardModelLoader.LoadModelAsync(message.Team, message.Season);
+        var stampCardAggregate = await stampCardModelLoader.LoadModelAsync(message.Season, message.Team);
         var stampCards = await stampCardAggregate.List();
         var stampCardReadDetailsDto = mapper.Map<IEnumerable<StampCardReadDto>>(stampCards).ToList();
         foreach (var stampCardReadDto in stampCardReadDetailsDto)

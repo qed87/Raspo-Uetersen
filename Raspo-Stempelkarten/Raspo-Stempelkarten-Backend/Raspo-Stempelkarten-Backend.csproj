@@ -29,7 +29,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Commands\StampCardUpdate\" />
+      <Folder Include="docs\" />
     </ItemGroup>
 
 </Project>

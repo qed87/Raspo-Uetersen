@@ -17,7 +17,7 @@ public class StampCardGetByIdQueryHandler(IStampCardModelLoader stampCardModelLo
         StampCardDetailedGetByIdQuery message, 
         CancellationToken cancellationToken)
     {
-        var stampCardAggregate = await stampCardModelLoader.LoadModelAsync(message.Team, message.Season);
+        var stampCardAggregate = await stampCardModelLoader.LoadModelAsync(message.Season, message.Team);
         var stampCard = await stampCardAggregate.GetById(message.Id);
         if (stampCard == null) return Result.Fail($"Stempelkarte '{message.Id}' konnte nicht gefunden werden.");
         var stampCardReadDetailDto = mapper.Map<StampCardReadDetailsDto>(stampCard);
@@ -28,7 +28,7 @@ public class StampCardGetByIdQueryHandler(IStampCardModelLoader stampCardModelLo
 
     public async Task<Result<StampCardReadDto>> Handle(StampCardGetByIdQuery message, CancellationToken cancellationToken)
     {
-        var stampCardAggregate = await stampCardModelLoader.LoadModelAsync(message.Team, message.Season);
+        var stampCardAggregate = await stampCardModelLoader.LoadModelAsync(message.Season, message.Team);
         var stampCard = await stampCardAggregate.GetById(message.Id);
         if (stampCard == null) return Result.Fail($"Stempelkarte '{message.Id}' konnte nicht gefunden werden.");
         var stampCardReadDetailDto = mapper.Map<StampCardReadDto>(stampCard);

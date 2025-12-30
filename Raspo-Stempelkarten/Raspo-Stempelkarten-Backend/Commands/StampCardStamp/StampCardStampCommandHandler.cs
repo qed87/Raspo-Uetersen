@@ -15,8 +15,7 @@ public class StampCardStampCommandHandler(
 {
     public async Task<Result<StampCardStampResponse>> Handle(StampCardStampCommand message, CancellationToken cancellationToken)
     {
-        var model = await modelLoader.LoadModelAsync(
-            message.Team, message.Season);
+        var model = await modelLoader.LoadModelAsync(message.Season, message.Team);
         var stampResult = await model.Stamp(message.StampCardId, contextAccessor.HttpContext?.User.Identity?.Name ?? "dbo", message.Reason);
         var changes = changeTracker.GetChanges().ToList();
         if (stampResult.IsFailed)
@@ -29,8 +28,8 @@ public class StampCardStampCommandHandler(
             return Result.Fail<StampCardStampResponse>("Stempelkarte konnte nicht gestempelt werden!");
         }
         
-        var result = await storage.StoreAsync(message.Team, message.Season, model.ConcurrencyToken, 
-            changes, cancellationToken);
+        var result = await storage.StoreAsync(message.Season, message.Team, 
+            model.ConcurrencyToken, changes, cancellationToken);
 
         return Result.Ok(new StampCardStampResponse(stampResult.Value.Id, (ulong) result.Value));
     }

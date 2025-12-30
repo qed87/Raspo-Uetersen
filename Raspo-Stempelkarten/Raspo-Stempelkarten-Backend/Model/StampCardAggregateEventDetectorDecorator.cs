@@ -6,8 +6,11 @@ using Raspo_Stempelkarten_Backend.Events;
 namespace Raspo_Stempelkarten_Backend.Model;
 
 [UsedImplicitly]
-public class StampCardAggregateEventDetectorDecorator(string team, string season, 
-    IStampCardAggregate inner, IMediator mediator) 
+public class StampCardAggregateEventDetectorDecorator(
+    string season,
+    string team,
+    IStampCardAggregate inner,
+    IMediator mediator) 
     : IStampCardAggregate
 {
     public Task<IEnumerable<StampCard>> GetStampCards()
@@ -15,9 +18,14 @@ public class StampCardAggregateEventDetectorDecorator(string team, string season
         return inner.GetStampCards();
     }
 
-    public async Task<Result<StampCard>> AddStampCard(string recipient, string issuedBy, int minStamps, int maxStamps)
+    public async Task<Result<StampCard>> AddStampCard(
+        string recipient, 
+        string issuedBy, 
+        int minStamps, 
+        int maxStamps, 
+        string[] additionalOwners)
     {
-        var result = await inner.AddStampCard(recipient, issuedBy, minStamps, maxStamps);
+        var result = await inner.AddStampCard(recipient, issuedBy, minStamps, maxStamps, additionalOwners);
         if (result.IsFailed) return result;
         await mediator.Publish(
             new StampCardCreated
@@ -137,6 +145,17 @@ public class StampCardAggregateEventDetectorDecorator(string team, string season
     public Task<IEnumerable<Stamp>> GetStamps(Guid id)
     {
         return inner.GetStamps(id);
+    }
+
+    public Task<Result<StampCard>> Update(
+        Guid id, 
+        string recipient, 
+        string issuer, 
+        int minStamps, 
+        int maxStamps, 
+        string[] owners)
+    {
+        throw new NotImplementedException();
     }
 
     public ulong? ConcurrencyToken => inner.ConcurrencyToken;

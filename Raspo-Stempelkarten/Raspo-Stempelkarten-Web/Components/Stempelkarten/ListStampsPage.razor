@@ -1,0 +1,120 @@
+@page "/stampcards/{Id}/stamps"
+@using System.Web
+@using Raspo.StampCard.Web.Services
+
+@inject StampCardService StampCardClient
+@inject NavigationManager NavigationManager
+<h3>Stempel bearbeiten</h3>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <label>Saison</label>
+            <input class="form-control" value="@(HttpUtility.UrlDecode(Season))" aria-label="Season" disabled/>
+        </div>
+        <div class="col">
+            <label>Team</label>
+            <input class="form-control" value="@(HttpUtility.UrlDecode(Team))" aria-label="Team" disabled/>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <label>Id</label>
+            <input class="form-control" value="@_stampCard?.Id" aria-label="Id" disabled/>
+        </div>
+        <div class="col">
+            <label>Empfänger</label>
+            <input class="form-control" value="@_stampCard?.Recipient" aria-label="Empfänger" disabled/>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <Grid TItem="StampReadDto"
+                  Data="_stamps"
+                  AllowFiltering="true"
+                  AllowPaging="false"
+                  AllowSorting="true"
+                  AllowSelection="false"
+                  Class="table table-hover table-bordered table-striped"
+                  PageSize="5"
+                  Responsive="true"
+                  RowKeySelector="(stamp) => stamp.Id"
+                  SelectionMode="GridSelectionMode.Single">
+                <GridColumns>
+                    <GridColumn TItem="StampReadDto" HeaderText="Id" PropertyName="Id" SortKeySelector="item => item.Id">
+                        @context.Id
+                    </GridColumn>
+                    <GridColumn TItem="StampReadDto" HeaderText="Grund" PropertyName="Reason" SortKeySelector="item => item.Reason">
+                        @context.Reason
+                    </GridColumn>
+                    <GridColumn TItem="StampReadDto" HeaderText="Actions" >
+                        <button @onclick="() => DeleteStamp(context.Id)"><Icon Name="IconName.Trash3" /> Löschen</button>
+                    </GridColumn>
+                </GridColumns>
+            </Grid>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col">
+            <label>Grund</label>
+            <input class="form-control" @bind="_reason" aria-label="Grund"/>
+        </div>
+        <div class="col-2">
+            <label></label>
+            <button class="form-control" @onclick="AddStamp"><Icon Name="IconName.Trash3" /> Hinzufügen</button>
+        </div>
+    </div>
+
+</div>
+
+<div class="mt-3">
+    <button type="button" class="btn-primary col-1" @onclick="NavigateBack"><Icon Name="IconName.ArrowLeft"/> Zurück</button>
+</div>
+
+@code {
+    private StampCardReadDto? _stampCard;
+    private List<StampReadDto>? _stamps = [];
+    private string? _reason;
+
+    [SupplyParameterFromQuery, Parameter]
+    public required string Team { get; set; }
+    
+    [SupplyParameterFromQuery, Parameter]
+    public required string Season { get; set; }
+    
+    [Parameter]
+    public required string Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStamps();
+    }
+
+    private async Task LoadStamps()
+    {
+        _stampCard = await StampCardClient.GetStampCardById(HttpUtility.UrlEncode(Season), HttpUtility.UrlEncode(Team), Guid.Parse(Id));
+        _stamps = await StampCardClient.GetStamps(HttpUtility.UrlEncode(Season), HttpUtility.UrlEncode(Team), Guid.Parse(Id));
+    }
+
+    private async Task DeleteStamp(Guid stampId)
+    {
+        await StampCardClient.DeleteStamp(Season, Team, Guid.Parse(Id), stampId);
+        await LoadStamps();
+        StateHasChanged();
+    }
+
+    private async Task AddStamp()
+    {
+        if (_reason is null) return;
+        await StampCardClient.AddStamp(Season, Team, Guid.Parse(Id), _reason);
+        _reason = null;
+        await LoadStamps();
+        StateHasChanged();
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo(NavigationManager.HistoryEntryState ?? "/");
+    }
+}

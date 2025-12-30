@@ -17,17 +17,17 @@ public class StampCardCreateCommandHandler(
         StampCardCreateCommand message, 
         CancellationToken cancellationToken)
     {
-        var model = await modelLoader.LoadModelAsync(
-            message.Dto.Team, message.Dto.Season);
-        var stempelkarteResult = await model.AddStampCard(
+        var model = await modelLoader.LoadModelAsync(message.Dto.Season, message.Dto.Team);
+        var addStampCardResult = await model.AddStampCard(
             message.Dto.Recipient, 
             contextAccessor.HttpContext?.User.Identity?.Name ?? "dbo",
             message.Dto.MinStamps, 
-            message.Dto.MaxStamps);
+            message.Dto.MaxStamps,
+            message.Dto.Owners);
         var changes = changeTracker.GetChanges().ToList();
-        if (stempelkarteResult.IsFailed)
+        if (addStampCardResult.IsFailed)
         {
-            return Result.Fail("Stempelkarte konnte nicht angelegt werden!");
+            return Result.Fail(addStampCardResult.Errors);
         }
         
         if (!changes.Any())
@@ -35,11 +35,11 @@ public class StampCardCreateCommandHandler(
             return Result.Ok();
         }
 
-        var result = await modelStorage.StoreAsync(message.Dto.Team, message.Dto.Season, 
-            model.ConcurrencyToken, changes, cancellationToken);
+        var result = await modelStorage.StoreAsync(message.Dto.Season, 
+            message.Dto.Team, model.ConcurrencyToken, changes, cancellationToken);
  
         return Result.Ok(new StampCardCreateResponse(
-            stempelkarteResult.Value.Id, 
+            addStampCardResult.Value.Id, 
             (ulong) result.Value));
     }
 }

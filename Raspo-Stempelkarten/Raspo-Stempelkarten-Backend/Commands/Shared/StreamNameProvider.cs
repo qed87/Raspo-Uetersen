@@ -9,8 +9,8 @@ public partial class StreamNameProvider : IStreamNameProvider
     [GeneratedRegex(@"[\s/-]+")]
     private static partial Regex SpecialCharRegex();
     
-    public string GetStreamName(string team, string season)
+    public string GetStreamName(string season, string team)
     {
-        return $"StampCard-{SpecialCharRegex().Replace(team, "_")}-{SpecialCharRegex().Replace(season, "_")}";
+        return $"StampCard-{SpecialCharRegex().Replace(season, "_")}-{SpecialCharRegex().Replace(team, "_")}";
     }
 }

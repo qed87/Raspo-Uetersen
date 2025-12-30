@@ -1,12 +1,22 @@
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using FluentResults;
 using Raspo_Stempelkarten_Backend.Model.Data;
 
 namespace Raspo_Stempelkarten_Backend.Model;
 
-public class StampCard
+public class StampCard : INotifyPropertyChanged
 {
     private readonly StampCardData _data;
-    private readonly List<Stamp> _stamps = [];
+    public ObservableCollection<Stamp> Stamps { get; } = [];
+    
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
     
     public StampCard(
         Guid id,
@@ -19,7 +29,7 @@ public class StampCard
         new StampCardData
         {
             Id = id, 
-            IssuedBy = issuedBy,
+            CreatedBy = issuedBy,
             Recipient = recipient,
             MaxStamps = maxStamps,
             MinStamps = minStamps,
@@ -33,10 +43,16 @@ public class StampCard
         IEnumerable<StampData> stampDataList)
     {
         _data = stampCardData;
+        _data.PropertyChanged += DataOnPropertyChanged;
         foreach (var stampData in stampDataList)
         {
-            _stamps.Add(new Stamp(stampData));
+            Stamps.Add(new Stamp(stampData));
         }
+    }
+    
+    private void DataOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        OnPropertyChanged(e.PropertyName);
     }
 
     public Guid Id => _data.Id; 
@@ -44,51 +60,55 @@ public class StampCard
     public string Recipient 
     {
         get => _data.Recipient;
-        set
-        {
-            if (value == _data.Recipient) return;
-            _data.Recipient = value;
-        }
+        set => _data.Recipient = value;
     }
 
-    public string IssuedBy => _data.IssuedBy;
+    public string IssuedBy => _data.CreatedBy;
 
     public int MaxStamps
     {
         get => _data.MaxStamps;
-        set
-        {
-            if (value == _data.MaxStamps) return;
-            _data.MaxStamps = value;
-        }
+        set => _data.MaxStamps = value;
     }
 
     public int MinStamps
     {
         get => _data.MinStamps;
-        set
-        {
-            if (value == _data.MinStamps) return;
-            _data.MinStamps = value;
-        }
+        set => _data.MinStamps = value;
     }
 
-    public Result<(IEnumerable<string> AddedOwners, IEnumerable<string> RemovedOwners)> SetOwners(string issuedBy, string[] owners)
+    public Result<(IEnumerable<string> AddedOwners, IEnumerable<string> RemovedOwners)> SetOwners(
+        string issuedBy, 
+        string[] owners)
     {
-        if (_data.Owners.Contains(issuedBy)) return Result.Fail($"Besitzer '{issuedBy}' ist bereits vorhanden!");
-        if (issuedBy != IssuedBy && !owners.Contains(IssuedBy)) 
-            return Result.Fail($"Nur der Ersteller '{IssuedBy}' kann sich als Besitzer entfernen!");
-        var removedOwners = _data.Owners.Except(owners);
-        var addedOwners = owners.Except(_data.Owners);
-        return Result.Ok((addedOwners, removedOwners));
+        var existingOwners = new HashSet<string>(_data.Owners);
+        var newOwners = new HashSet<string>(owners) { issuedBy };
+        var removedOwners = existingOwners.Except(owners).ToList();
+        var addedOwners = newOwners.Except(existingOwners).ToList();
+        if (issuedBy != IssuedBy && removedOwners.Contains(IssuedBy))
+            return Result.Fail($"Nur der Eigentümer'{IssuedBy}' kann sich als Besitzer entfernen!");
+        foreach (var removedOwner in removedOwners)
+            _data.Owners.Remove(removedOwner);
+        foreach (var addedOwner in addedOwners)
+            _data.Owners.Add(addedOwner);
+        return Result.Ok<(IEnumerable<string>, IEnumerable<string>)>((addedOwners, removedOwners));
+    }
+    
+    
+    public void Update(string recipient, string issuer, int minStamps, int maxStamps, string[] owners)
+    {
+        Recipient = recipient;
+        //IssuedBy = issuer;
+        MaxStamps = maxStamps;
+        MinStamps = minStamps;
     }
 
     public Result<Stamp> EraseStamp(Guid id, string issuedBy)
     {
-        var stamp = _stamps.FirstOrDefault(stamp => stamp.Id == id);
+        var stamp = Stamps.FirstOrDefault(stamp => stamp.Id == id);
         if (stamp is null) return Result.Fail($"Stempel mit Id='{id}' konnte nicht gefunden werden!");
         if (!_data.Owners.Contains(issuedBy)) return Result.Fail("Nur Besitzer können Stempel entfernen!");
-        _stamps.Remove(stamp);
+        Stamps.Remove(stamp);
         return Result.Ok(stamp);
     }
 
@@ -102,10 +122,10 @@ public class StampCard
         }
 
         var stamp = new Stamp(Guid.NewGuid(), issuedBy, reason);
-        _stamps.Add(stamp);
+        Stamps.Add(stamp);
 
         return Result.Ok(stamp);
     }
 
-    public IEnumerable<Stamp> GetStamps() => _stamps.ToList();
+    public IEnumerable<Stamp> GetStamps() => Stamps.ToList();
 }

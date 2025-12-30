@@ -88,8 +88,3 @@ public class StampCardChangeHandler
         return ValueTask.CompletedTask;
     }
 }
-
-public interface IStampCardChangeTracker
-{
-    IEnumerable<EventData> GetChanges();
-}

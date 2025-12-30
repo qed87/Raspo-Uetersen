@@ -6,13 +6,13 @@ namespace Raspo_Stempelkarten_Backend.Model;
 public sealed class StampCardAggregate : IStampCardAggregate
 {
     public StampCardAggregate(
-        string team, 
-        string season, 
+        string season,
+        string team,
         StampCardLoadContext loadContext)
     {
-        Team = team;
         Season = season;
-        foreach (var stampCardData in loadContext.StampCards ?? Enumerable.Empty<StampCardData>())
+        Team = team;
+        foreach (var stampCardData in loadContext.StampCards)
         {
             var stampData = loadContext.Stamps.Where(data => data.StampCardId == stampCardData.Id).ToList();
             _stampCards.Add(stampCardData.Id, new StampCard(stampCardData, stampData));
@@ -47,6 +47,22 @@ public sealed class StampCardAggregate : IStampCardAggregate
         return Task.FromResult(stampCard.GetStamps());
     }
 
+    public Task<Result<StampCard>> Update(
+        Guid id, 
+        string recipient, 
+        string issuer, 
+        int minStamps, 
+        int maxStamps, 
+        string[] owners)
+    {
+        var stampCard = _stampCards.Values.SingleOrDefault(stampCard => stampCard.Id == id);
+        if (stampCard is null) 
+            return Task.FromResult(
+                Result.Fail<StampCard>($"Stempelkarte '{id}' konnte nicht gefunden!"));
+        stampCard.Update(recipient, issuer, minStamps, maxStamps, owners);
+        return Task.FromResult(Result.Ok(stampCard));
+    }
+
     public Task<IEnumerable<StampCard>> GetStampCards() 
         => Task.FromResult<IEnumerable<StampCard>>(_stampCards.Values.ToList());
    
@@ -54,7 +70,8 @@ public sealed class StampCardAggregate : IStampCardAggregate
         string recipient, 
         string issuedBy,
         int minStamps, 
-        int maxStamps)
+        int maxStamps,
+        string[] additionalOwners)
     {
         if (_stampCards.Values.Any(stempelkarte => stempelkarte.Recipient == recipient))
         {
@@ -69,6 +86,7 @@ public sealed class StampCardAggregate : IStampCardAggregate
             minStamps);
         
         _stampCards.Add(stempelkarte.Id, stempelkarte);
+        SetStampCardOwners(stempelkarte.Id, additionalOwners, issuedBy);
         return Task.FromResult(Result.Ok(stempelkarte));
     }
 
@@ -92,7 +110,10 @@ public sealed class StampCardAggregate : IStampCardAggregate
         return Task.FromResult(Result.Ok(stempelkarte));
     }
 
-    public Task<Result<(IEnumerable<string> AddedOwners, IEnumerable<string> RemovedOwners)>> SetStampCardOwners(Guid stampCardId, string[] owners, string issuedBy)
+    public Task<Result<(IEnumerable<string> AddedOwners, IEnumerable<string> RemovedOwners)>> SetStampCardOwners(
+        Guid stampCardId, 
+        string[] owners, 
+        string issuedBy)
     {
         if (!_stampCards.TryGetValue(stampCardId, out var stempelkarte))
         {

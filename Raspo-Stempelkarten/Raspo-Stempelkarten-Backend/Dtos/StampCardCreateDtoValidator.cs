@@ -8,7 +8,7 @@ public class StampCardCreateDtoValidator : AbstractValidator<StampCardCreateDto>
 {
     public StampCardCreateDtoValidator()
     {
-        RuleFor(dto => dto.Team).NotNull().NotEmpty().Matches(@".+ \d{4}");
+        RuleFor(dto => dto.Team).NotNull().NotEmpty();
         RuleFor(dto => dto.Season).NotNull().NotEmpty().Matches(@"\d{4}/\d{2}");
         RuleFor(dto => dto.Recipient).NotNull().NotEmpty();
         RuleFor(dto => dto.MinStamps).GreaterThan(0).LessThanOrEqualTo(dto => dto.MaxStamps);

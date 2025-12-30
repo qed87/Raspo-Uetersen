@@ -61,31 +61,31 @@ var kurrentDbProjection = app.Services.GetRequiredService<KurrentDBProjectionMan
 await kurrentDbProjection.EnableAsync("$by_category");
 
 var projections = kurrentDbProjection.ListContinuousAsync();
-if (!await projections.AnyAsync(projection => projection.Name == "StampCard-Teams-and-Seasons"))
+if (!await projections.AnyAsync(projection => projection.Name == "StampCard-Seasons-and-Teams"))
 {
-    await kurrentDbProjection.CreateContinuousAsync("StampCard-Teams-and-Seasons", """
+    await kurrentDbProjection.CreateContinuousAsync("StampCard-Seasons-and-Teams", """
         fromCategory('StampCard')
         .when({
             $init: function () {
                 return {
-                    teams: {}
+                    seasons: {}
                 }
             },
             StampCardCreated: function (state, event) {
                 if (!event) return state;
-                let teams = Object.keys(state.teams);
-                let teamSet = new Set(teams);
-                teamSet.add(event.data.Team);
-                let newState = { teams: { } } ;
-                for (const team of teamSet) {
-                    let seasonResult = state.teams[team];
-                    if (!seasonResult) {
-                        seasonResult = { seasons: [] };
+                let seasons = Object.keys(state.seasons);
+                let seasonSet = new Set(seasons);
+                seasonSet.add(event.data.Season);
+                let newState = { seasons: { } } ;
+                for (const season of seasonSet) {
+                    let teamResult = state.seasons[season];
+                    if (!teamResult) {
+                        teamResult = { teams: [] };
                     }
-                    let seasons = new Set(seasonResult.seasons);
-                    seasons.add(event.data.Season);
-                    newState.teams[team] = {};
-                    newState.teams[team].seasons = [...seasons];
+                    let teamSet = new Set(teamResult.teams);
+                    teamSet.add(event.data.Team);
+                    newState.seasons[season] = {};
+                    newState.seasons[season].teams = [...teamSet];
                 }
                 return newState;
             }

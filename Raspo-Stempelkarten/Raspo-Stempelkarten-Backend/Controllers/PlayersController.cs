@@ -2,7 +2,10 @@ using System.Web;
 using DispatchR;
 using Microsoft.AspNetCore.Mvc;
 using Raspo_Stempelkarten_Backend.Commands.AddPlayer;
+using Raspo_Stempelkarten_Backend.Commands.DeletePlayer;
 using Raspo_Stempelkarten_Backend.Dtos;
+using Raspo_Stempelkarten_Backend.Queries.GetPlayer;
+using Raspo_Stempelkarten_Backend.Queries.ListPlayers;
 
 namespace Raspo_Stempelkarten_Backend.Controllers;
 
@@ -27,14 +30,36 @@ public class PlayersController(IMediator mediator) : ControllerBase
     }
     
     [HttpGet]
-    public Task<IActionResult> Get(Guid id, string team)
+    public async Task<IActionResult> List(string team)
     {
-        throw new NotImplementedException();
+        team = HttpUtility.UrlDecode(team);
+        var responseStream = mediator.CreateStream(
+            new ListPlayersQuery(team), 
+            CancellationToken.None);
+        var players = await responseStream.ToListAsync();
+        return Ok(players);
+    }
+    
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> Get(Guid id, string team)
+    {
+        team = HttpUtility.UrlDecode(team);
+        var response = await mediator.Send(
+            new GetPlayersQuery(team) { Id = id }, 
+            CancellationToken.None);
+        if (response is null) return NotFound();
+        return Ok(response);
     }
     
     [HttpDelete("{id:guid}")]
-    public Task<IActionResult> Delete(Guid id, string team)
+    public async Task<IActionResult> Delete(Guid id, string team)
     {
-        throw new NotImplementedException();
+        team = HttpUtility.UrlDecode(team);
+        var response = await mediator.Send(
+            new DeletePlayerRequest(id, team), 
+            CancellationToken.None);
+        return response.IsFailed 
+            ? Problem(string.Join(Environment.NewLine, response.Errors.Select(e => e.Message))) 
+            : Ok(response.Value);
     }
 }

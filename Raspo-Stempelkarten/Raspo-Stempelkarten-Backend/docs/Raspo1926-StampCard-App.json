@@ -4,6 +4,41 @@
   "items": [
     {
       "type": "http",
+      "name": "Add Player",
+      "filename": "Add Player.bru",
+      "seq": 10,
+      "settings": {
+        "encodeUrl": true,
+        "timeout": 0
+      },
+      "tags": [],
+      "examples": [],
+      "request": {
+        "url": "http://{{uri}}/api/teams/{{team}}/players",
+        "method": "POST",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "json",
+          "json": "{\n  \"FirstName\": \"Julius Richard\",\n  \"Surname\": \"Kirchner\",\n  \"Birthdate\": \"2020-09-07\"\n}",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {
+          "res": "bru.setEnvVar(\"playerId\", res.getBody().id);"
+        },
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
+    },
+    {
+      "type": "http",
       "name": "Create Stamp Card",
       "filename": "Create Stamp Card.bru",
       "seq": 2,
@@ -20,7 +55,7 @@
         "params": [],
         "body": {
           "mode": "json",
-          "json": "{\n  \"AccountingYear\": 2018,\n  \"IssuedTo\": \"96fbe593-79ba-498b-8b7f-78f39ebc4718\"\n}",
+          "json": "{\n  \"AccountingYear\": 2025,\n  \"IssuedTo\": \"a96f18f1-fb1a-4340-83cb-23fd0fa2e2d1\"\n}",
           "formUrlEncoded": [],
           "multipartForm": [],
           "file": []
@@ -28,6 +63,284 @@
         "script": {
           "res": "bru.setEnvVar(\"stampCardId\", res.getBody().id);"
         },
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "Create Stamp Cards for Accounting Year",
+      "filename": "Create Stamp Cards for Accounting Year.bru",
+      "seq": 14,
+      "settings": {
+        "encodeUrl": true,
+        "timeout": 0
+      },
+      "tags": [],
+      "examples": [],
+      "request": {
+        "url": "http://{{uri}}/api/teams/{{team}}/accounting-year/{{accountingYear}}/create",
+        "method": "POST",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "none",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "Create Team",
+      "filename": "Create Team.bru",
+      "seq": 16,
+      "settings": {
+        "encodeUrl": true,
+        "timeout": 0
+      },
+      "tags": [],
+      "examples": [],
+      "request": {
+        "url": "http://{{uri}}/api/teams?club=raspo1926&birthCohort=2017",
+        "method": "POST",
+        "headers": [],
+        "params": [
+          {
+            "name": "club",
+            "value": "raspo1926",
+            "type": "query",
+            "enabled": true
+          },
+          {
+            "name": "birthCohort",
+            "value": "2017",
+            "type": "query",
+            "enabled": true
+          }
+        ],
+        "body": {
+          "mode": "none",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {
+          "res": "bru.setEnvVar(\"team\", res.getBody().id);"
+        },
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "Delete Player",
+      "filename": "Delete Player.bru",
+      "seq": 13,
+      "settings": {
+        "encodeUrl": true,
+        "timeout": 0
+      },
+      "tags": [],
+      "examples": [],
+      "request": {
+        "url": "http://{{uri}}/api/teams/{{team}}/players/{{playerId}}",
+        "method": "DELETE",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "none",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "Delete Stamp Card",
+      "filename": "Delete Stamp Card.bru",
+      "seq": 9,
+      "settings": {
+        "encodeUrl": true,
+        "timeout": 0
+      },
+      "tags": [],
+      "examples": [],
+      "request": {
+        "url": "http://{{uri}}/api/teams/{{team}}/stampcard/{{stampCardId}}",
+        "method": "DELETE",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "none",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "Delete Team",
+      "filename": "Delete Team.bru",
+      "seq": 17,
+      "settings": {
+        "encodeUrl": true,
+        "timeout": 0
+      },
+      "tags": [],
+      "examples": [],
+      "request": {
+        "url": "http://{{uri}}/api/teams/{{team}}",
+        "method": "DELETE",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "none",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "Erase Stamp",
+      "filename": "Erase Stamp.bru",
+      "seq": 8,
+      "settings": {
+        "encodeUrl": true,
+        "timeout": 0
+      },
+      "tags": [],
+      "examples": [],
+      "request": {
+        "url": "http://{{uri}}/api/teams/{{team}}/stampcard/{{stampCardId}}/stamp/{{stampId}}",
+        "method": "DELETE",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "none",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "Get Player",
+      "filename": "Get Player.bru",
+      "seq": 12,
+      "settings": {
+        "encodeUrl": true,
+        "timeout": 0
+      },
+      "tags": [],
+      "examples": [],
+      "request": {
+        "url": "http://{{uri}}/api/teams/{{team}}/players/{{playerId}}",
+        "method": "GET",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "none",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "Get Stamp Card with details",
+      "filename": "Get Stamp Card with details.bru",
+      "seq": 4,
+      "settings": {
+        "encodeUrl": true,
+        "timeout": 0
+      },
+      "tags": [],
+      "examples": [],
+      "request": {
+        "url": "http://{{uri}}/api/teams/{{team}}/stampcard/{{stampCardId}}?includeDetails=true",
+        "method": "GET",
+        "headers": [],
+        "params": [
+          {
+            "name": "includeDetails",
+            "value": "true",
+            "type": "query",
+            "enabled": true
+          }
+        ],
+        "body": {
+          "mode": "none",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
         "vars": {},
         "assertions": [],
         "tests": "",
@@ -71,9 +384,9 @@
     },
     {
       "type": "http",
-      "name": "Delete Stamp Card",
-      "filename": "Delete Stamp Card.bru",
-      "seq": 6,
+      "name": "Get unfulfilled stamp cards per accounting year",
+      "filename": "Get unfulfilled stamp cards per accounting year.bru",
+      "seq": 15,
       "settings": {
         "encodeUrl": true,
         "timeout": 0
@@ -81,45 +394,13 @@
       "tags": [],
       "examples": [],
       "request": {
-        "url": "http://{{uri}}/api/teams/{{team}}/stampcard/{{stampCardId}}",
-        "method": "DELETE",
-        "headers": [],
-        "params": [],
-        "body": {
-          "mode": "none",
-          "formUrlEncoded": [],
-          "multipartForm": [],
-          "file": []
-        },
-        "script": {},
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "inherit"
-        }
-      }
-    },
-    {
-      "type": "http",
-      "name": "Get Stamp Card with details",
-      "filename": "Get Stamp Card with details.bru",
-      "seq": 4,
-      "settings": {
-        "encodeUrl": true,
-        "timeout": 0
-      },
-      "tags": [],
-      "examples": [],
-      "request": {
-        "url": "http://{{uri}}/api/teams/{{team}}/stampcard/{{stampCardId}}?detailed=detailed",
+        "url": "http://{{uri}}/teams/{{team}}/accounting-year/{{accountingYear}}?minRequiredStamps=12",
         "method": "GET",
         "headers": [],
         "params": [
           {
-            "name": "detailed",
-            "value": "detailed",
+            "name": "minRequiredStamps",
+            "value": "12",
             "type": "query",
             "enabled": true
           }
@@ -142,76 +423,9 @@
     },
     {
       "type": "http",
-      "name": "Stamp a Stamp Card",
-      "filename": "Stamp a Stamp Card.bru",
-      "seq": 7,
-      "settings": {
-        "encodeUrl": true,
-        "timeout": 0
-      },
-      "tags": [],
-      "examples": [],
-      "request": {
-        "url": "http://{{uri}}/api/teams/{{team}}/stampcard/{{stampCardId}}/stamp",
-        "method": "POST",
-        "headers": [],
-        "params": [],
-        "body": {
-          "mode": "json",
-          "json": "{\n  \"Reason\": \"lorem ipsum\"\n}",
-          "formUrlEncoded": [],
-          "multipartForm": [],
-          "file": []
-        },
-        "script": {
-          "res": "bru.setEnvVar(\"stampId\", res.getBody().id);"
-        },
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "inherit"
-        }
-      }
-    },
-    {
-      "type": "http",
-      "name": "Erase Stamp",
-      "filename": "Erase Stamp.bru",
-      "seq": 9,
-      "settings": {
-        "encodeUrl": true,
-        "timeout": 0
-      },
-      "tags": [],
-      "examples": [],
-      "request": {
-        "url": "http://{{uri}}/api/teams/{{team}}/stampcard/{{stampCardId}}/stamp/{{stampId}}",
-        "method": "DELETE",
-        "headers": [],
-        "params": [],
-        "body": {
-          "mode": "none",
-          "formUrlEncoded": [],
-          "multipartForm": [],
-          "file": []
-        },
-        "script": {},
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "inherit"
-        }
-      }
-    },
-    {
-      "type": "http",
-      "name": "Add Player",
-      "filename": "Add Player.bru",
-      "seq": 10,
+      "name": "List Players",
+      "filename": "List Players.bru",
+      "seq": 11,
       "settings": {
         "encodeUrl": true,
         "timeout": 0
@@ -220,74 +434,7 @@
       "examples": [],
       "request": {
         "url": "http://{{uri}}/api/teams/{{team}}/players",
-        "method": "POST",
-        "headers": [],
-        "params": [],
-        "body": {
-          "mode": "json",
-          "json": "{\n  \"FirstName\": \"Leopold\",\n  \"Surname\": \"Kirchner\",\n  \"Birthdate\": \"2017-08-13\"\n}",
-          "formUrlEncoded": [],
-          "multipartForm": [],
-          "file": []
-        },
-        "script": {
-          "res": "bru.setEnvVar(\"playerId\", res.getBody().id);"
-        },
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "inherit"
-        }
-      }
-    },
-    {
-      "type": "http",
-      "name": "Delete Player",
-      "filename": "Delete Player.bru",
-      "seq": 12,
-      "settings": {
-        "encodeUrl": true,
-        "timeout": 0
-      },
-      "tags": [],
-      "examples": [],
-      "request": {
-        "url": "http://{{uri}}/api/teams/{{team}}/players/{{playerId}}",
-        "method": "DELETE",
-        "headers": [],
-        "params": [],
-        "body": {
-          "mode": "none",
-          "formUrlEncoded": [],
-          "multipartForm": [],
-          "file": []
-        },
-        "script": {},
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "inherit"
-        }
-      }
-    },
-    {
-      "type": "http",
-      "name": "Create Stamp Cards for Accounting Year",
-      "filename": "Create Stamp Cards for Accounting Year.bru",
-      "seq": 13,
-      "settings": {
-        "encodeUrl": true,
-        "timeout": 0
-      },
-      "tags": [],
-      "examples": [],
-      "request": {
-        "url": "http://{{uri}}/api/teams/{{team}}/accounting-year/{{accountingYear}}/create",
-        "method": "POST",
+        "method": "GET",
         "headers": [],
         "params": [],
         "body": {
@@ -342,7 +489,7 @@
       "type": "http",
       "name": "List Stamps of Stamp Card",
       "filename": "List Stamps of Stamp Card.bru",
-      "seq": 8,
+      "seq": 7,
       "settings": {
         "encodeUrl": true,
         "timeout": 0
@@ -372,9 +519,9 @@
     },
     {
       "type": "http",
-      "name": "List Players",
-      "filename": "List Players.bru",
-      "seq": 11,
+      "name": "Stamp a Stamp Card",
+      "filename": "Stamp a Stamp Card.bru",
+      "seq": 6,
       "settings": {
         "encodeUrl": true,
         "timeout": 0
@@ -382,56 +529,27 @@
       "tags": [],
       "examples": [],
       "request": {
-        "url": "http://{{uri}}/api/teams/{{team}}/players",
-        "method": "GET",
+        "url": "http://{{uri}}/api/teams/{{team}}/stampcard/{{stampCardId}}/stamp",
+        "method": "POST",
         "headers": [],
         "params": [],
         "body": {
-          "mode": "none",
+          "mode": "multipartForm",
+          "json": "{\n  \"Reason\": \"lorem ipsum\"\n}",
           "formUrlEncoded": [],
-          "multipartForm": [],
+          "multipartForm": [
+            {
+              "type": "text",
+              "name": "reason",
+              "value": "Lorem Ipsum",
+              "enabled": true
+            }
+          ],
           "file": []
         },
-        "script": {},
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "inherit"
-        }
-      }
-    },
-    {
-      "type": "http",
-      "name": "Get unfulfilled stamp cards per accounting year",
-      "filename": "Get unfulfilled stamp cards per accounting year.bru",
-      "seq": 13,
-      "settings": {
-        "encodeUrl": true,
-        "timeout": 0
-      },
-      "tags": [],
-      "examples": [],
-      "request": {
-        "url": "http://{{uri}}/teams/{{team}}/accounting-year/{{accountingYear}}?minRequiredStamps=12",
-        "method": "GET",
-        "headers": [],
-        "params": [
-          {
-            "name": "minRequiredStamps",
-            "value": "12",
-            "type": "query",
-            "enabled": true
-          }
-        ],
-        "body": {
-          "mode": "none",
-          "formUrlEncoded": [],
-          "multipartForm": [],
-          "file": []
+        "script": {
+          "res": "bru.setEnvVar(\"stampId\", res.getBody().id);"
         },
-        "script": {},
         "vars": {},
         "assertions": [],
         "tests": "",
@@ -442,7 +560,7 @@
       }
     }
   ],
-  "activeEnvironmentUid": "XNFdYuQJfqHWFh9yUAgUz",
+  "activeEnvironmentUid": "rKlVGWV6bz6adZpVJCSrh",
   "environments": [
     {
       "variables": [
@@ -462,21 +580,21 @@
         },
         {
           "name": "stampCardId",
-          "value": "",
+          "value": "56844b01-7457-4c3d-9657-1338ca609873",
           "enabled": true,
           "secret": false,
           "type": "text"
         },
         {
           "name": "stampId",
-          "value": "",
+          "value": "00000000-0000-0000-0000-000000000000",
           "enabled": true,
           "secret": false,
           "type": "text"
         },
         {
           "name": "playerId",
-          "value": "",
+          "value": "faa35473-7e93-41a5-921d-2f236ce69b",
           "enabled": true,
           "secret": false,
           "type": "text"
@@ -500,7 +618,7 @@
       "node_modules",
       ".git"
     ],
-    "size": 0,
-    "filesCount": 0
+    "size": 0.0039997100830078125,
+    "filesCount": 17
   }
 }

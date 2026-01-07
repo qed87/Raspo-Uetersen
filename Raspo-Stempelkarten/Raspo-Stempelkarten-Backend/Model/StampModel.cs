@@ -8,6 +8,8 @@ public class StampModel : IStampModel
 
     public List<Player> Players { get; } = [];
     
+    public List<StampCard> Cards { get; } = [];
+    
     public Result<Guid> AddPlayer(string firstName, string surname, DateOnly birthdate)
     {
         if(string.IsNullOrEmpty(firstName)) return Result.Fail("First name is empty");
@@ -37,5 +39,51 @@ public class StampModel : IStampModel
         if (playerFound is null) return Result.Fail("Player not found");
         playerFound.Deleted = true;
         return Result.Ok(playerFound.Id);
+    }
+
+    public Result<StampCard> AddStampCard(Guid issuedTo, short accountingYear)
+    {
+        var playerResponse = GetActivePlayerById(issuedTo);
+        if(!playerResponse.IsSuccess) return playerResponse.ToResult();
+        var newStampCard = new StampCard(playerResponse.Value.Id, accountingYear);
+        var cardFound = Cards.SingleOrDefault(stampCard => stampCard.Equals(newStampCard));
+        if (cardFound is not null) return Result.Fail("Card already exist");
+        Cards.Add(newStampCard);
+        return Result.Ok(newStampCard);
+    }
+
+    public Result<Stamp> AddStamp(Guid stampCardId, string reason)
+    {
+        var stampCard = Cards.SingleOrDefault(card => card.Id == stampCardId);
+        if(stampCard is null) return Result.Fail("StampCard not found");
+        var newStamp = new Stamp(reason);
+        stampCard.Stamps.Add(newStamp);
+        return Result.Ok(newStamp);
+    }
+    
+    public Result<Stamp> EraseStamp(Guid stampCardId, Guid stampId)
+    {
+        var stampCard = Cards.SingleOrDefault(card => card.Id == stampCardId);
+        if(stampCard is null) return Result.Fail("StampCard not found");
+        var stamp = stampCard.Stamps.SingleOrDefault(stamp => stamp.Id == stampId);
+        if(stamp is null) return Result.Fail("Stamp not found");
+        stampCard.Stamps.Remove(stamp);
+        return Result.Ok(stamp);
+    }
+
+    public Result<Guid> DeleteStampCard(Guid id)
+    {
+        var stampCard = Cards.SingleOrDefault(card => card.Id == id);
+        if(stampCard is null) return Result.Fail("StampCard not found");
+        Cards.Remove(stampCard);
+        return Result.Ok(stampCard.Id);
+    }
+
+    private Result<Player> GetActivePlayerById(Guid playerId)
+    {
+        var playerFound = Players.SingleOrDefault(player => player.Id.Equals(playerId) && !player.Deleted);
+        return playerFound is null 
+            ? Result.Fail($"No player found with Id = {playerId}") 
+            : Result.Ok(playerFound);
     }
 }

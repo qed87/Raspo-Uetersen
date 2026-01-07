@@ -2,4 +2,7 @@ using DispatchR.Abstractions.Notification;
 
 namespace Raspo_Stempelkarten_Backend.Events;
 
-public record TeamAdded(string Club, short BirthCohort) : INotification;
+public class StampErased : INotification
+{
+    
+}

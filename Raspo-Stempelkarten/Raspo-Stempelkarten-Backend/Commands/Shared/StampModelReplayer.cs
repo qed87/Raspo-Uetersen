@@ -53,6 +53,51 @@ public class StampModelReplayer(string streamId) : IStampReplayer
             var playerToDelete = _stampModel.Players.Single(player => playerDeletedEvent.Id.Equals(player.Id));
             playerToDelete.Deleted = true;
         }
+        
+        if (resolvedEvent.Event.EventType == nameof(StampCardAdded))
+        {
+            var stampCardAddedEvent = JsonSerializer.Deserialize<StampCardAdded>(
+                resolvedEvent.Event.Data.ToArray(), 
+                JsonSerializerOptions.Default);
+            if (stampCardAddedEvent is null) throw new ModelLoadException();
+            _stampModel.Cards.Add(new StampCard(stampCardAddedEvent.Id, stampCardAddedEvent.IssuedTo, stampCardAddedEvent.IssuedAt, stampCardAddedEvent.AccountingYear));
+        }
+        
+        if (resolvedEvent.Event.EventType == nameof(StampCardRemoved))
+        {
+            var stampCardRemovedEvent = JsonSerializer.Deserialize<StampCardRemoved>(
+                resolvedEvent.Event.Data.ToArray(), 
+                JsonSerializerOptions.Default);
+            if (stampCardRemovedEvent is null) throw new ModelLoadException();
+            var stampCard = _stampModel.Cards.SingleOrDefault(card => card.Id.Equals(stampCardRemovedEvent.Id));
+            if(stampCard is null) throw new ModelLoadException();
+            _stampModel.Cards.Remove(stampCard);
+        }
+        
+        if (resolvedEvent.Event.EventType == nameof(StampAdded))
+        {
+            var stampAdded = JsonSerializer.Deserialize<StampAdded>(
+                resolvedEvent.Event.Data.ToArray(), 
+                JsonSerializerOptions.Default);
+            if (stampAdded is null) throw new ModelLoadException();
+            var stampCard = _stampModel.Cards.SingleOrDefault(card => card.Id.Equals(stampAdded.StampCardId));
+            if(stampCard is null) throw new ModelLoadException();
+            stampCard.Stamps.Add(
+                new Stamp(stampAdded.Id, stampAdded.Reason, stampAdded.IssuedBy, stampAdded.IssuedAt));
+        }
+        
+        if (resolvedEvent.Event.EventType == nameof(EraseStamp))
+        {
+            var eraseStamp = JsonSerializer.Deserialize<EraseStamp.EraseStamp>(
+                resolvedEvent.Event.Data.ToArray(), 
+                JsonSerializerOptions.Default);
+            if (eraseStamp is null) throw new ModelLoadException();
+            var stampCard = _stampModel.Cards.SingleOrDefault(card => card.Id.Equals(eraseStamp.StampCardId));
+            if(stampCard is null) throw new ModelLoadException();
+            var stamp = stampCard.Stamps.SingleOrDefault(stamp => stamp.Id.Equals(eraseStamp.StampId));
+            if(stamp is null) throw new ModelLoadException();
+            stampCard.Stamps.Remove(stamp);
+        }
     }
 
     public StampModel GetModel()

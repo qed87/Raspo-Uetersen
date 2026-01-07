@@ -67,6 +67,72 @@ public class StampModelChangeInterceptor(IMediator mediator) : IInterceptor
                 if (resultCode.IsSuccess)
                 {
                     await mediator.Publish(new PlayerDeleted(resultCode.Value), 
+                    cancellationToken: CancellationToken.None);
+                }
+            }
+            else if (invocation.Method.Name == nameof(StampModel.AddStampCard))
+            {
+                invocation.Proceed();
+                var stampCardResult = (Result<StampCard>) invocation.ReturnValue!;
+                if (stampCardResult.IsSuccess)
+                {
+                    await mediator.Publish(
+                        new StampCardAdded 
+                        {
+                            Id = stampCardResult.Value.Id,
+                            AccountingYear = stampCardResult.Value.AccountingYear,
+                            IssuedAt = stampCardResult.Value.IssuedAt,
+                            IssuedTo = stampCardResult.Value.IssuedTo
+                        },
+                        cancellationToken: CancellationToken.None);
+                }
+            }
+            else if (invocation.Method.Name == nameof(StampModel.AddStamp))
+            {
+                var stampCardId = (Guid) invocation.Arguments[0]!; 
+                invocation.Proceed();
+                var stampResult = (Result<Stamp>) invocation.ReturnValue!;
+                if (stampResult.IsSuccess)
+                {
+                    await mediator.Publish(
+                        new StampAdded 
+                        {
+                            Id = stampResult.Value.Id,
+                            StampCardId = stampCardId,
+                            Reason = stampResult.Value.Reason,
+                            IssuedBy = stampResult.Value.IssuedBy,
+                            IssuedAt = stampResult.Value.IssuedAt
+                        },
+                        cancellationToken: CancellationToken.None);
+                }
+            }
+            else if (invocation.Method.Name == nameof(StampModel.EraseStamp))
+            {
+                var stampCardId = (Guid) invocation.Arguments[0]!;
+                invocation.Proceed();
+                var stampResult = (Result<Stamp>) invocation.ReturnValue!;
+                if (stampResult.IsSuccess)
+                {
+                    await mediator.Publish(
+                        new StampCardRemoved 
+                        {
+                            Id = stampResult.Value.Id,
+                            StampCardId = stampCardId
+                        },
+                        cancellationToken: CancellationToken.None);
+                }
+            }
+            else if (invocation.Method.Name == nameof(StampModel.DeleteStampCard))
+            {
+                invocation.Proceed();
+                var stampCardResult = (Result<Guid>) invocation.ReturnValue!;
+                if (stampCardResult.IsSuccess)
+                {
+                    await mediator.Publish(
+                        new StampCardRemoved 
+                        {
+                            Id = stampCardResult.Value
+                        },
                         cancellationToken: CancellationToken.None);
                 }
             }

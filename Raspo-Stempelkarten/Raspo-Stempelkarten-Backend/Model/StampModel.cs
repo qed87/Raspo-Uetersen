@@ -71,6 +71,50 @@ public class StampModel : IStampModel
         return Result.Ok(stamp);
     }
 
+    public Result<List<StampCard>> CreateNewAccountingYear(int accountingYear)
+    {
+        var stampCards = new List<StampCard>();
+        foreach (var player in Players)
+        {
+            var result = AddStampCard(player.Id, (short)accountingYear);
+            if (result.IsSuccess)
+            {
+                stampCards.Add(result.Value);
+            }
+        }
+
+        return Result.Ok(stampCards);
+    }
+
+    /// <summary>
+    /// Returns all incomplete stamp cards. A stamp card is expected to be incomplete when the actual number of stamps
+    /// is less than the required number of stamps. 
+    /// </summary>
+    /// <param name="accountingYear">The accounting year.</param>
+    /// <param name="numberOfRequiredStamps">The number of required stamps.</param>
+    /// <returns>List of incomplete stamp cards.</returns>
+    /// <remarks>Since players can be deleted retrospectively, it is not always possible to tell whether a stamp card
+    /// is missing for a player. The number of existing stamp cards is
+    /// therefore used as the basis for incomplete stamp cards.</remarks>
+    public Result<List<StampCard>> GetIncompleteStampCards(int accountingYear, int numberOfRequiredStamps)
+    {
+        return Result.Ok(Cards.Where(card => card.AccountingYear == accountingYear && card.Stamps.Count < numberOfRequiredStamps)
+            .ToList());
+    }
+    
+    /// <summary>
+    /// Returns all completed stamp cards. A stamp card is expected to be completed when the actual number of stamps
+    /// is equal to the required number of stamps. 
+    /// </summary>
+    /// <param name="accountingYear">The accounting year.</param>
+    /// <param name="numberOfRequiredStamps">The number of required stamps.</param>
+    /// <returns>List of completed stamp cards.</returns>
+    public Result<List<StampCard>> GetCompleteStampCards(int accountingYear, int numberOfRequiredStamps)
+    {
+        return Result.Ok(Cards.Where(card => card.AccountingYear == accountingYear && card.Stamps.Count >= numberOfRequiredStamps)
+            .ToList());
+    }
+
     public Result<Guid> DeleteStampCard(Guid id)
     {
         var stampCard = Cards.SingleOrDefault(card => card.Id == id);

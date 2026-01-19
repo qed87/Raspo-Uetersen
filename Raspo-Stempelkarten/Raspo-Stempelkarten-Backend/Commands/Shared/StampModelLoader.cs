@@ -136,6 +136,26 @@ public class StampModelChangeInterceptor(IMediator mediator) : IInterceptor
                         cancellationToken: CancellationToken.None);
                 }
             }
+            else if (invocation.Method.Name == nameof(StampModel.CreateNewAccountingYear))
+            {
+                invocation.Proceed();
+                var stampCardResponses = (Result<List<StampCard>>) invocation.ReturnValue!;
+                if (stampCardResponses.IsSuccess)
+                {
+                    foreach (var stampCard in stampCardResponses.Value)
+                    {
+                        await mediator.Publish(
+                            new StampCardAdded 
+                            {
+                                Id = stampCard.Id,
+                                AccountingYear = stampCard.AccountingYear,
+                                IssuedAt = stampCard.IssuedAt,
+                                IssuedTo = stampCard.IssuedTo
+                            },
+                            cancellationToken: CancellationToken.None);
+                    }
+                }
+            }
             else
             {
                 invocation.Proceed();

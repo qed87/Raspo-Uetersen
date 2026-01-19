@@ -108,7 +108,7 @@
       "type": "http",
       "name": "Create Team",
       "filename": "Create Team.bru",
-      "seq": 16,
+      "seq": 17,
       "settings": {
         "encodeUrl": true,
         "timeout": 0
@@ -153,38 +153,6 @@
     },
     {
       "type": "http",
-      "name": "Delete Player",
-      "filename": "Delete Player.bru",
-      "seq": 13,
-      "settings": {
-        "encodeUrl": true,
-        "timeout": 0
-      },
-      "tags": [],
-      "examples": [],
-      "request": {
-        "url": "http://{{uri}}/api/teams/{{team}}/players/{{playerId}}",
-        "method": "DELETE",
-        "headers": [],
-        "params": [],
-        "body": {
-          "mode": "none",
-          "formUrlEncoded": [],
-          "multipartForm": [],
-          "file": []
-        },
-        "script": {},
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "inherit"
-        }
-      }
-    },
-    {
-      "type": "http",
       "name": "Delete Stamp Card",
       "filename": "Delete Stamp Card.bru",
       "seq": 9,
@@ -217,9 +185,41 @@
     },
     {
       "type": "http",
+      "name": "Delete Player",
+      "filename": "Delete Player.bru",
+      "seq": 13,
+      "settings": {
+        "encodeUrl": true,
+        "timeout": 0
+      },
+      "tags": [],
+      "examples": [],
+      "request": {
+        "url": "http://{{uri}}/api/teams/{{team}}/players/{{playerId}}",
+        "method": "DELETE",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "none",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
+    },
+    {
+      "type": "http",
       "name": "Delete Team",
       "filename": "Delete Team.bru",
-      "seq": 17,
+      "seq": 18,
       "settings": {
         "encodeUrl": true,
         "timeout": 0
@@ -384,8 +384,8 @@
     },
     {
       "type": "http",
-      "name": "Get unfulfilled stamp cards per accounting year",
-      "filename": "Get unfulfilled stamp cards per accounting year.bru",
+      "name": "Get incompleted stamp cards per accounting year",
+      "filename": "Get incompleted stamp cards per accounting year.bru",
       "seq": 15,
       "settings": {
         "encodeUrl": true,
@@ -394,19 +394,20 @@
       "tags": [],
       "examples": [],
       "request": {
-        "url": "http://{{uri}}/teams/{{team}}/accounting-year/{{accountingYear}}?minRequiredStamps=12",
+        "url": "http://{{uri}}/api/teams/{{team}}/accounting-year/{{accountingYear}}/stampcard/incompleted?numberOfRequiredStamps=12",
         "method": "GET",
         "headers": [],
         "params": [
           {
-            "name": "minRequiredStamps",
+            "name": "numberOfRequiredStamps",
             "value": "12",
             "type": "query",
             "enabled": true
           }
         ],
         "body": {
-          "mode": "none",
+          "mode": "json",
+          "json": "",
           "formUrlEncoded": [],
           "multipartForm": [],
           "file": []
@@ -558,9 +559,48 @@
           "mode": "inherit"
         }
       }
+    },
+    {
+      "type": "http",
+      "name": "Get completed stamp cards per accounting year",
+      "filename": "Get completed stamp cards per accounting year.bru",
+      "seq": 16,
+      "settings": {
+        "encodeUrl": true,
+        "timeout": 0
+      },
+      "tags": [],
+      "examples": [],
+      "request": {
+        "url": "http://{{uri}}/api/teams/{{team}}/accounting-year/{{accountingYear}}/stampcard/completed?numberOfRequiredStamps=3",
+        "method": "GET",
+        "headers": [],
+        "params": [
+          {
+            "name": "numberOfRequiredStamps",
+            "value": "3",
+            "type": "query",
+            "enabled": true
+          }
+        ],
+        "body": {
+          "mode": "none",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
     }
   ],
-  "activeEnvironmentUid": "rKlVGWV6bz6adZpVJCSrh",
+  "activeEnvironmentUid": "yJDUHP2Pk5JYOgnhyddM5",
   "environments": [
     {
       "variables": [
@@ -601,7 +641,7 @@
         },
         {
           "name": "accountingYear",
-          "value": "2018",
+          "value": "2025",
           "enabled": true,
           "secret": false,
           "type": "text"
@@ -618,7 +658,9 @@
       "node_modules",
       ".git"
     ],
-    "size": 0.0039997100830078125,
+    "size": 0.0041217803955078125,
     "filesCount": 17
-  }
+  },
+  "exportedAt": "2026-01-19T07:54:47.172Z",
+  "exportedUsing": "Bruno/3.0.2"
 }

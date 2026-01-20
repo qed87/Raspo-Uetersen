@@ -27,6 +27,7 @@ using Raspo_Stempelkarten_Backend.Queries.GetStampCard;
 using Raspo_Stempelkarten_Backend.Queries.GetStampCardDetails;
 using Raspo_Stempelkarten_Backend.Queries.ListPlayers;
 using Raspo_Stempelkarten_Backend.Queries.ListStampCards;
+using Raspo_Stempelkarten_Backend.Queries.ListTeamsQuery;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -49,6 +50,7 @@ builder.Services.AddSingleton<IProxyGenerator, ProxyGenerator>();
 // Commands Teams
 builder.Services.AddScoped<IRequestHandler<AddTeamRequest, Task<Result<AddTeamResponse>>>, AddTeamRequestHandler>();
 builder.Services.AddScoped<IRequestHandler<DeleteTeamRequest, Task<Result>>, DeleteTeamRequestHandler>();
+builder.Services.AddScoped<IRequestHandler<ListTeamsQuery, Task<List<string>>>, ListTeamsQueryHandler>();
 
 // Commands/Queries Players
 builder.Services.AddScoped<IRequestHandler<AddPlayersRequest, Task<Result<AddPlayersResponse>>>, AddPlayersRequestHandler>();
@@ -89,7 +91,7 @@ var kurrentDbProjection = app.Services.GetRequiredService<KurrentDBProjectionMan
 await kurrentDbProjection.EnableAsync("$by_event_type");
 
 var projections = kurrentDbProjection.ListContinuousAsync();
-if (!await projections.AnyAsync(projection => projection.Name == "Team-Streams"))
+if (!await projections.AnyAsync(projection => projection.Name == "Teams-Stream"))
 {
     await kurrentDbProjection.CreateContinuousAsync("Teams-Stream", """
         fromStream('$et-TeamAdded')

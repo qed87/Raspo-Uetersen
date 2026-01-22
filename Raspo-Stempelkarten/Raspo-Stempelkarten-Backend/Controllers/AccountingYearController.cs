@@ -1,5 +1,6 @@
 using System.Web;
 using DispatchR;
+using DispatchR.Abstractions.Send;
 using Microsoft.AspNetCore.Mvc;
 using Raspo_Stempelkarten_Backend.Commands.CreateTeamStampCardsForAccountingYear;
 using Raspo_Stempelkarten_Backend.Queries.GetCompletedStampCardsQuery;
@@ -10,7 +11,7 @@ namespace Raspo_Stempelkarten_Backend.Controllers;
 [Route("api/teams/{team}/accounting-year")]
 public class AccountingYearController(IMediator mediator) : ControllerBase
 {
-    [HttpPost("{accountingYear:int}/create")]
+    [HttpPost("{accountingYear:int}")]
     public async Task<IActionResult> CreateFiscalYear(int accountingYear, string team)
     {
         team = HttpUtility.UrlDecode(team);
@@ -22,29 +23,23 @@ public class AccountingYearController(IMediator mediator) : ControllerBase
             : Ok(response.Value);
     }
     
-    [HttpGet("{accountingYear:int}/stampcard/incompleted")]
+    [HttpGet("{accountingYear:int}/stampcard")]
     public async Task<IActionResult> GetIncompletedStampCards(
         int accountingYear, 
         string team,
+        [FromQuery(Name = "type")] string commandType,
         [FromQuery(Name = "numberOfRequiredStamps")] int numberOfRequiredStamps)
     {
         team = HttpUtility.UrlDecode(team);
+        dynamic command = commandType switch
+        {
+            "completed" => new GetCompletedStampCardsQuery(team, accountingYear) { NumberOfRequiredStamps = numberOfRequiredStamps },
+            "incompleted" => new GetIncompletedStampCardsQuery(team, accountingYear)
+                { NumberOfRequiredStamps = numberOfRequiredStamps },
+            _ => throw new NotSupportedException(commandType + " not supported")
+        };
         var response = await mediator.Send(
-            new GetIncompletedStampCardsQuery(team, accountingYear) { NumberOfRequiredStamps = numberOfRequiredStamps },
-            CancellationToken.None);
-        if (response is null) return NotFound();
-        return Ok(response);
-    }
-    
-    [HttpGet("{accountingYear:int}/stampcard/completed")]
-    public async Task<IActionResult> GetCompletedStampCards(
-        int accountingYear, 
-        string team,
-        [FromQuery(Name = "numberOfRequiredStamps")] int numberOfRequiredStamps)
-    {
-        team = HttpUtility.UrlDecode(team);
-        var response = await mediator.Send(
-            new GetCompletedStampCardsQuery(team, accountingYear) { NumberOfRequiredStamps = numberOfRequiredStamps },
+            command,
             CancellationToken.None);
         if (response is null) return NotFound();
         return Ok(response);

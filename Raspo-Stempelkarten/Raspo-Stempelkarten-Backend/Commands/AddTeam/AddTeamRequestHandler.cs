@@ -22,7 +22,11 @@ public class AddTeamRequestHandler(KurrentDBClient kurrentDbClient) : IRequestHa
                     new EventData(
                         Uuid.NewUuid(),
                         nameof(TeamAdded),
-                        JsonSerializer.SerializeToUtf8Bytes(new TeamAdded(request.Club, request.BirthCohort)))
+                        JsonSerializer.SerializeToUtf8Bytes(new TeamAdded(request.Club, request.BirthCohort))),
+                    new EventData(
+                        Uuid.NewUuid(),
+                        nameof(CoachAdded),
+                        JsonSerializer.SerializeToUtf8Bytes(new CoachAdded(request.Club, request.BirthCohort)))
                 ],
                 cancellationToken: cancellationToken);
             return Result.Ok(new AddTeamResponse(streamId));

@@ -1,91 +1,80 @@
-using Castle.DynamicProxy;
-using DispatchR.Abstractions.Notification;
-using DispatchR.Abstractions.Send;
-using DispatchR.Abstractions.Stream;
 using DispatchR.Extensions;
-using FluentResults;
 using FluentValidation;
+using Keycloak.AuthServices.Authentication;
 using KurrentDB.Client;
-using Mapster;
-using Raspo_Stempelkarten_Backend.Commands.AddPlayer;
-using Raspo_Stempelkarten_Backend.Commands.AddTeam;
-using Raspo_Stempelkarten_Backend.Commands.CreateStampCard;
-using Raspo_Stempelkarten_Backend.Commands.CreateTeamStampCardsForAccountingYear;
-using Raspo_Stempelkarten_Backend.Commands.DeletePlayer;
-using Raspo_Stempelkarten_Backend.Commands.DeleteStampCard;
-using Raspo_Stempelkarten_Backend.Commands.DeleteTeam;
-using Raspo_Stempelkarten_Backend.Commands.EraseStamp;
-using Raspo_Stempelkarten_Backend.Commands.Shared;
-using Raspo_Stempelkarten_Backend.Commands.StampStampCard;
-using Raspo_Stempelkarten_Backend.Dtos;
-using Raspo_Stempelkarten_Backend.Events;
-using Raspo_Stempelkarten_Backend.Mappings;
-using Raspo_Stempelkarten_Backend.Queries.GetCompletedStampCardsQuery;
-using Raspo_Stempelkarten_Backend.Queries.GetIncompletedStampCardsQuery;
-using Raspo_Stempelkarten_Backend.Queries.GetPlayer;
-using Raspo_Stempelkarten_Backend.Queries.GetStampCard;
-using Raspo_Stempelkarten_Backend.Queries.GetStampCardDetails;
-using Raspo_Stempelkarten_Backend.Queries.ListPlayers;
-using Raspo_Stempelkarten_Backend.Queries.ListStampCards;
-using Raspo_Stempelkarten_Backend.Queries.ListTeamsQuery;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using Raspo_Stempelkarten_Backend;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
-builder.Services.AddMapster();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<EventDataChangeTracker>();
 
-// Change Tracker 
-builder.Services.AddScoped<IEventDataChangeTracker, EventDataChangeTracker>(provider => provider.GetRequiredService<EventDataChangeTracker>());
-builder.Services.AddScoped<INotificationHandler<PlayerAdded>>(provider => provider.GetRequiredService<EventDataChangeTracker>());
-builder.Services.AddScoped<INotificationHandler<PlayerDeleted>>(provider => provider.GetRequiredService<EventDataChangeTracker>());
-builder.Services.AddScoped<INotificationHandler<TeamAdded>>(provider => provider.GetRequiredService<EventDataChangeTracker>());
-builder.Services.AddScoped<INotificationHandler<StampCardAdded>>(provider => provider.GetRequiredService<EventDataChangeTracker>());
-builder.Services.AddScoped<INotificationHandler<StampCardRemoved>>(provider => provider.GetRequiredService<EventDataChangeTracker>());
-builder.Services.AddScoped<INotificationHandler<StampAdded>>(provider => provider.GetRequiredService<EventDataChangeTracker>());
-builder.Services.AddScoped<INotificationHandler<StampErased>>(provider => provider.GetRequiredService<EventDataChangeTracker>());
-builder.Services.AddSingleton<IProxyGenerator, ProxyGenerator>();
-
-// Commands Teams
-builder.Services.AddScoped<IRequestHandler<AddTeamRequest, Task<Result<AddTeamResponse>>>, AddTeamRequestHandler>();
-builder.Services.AddScoped<IRequestHandler<DeleteTeamRequest, Task<Result>>, DeleteTeamRequestHandler>();
-builder.Services.AddScoped<IRequestHandler<ListTeamsQuery, Task<List<string>>>, ListTeamsQueryHandler>();
-
-// Commands/Queries Players
-builder.Services.AddScoped<IRequestHandler<AddPlayersRequest, Task<Result<AddPlayersResponse>>>, AddPlayersRequestHandler>();
-builder.Services.AddScoped<IRequestHandler<DeletePlayerRequest, Task<Result<DeletePlayerResponse>>>, DeletePlayerRequestHandler>();
-builder.Services.AddScoped<IStreamRequestHandler<ListPlayersQuery, PlayerReadDto>, ListPlayerStreamQueryHandler>();
-builder.Services.AddScoped<IRequestHandler<GetPlayersQuery, Task<PlayerReadDto?>>, GetPlayerQueryHandler>();
-
-// Commands/Queries Stamp Card
-builder.Services.AddScoped<IRequestHandler<CreateTeamStampCardsForAccountingYears, Task<Result<CreateTeamStampCardsForAccountingYearsResponse>>>, 
-    CreateTeamStampCardsForAccountingYearsRequestHandler>();
-builder.Services.AddScoped<IRequestHandler<StampStampCard, Task<Result<StampStampCardResponse>>>, StampStampCardRequestHandler>();
-builder.Services.AddScoped<IRequestHandler<EraseStamp, Task<Result<EraseStampResponse>>>, EraseStampRequestHandler>();
-builder.Services.AddScoped<IRequestHandler<CreateStampCard, Task<Result<CreateStampCardResponse>>>, CreateStampCardRequestHandler>();
-builder.Services.AddScoped<IRequestHandler<DeleteStampCard, Task<Result<DeleteStampCardResponse>>>, DeleteStampCardRequestHandler>();
-builder.Services.AddScoped<IRequestHandler<GetStampCardDetailsQuery, Task<StampCardReadDetailsDto?>>, GetStampCardDetailsQueryHandler>();
-builder.Services.AddScoped<IRequestHandler<GetStampCardQuery, Task<StampCardReadDto?>>, GetStampCardQueryHandler>();
-builder.Services.AddScoped<IStreamRequestHandler<ListStampCardsQuery, StampCardReadDto>, ListStampCardQueryHandler>();
-builder.Services.AddScoped<IRequestHandler<GetCompletedStampCardsQuery, Task<List<StampCardReadDetailsDto>?>>, GetCompletedStampCardsQueryHandler>();
-builder.Services.AddScoped<IRequestHandler<GetIncompletedStampCardsQuery, Task<List<StampCardReadDetailsDto>?>>, GetIncompletedStampCardsQueryHandler>();
-
-// Common
-builder.Services.AddScoped<IStampModelLoader, StampModelLoader>();
-builder.Services.AddTransient<IStampModelStorage, StampModelStorage>();
-builder.Services.AddTransient<KurrentDBClient>(_ => new KurrentDBClient(
-    KurrentDBClientSettings.Create(builder.Configuration.GetConnectionString("KurrentDb")!)));
-builder.Services.AddTransient<KurrentDBProjectionManagementClient>(_ => new KurrentDBProjectionManagementClient(
-    KurrentDBClientSettings.Create(builder.Configuration.GetConnectionString("KurrentDb")!)));
+// Application specific services
+builder.Services.AddApplicationServices(builder.Configuration);
+var jwtConfiguration = builder.Configuration.GetSection("Jwt");
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly, ServiceLifetime.Transient);
+builder.Services.AddAuthentication().AddJwtBearer(options =>
+{
+    options.Authority = jwtConfiguration.GetValue<string>("Authority");
+    options.RequireHttpsMetadata = jwtConfiguration.GetValue<bool>("RequireHttpsMetadata"); // Only for develop
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = jwtConfiguration.GetValue<bool>("ValidateIssuer"),
+        ValidIssuer = jwtConfiguration.GetValue<string>("Authority"),
+        ValidateAudience = jwtConfiguration.GetValue<bool>("ValidateAudience"),
+        ValidAudience = jwtConfiguration.GetValue<string>("Audience")
+    };
+});
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("IsClubManager", policy => policy.RequireRole("club-manager"));
+    options.AddPolicy("IsCoach", policy => policy.RequireRole("coach"));
+    options.AddPolicy("IsCoachOrClubManager", policy => policy.RequireRole("coach", "club-manager"));
+});
+builder.Services.AddDispatchR(_ => { });
 
-builder.Services.AddDispatchR(options => { });
-TypeAdapterConfig.GlobalSettings.Apply(new DefaultRegister());
-    
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+
+    const string schemeName = "Bearer";
+
+    c.AddSecurityDefinition(schemeName, new OpenApiSecurityScheme
+    {
+        Type        = SecuritySchemeType.Http,
+        Scheme      = "bearer",
+        BearerFormat = "JWT",
+        In          = ParameterLocation.Header,
+        Name        = "Authorization",
+        Description = "JWT Authorization header.<br/>Enter **only** the token (without 'Bearer ' prefix)."
+    });
+
+    c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference(schemeName, document)] = []
+    });
+});
+
 var app = builder.Build();
 app.UseHttpsRedirection();
 app.MapControllers();
+app.UseAuthentication();
+app.UseAuthorization();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
+        c.OAuthScopes("openid", "profile", "email");
+    });
+}
+
+app.MapSwagger();
 
 var kurrentDbProjection = app.Services.GetRequiredService<KurrentDBProjectionManagementClient>();
 await kurrentDbProjection.EnableAsync("$by_event_type");

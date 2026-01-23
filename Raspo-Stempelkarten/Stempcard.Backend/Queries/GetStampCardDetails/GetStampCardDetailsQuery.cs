@@ -1,7 +1,7 @@
 using DispatchR.Abstractions.Send;
 using Raspo_Stempelkarten_Backend.Dtos;
 
-namespace Raspo_Stempelkarten_Backend.Queries.GetStampCard;
+namespace Raspo_Stempelkarten_Backend.Queries.GetStampCardDetails;
 
 public record GetStampCardDetailsQuery(Guid Id, string StreamId) : IRequest<GetStampCardDetailsQuery, Task<StampCardReadDetailsDto?>>
 {

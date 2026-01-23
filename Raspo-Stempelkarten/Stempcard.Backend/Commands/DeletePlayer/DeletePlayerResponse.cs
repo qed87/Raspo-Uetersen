@@ -1,4 +1,4 @@
-namespace Raspo_Stempelkarten_Backend.Commands.AddPlayer;
+namespace Raspo_Stempelkarten_Backend.Commands.DeletePlayer;
 
 public class DeletePlayerResponse
 {

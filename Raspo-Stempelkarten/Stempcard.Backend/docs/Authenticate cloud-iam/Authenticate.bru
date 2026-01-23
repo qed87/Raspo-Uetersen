@@ -1,0 +1,29 @@
+meta {
+  name: Authenticate
+  type: http
+  seq: 1
+}
+
+post {
+  url: https://lemur-10.cloud-iam.com/auth/realms/raspo1926/protocol/openid-connect/token
+  body: formUrlEncoded
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/x-www-form-urlencoded
+}
+
+body:form-urlencoded {
+  grant_type: password
+  client_id: stampcard
+  client_secret: RPf6XYGRjLQqzBZeL3uZAJBaggLvPfue
+  username: trainer2@web.de
+  password: trainer2
+  scope: openid profile email
+}
+
+settings {
+  encodeUrl: false
+  timeout: 0
+}

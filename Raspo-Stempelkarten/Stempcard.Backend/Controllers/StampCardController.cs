@@ -7,6 +7,7 @@ using Raspo_Stempelkarten_Backend.Commands.EraseStamp;
 using Raspo_Stempelkarten_Backend.Commands.StampStampCard;
 using Raspo_Stempelkarten_Backend.Dtos;
 using Raspo_Stempelkarten_Backend.Queries.GetStampCard;
+using Raspo_Stempelkarten_Backend.Queries.GetStampCardDetails;
 using Raspo_Stempelkarten_Backend.Queries.ListStampCards;
 
 namespace Raspo_Stempelkarten_Backend.Controllers;

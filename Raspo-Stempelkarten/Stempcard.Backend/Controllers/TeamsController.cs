@@ -19,7 +19,7 @@ public class TeamsController(IMediator mediator) : ControllerBase
     /// <param name="club"></param>
     /// <param name="birthCohort"></param>
     /// <returns></returns>
-    [Authorize("IsClubManager")]
+    //[Authorize("IsClubManager")]
     [HttpPost]
     public async Task<IActionResult> Create([FromQuery] string club, [FromQuery] short birthCohort)
     {
@@ -36,7 +36,7 @@ public class TeamsController(IMediator mediator) : ControllerBase
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    [Authorize("IsClubManager")]
+    //[Authorize("IsClubManager")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {
@@ -52,7 +52,7 @@ public class TeamsController(IMediator mediator) : ControllerBase
     /// 
     /// </summary>
     /// <returns></returns>
-    [Authorize("IsCoachOrClubManager")]
+    //[Authorize("IsCoachOrClubManager")]
     [HttpGet]
     public async Task<IActionResult> List()
     {

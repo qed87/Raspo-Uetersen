@@ -4,10 +4,17 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <AssemblyName>$(AssemblyName.Replace(' ', '_'))</AssemblyName>
+        <UserSecretsId>aspnet-Stampcard.UI2-0916ae13-e00b-43c1-b85e-44d30c212f38</UserSecretsId>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-        <RootNamespace>Raspo.StampCard.Web</RootNamespace>
     </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.11"/>
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.11"/>
+        <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.11"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.11"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.11"/>
+    </ItemGroup>
 
     <ItemGroup>
       <Content Include="..\.dockerignore">
@@ -16,9 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Blazor.Bootstrap" Version="3.4.0" />
-      <PackageReference Include="FluentResults" Version="4.0.0" />
-      <PackageReference Include="JetBrains.Annotations" Version="2025.2.0" />
+      <_ContentIncludedByDefault Remove="Areas\Identity\Pages\_ViewStart.cshtml" />
     </ItemGroup>
 
 </Project>

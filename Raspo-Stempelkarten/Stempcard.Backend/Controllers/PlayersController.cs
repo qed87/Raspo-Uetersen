@@ -21,7 +21,8 @@ public class PlayersController(IMediator mediator) : ControllerBase
             {
                 FirstName = playerCreateDto.FirstName,
                 Surname = playerCreateDto.Surname,
-                Birthdate = playerCreateDto.Birthdate
+                Birthdate = playerCreateDto.Birthdate,
+                // birthplace
             }, 
             CancellationToken.None);
         return response.IsFailed 

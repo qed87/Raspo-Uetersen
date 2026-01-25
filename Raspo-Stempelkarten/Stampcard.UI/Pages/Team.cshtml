@@ -1,0 +1,48 @@
+@page "/Teams/{Team}"
+@model Team
+@tagHelperPrefix x:
+
+@{
+    ViewData["Title"] = Model.Id + " bearbeiten";
+}
+
+<h1>Team @Model.Id</h1>
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th scope="col">#</th>
+        <th scope="col">Team-Coach</th>
+        <th scope="col"></th>
+    </tr>
+    </thead>
+    <tbody>
+    @for (var i = 0; i < Model.Items.Count; i++)
+    {
+        <tr>
+            <td>@(i+1)</td>
+            <td>
+                <x:label asp-for="Items[i]"/>
+                <x:input asp-for="Items[i]"/>
+            </td>
+            <td>
+                <x:a class="btn btn-dark" asp-page-handler="delete">
+                    <i class="bi bi-trash3-fill">Coach entfernen</i>
+                </x:a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<x:form asp-area="" asp-page="" method="post">
+    <div class="row g-3">
+        <div class="col-auto">
+            <x:label asp-for="Name" class="form-label">Coach (E-Mail)</x:label>
+            <x:input asp-for="Name" class="form-control"/>
+        </div>
+        <div class="col-auto align-baseline">
+            <button class="btn-primary btn">Hinzufügen</button>
+        </div>
+    </div>
+</x:form>

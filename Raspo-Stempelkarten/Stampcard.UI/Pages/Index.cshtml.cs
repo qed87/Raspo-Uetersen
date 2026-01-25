@@ -1,18 +1,31 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Stampcard.UI.Pages;
 
-public class IndexModel : PageModel
+public class Index : PageModel
 {
-    private readonly ILogger<IndexModel> _logger;
+    public required List<string> Items { get; set; } = [];
+    [BindProperty] public int BirthYear { get; set; } = DateTime.UtcNow.Year;
 
-    public IndexModel(ILogger<IndexModel> logger)
+    public Task OnGetAsync()
     {
-        _logger = logger;
+        Items.Add("raspo1926-2014");
+        Items.Add("raspo1926-2015");
+        Items.Add("raspo1926-2016");
+        Items.Add("raspo1926-2017");
+        Items.Add("raspo1926-2018");
+        return Task.CompletedTask;
     }
 
-    public void OnGet()
+    public IActionResult OnGetDelete(string id)
     {
+        return RedirectToPage("/Team");
+    }
+    
+    public IActionResult OnGetItem(string target, string id)
+    {
+        return RedirectToPage(target, new { Team = id });
     }
 }

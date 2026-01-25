@@ -1,10 +1,57 @@
-﻿@page
-@model IndexModel
+@page
+@model Index
+@tagHelperPrefix x:
+
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Teamverwaltung";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<h1>Teamverwaltung</h1>
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th scope="col">#</th>
+        <th scope="col">Team Name</th>
+        <th scope="col">Aktion</th>
+    </tr>
+    </thead>
+    <tbody>
+    @for (int i = 0; i < Model.Items.Count; i++)
+    {
+        var team = Model.Items[i];
+        <tr>
+            <td>@(i+1)</td>
+            <td>@team</td>
+            <td>
+                <x:a class="btn btn-dark" asp-route-target="Members" asp-route-id="@team" asp-page-handler="item">
+                    <i class="bi bi-people-fill">  Mitglieder verwalten</i>
+                </x:a>
+                <x:a class="btn btn-dark" asp-route-target="StampCards" asp-route-id="@team" asp-page-handler="item">
+                    <i class="bi bi-postage">  Stempelkarten verwalten</i>
+                </x:a>
+                <x:a class="btn btn-dark" asp-route-target="Team" asp-route-id="@team" asp-page-handler="item">
+                    <i class="bi bi-people-fill">  Team bearbeiten</i>
+                </x:a>
+                <x:a class="btn btn-dark" asp-route-id="@team" asp-page-handler="delete">
+                    <i class="bi bi-trash3-fill">  Team löschen</i>
+                </x:a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<x:form asp-page="" method="post">
+    <div class="row g-3">
+        <div class="col-auto">
+            <x:label asp-for="BirthYear" class="form-label">Geburtsjahr</x:label>
+            <x:input asp-for="BirthYear" class="form-control"/>
+        </div>
+        <div class="col-auto">
+            <button class="btn-primary btn">Anlegen</button>
+        </div>
+    </div>
+</x:form>
+
+

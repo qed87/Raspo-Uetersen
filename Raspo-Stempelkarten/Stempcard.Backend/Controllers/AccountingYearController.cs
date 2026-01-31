@@ -3,14 +3,20 @@ using DispatchR;
 using DispatchR.Abstractions.Send;
 using Microsoft.AspNetCore.Mvc;
 using Raspo_Stempelkarten_Backend.Commands.CreateTeamStampCardsForAccountingYear;
-using Raspo_Stempelkarten_Backend.Queries.GetCompletedStampCardsQuery;
-using Raspo_Stempelkarten_Backend.Queries.GetIncompletedStampCardsQuery;
+using Raspo_Stempelkarten_Backend.Commands.GetCompletedStampCardsQuery;
+using Raspo_Stempelkarten_Backend.Commands.GetIncompletedStampCardsQuery;
 
 namespace Raspo_Stempelkarten_Backend.Controllers;
 
+/// <summary>
+/// 
+/// </summary>
 [Route("api/teams/{team}/accounting-year")]
 public class AccountingYearController(IMediator mediator) : ControllerBase
 {
+    /// <summary>
+    /// 
+    /// </summary>
     [HttpPost("{accountingYear:int}")]
     public async Task<IActionResult> CreateFiscalYear(int accountingYear, string team)
     {
@@ -23,6 +29,9 @@ public class AccountingYearController(IMediator mediator) : ControllerBase
             : Ok(response.Value);
     }
     
+    /// <summary>
+    /// 
+    /// </summary>
     [HttpGet("{accountingYear:int}/stampcard")]
     public async Task<IActionResult> GetIncompletedStampCards(
         int accountingYear, 

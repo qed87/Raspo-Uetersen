@@ -1,5 +1,14 @@
+using RestSharp.Extensions.DependencyInjection;
+using Stampcard.UI.Clients;
+
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddRestClient(options =>
+{
+    options.BaseUrl = new Uri("https://localhost:7184");
+    options.RemoteCertificateValidationCallback = (_, _, _, _) => true;
+});
+builder.Services.AddTransient<TeamHttpClient>();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddRazorPages();
 

@@ -1,6 +1,5 @@
 using DispatchR.Extensions;
 using FluentValidation;
-using Keycloak.AuthServices.Authentication;
 using KurrentDB.Client;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -33,7 +32,6 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("IsCoach", policy => policy.RequireRole("coach"));
     options.AddPolicy("IsCoachOrClubManager", policy => policy.RequireRole("coach", "club-manager"));
 });
-builder.Services.AddDispatchR(_ => { });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -77,28 +75,37 @@ if (app.Environment.IsDevelopment())
 app.MapSwagger();
 
 var kurrentDbProjection = app.Services.GetRequiredService<KurrentDBProjectionManagementClient>();
-await kurrentDbProjection.EnableAsync("$by_event_type");
+await kurrentDbProjection.EnableAsync("$by_category");
 
 var projections = kurrentDbProjection.ListContinuousAsync();
-if (!await projections.AnyAsync(projection => projection.Name == "Teams-Stream"))
+if (!await projections.AnyAsync(projection => projection.Name == "all-club-teams"))
 {
-    await kurrentDbProjection.CreateContinuousAsync("Teams-Stream", """
-        fromStream('$et-TeamAdded')
-        .when({
-            $init: function () {
-                return {
-                    streams: []
+    await kurrentDbProjection.CreateContinuousAsync("all-club-teams", """
+        fromCategory('team')
+            .when({
+                $init: function () {
+                    return {
+                        teams: []
+                    }
+                },
+                TeamAdded: function (state, event) {
+                    if (event.eventType !== "TeamAdded") return state;
+                    if (!event.data) return state;
+                    log("Event: " + JSON.stringify(event.data));
+                    state.teams.push({ "club": event.data.Club, "name": event.data.Name, "id": event.streamId });
+                    return state;
+                },
+                TeamDeleted: function (state, event) {
+                    if (event.eventType !== "TeamDeleted") return state;
+                    if (!event.data) return state;
+                    log("Event: " + JSON.stringify(event.data));
+                    const index = state.teams.findIndex((team) => event.data.Id === team.id);
+                    if (index == -1) return state;
+                    state.teams.splice(index, 1);
+                    return state;
                 }
-            },
-            $any: function (state, event) {
-                if (!event.data) return state;
-                if (event.eventType !== "TeamAdded") return state;
-                log("Event: " + JSON.stringify(event.data));
-                state.streams.push(event.data.Club + "-" + event.data.BirthCohort);
-                return state;
-            }
-        })
-        .outputState();
+            })
+            .outputState();
         """);
 }
 

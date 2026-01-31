@@ -4,17 +4,24 @@ using Microsoft.AspNetCore.Mvc;
 using Raspo_Stempelkarten_Backend.Commands.CreateStampCard;
 using Raspo_Stempelkarten_Backend.Commands.DeleteStampCard;
 using Raspo_Stempelkarten_Backend.Commands.EraseStamp;
+using Raspo_Stempelkarten_Backend.Commands.GetStampCard;
+using Raspo_Stempelkarten_Backend.Commands.GetStampCardDetails;
+using Raspo_Stempelkarten_Backend.Commands.ListStampCards;
 using Raspo_Stempelkarten_Backend.Commands.StampStampCard;
 using Raspo_Stempelkarten_Backend.Dtos;
-using Raspo_Stempelkarten_Backend.Queries.GetStampCard;
-using Raspo_Stempelkarten_Backend.Queries.GetStampCardDetails;
-using Raspo_Stempelkarten_Backend.Queries.ListStampCards;
 
 namespace Raspo_Stempelkarten_Backend.Controllers;
 
+/// <summary>
+/// Administrate Stamp Cards.
+/// </summary>
+/// <param name="mediator"></param>
 [Route("api/teams/{team}/[controller]")]
 public class StampCardController(IMediator mediator) : ControllerBase
 {
+    /// <summary>
+    /// Create a new stamp card.
+    /// </summary>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] StampCardCreateDto stampCardCreateDto, string team)
     {
@@ -30,6 +37,9 @@ public class StampCardController(IMediator mediator) : ControllerBase
             : Ok(response.Value);
     }
     
+    /// <summary>
+    /// Stamps a stamp card.
+    /// </summary>
     [HttpPost("{id:guid}/stamp")]
     public async Task<IActionResult> Stamp(Guid id, [FromForm] string reason, string team)
     {
@@ -44,6 +54,9 @@ public class StampCardController(IMediator mediator) : ControllerBase
             : Ok(response.Value);
     }
     
+    /// <summary>
+    /// Erase a stamp.
+    /// </summary>
     [HttpDelete("{stampId:guid}/stamp/{id:guid}")]
     public async Task<IActionResult> EraseStamp(Guid stampId, Guid id, string team)
     {
@@ -56,6 +69,9 @@ public class StampCardController(IMediator mediator) : ControllerBase
             : Ok(response.Value);
     }
     
+    /// <summary>
+    /// List stamp cards.
+    /// </summary>
     [HttpGet]
     public async Task<IActionResult> List(string team)
     {
@@ -67,6 +83,9 @@ public class StampCardController(IMediator mediator) : ControllerBase
         return Ok(stampCards);
     }
     
+    /// <summary>
+    /// Get stamp card details.
+    /// </summary>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id, string team, [FromQuery] bool includeDetails = false)
     {
@@ -89,6 +108,9 @@ public class StampCardController(IMediator mediator) : ControllerBase
         return Ok(response);
     }
     
+    /// <summary>
+    /// Delete a stamp card.
+    /// </summary>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, string team)
     {

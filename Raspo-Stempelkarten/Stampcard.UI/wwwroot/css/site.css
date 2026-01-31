@@ -33,3 +33,5 @@ body {
 .table-auto {
     table-layout: auto !important;
 }
+
+.validation-summary-valid { display: none; }

@@ -1,0 +1,9 @@
+@page "/Teams/{Team}/StampCard/{Id}/Stamps"
+@model Stamps
+@tagHelperPrefix x:
+
+@{
+    ViewData["Title"] = "Stempelkarten - " + Model.Team;
+}
+
+<h1>Stempelkarten - @Model.Team</h1>

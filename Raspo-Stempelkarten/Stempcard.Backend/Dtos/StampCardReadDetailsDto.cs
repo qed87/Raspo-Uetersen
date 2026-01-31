@@ -4,7 +4,7 @@ public record StampCardReadDetailsDto
 {
     public Guid Id { get; set; }
     
-    public Guid IssuedTo { get; set; }
+    public Guid PlayerId { get; set; }
 
     public DateTimeOffset IssuedAt { get; set; }
 

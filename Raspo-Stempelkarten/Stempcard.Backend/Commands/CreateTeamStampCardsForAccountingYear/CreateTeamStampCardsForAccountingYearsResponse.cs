@@ -2,5 +2,4 @@ namespace Raspo_Stempelkarten_Backend.Commands.CreateTeamStampCardsForAccounting
 
 public class CreateTeamStampCardsForAccountingYearsResponse
 {
-    public Guid[] Ids { get; set; } = [];
 }

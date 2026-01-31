@@ -2,7 +2,4 @@ using DispatchR.Abstractions.Notification;
 
 namespace Raspo_Stempelkarten_Backend.Events;
 
-public class StampErased : INotification
-{
-    
-}
+public record StampErased(Guid Id, Guid StampCardId) : INotification;

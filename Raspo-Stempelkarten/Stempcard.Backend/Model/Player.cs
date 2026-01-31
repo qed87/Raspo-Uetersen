@@ -1,22 +1,18 @@
 namespace Raspo_Stempelkarten_Backend.Model;
 
-public class Player(Guid id, string firstName, string surname, DateOnly birthdate, bool deleted = false)
+public class Player(Guid id, string firstName, string lastName, DateOnly birthdate, string birthplace, bool deleted = false)
 {
     public Guid Id { get; set; } = id;
-    
     public string FirstName { get; set; } = firstName;
-    
-    public string Surname { get; set; } = surname;
-    
+    public string LastName { get; set; } = lastName;
     public DateOnly Birthdate { get; set; } = birthdate;
     
+    public string Birthplace { get; set; } = birthplace;
     public bool Deleted { get; set; } = deleted;
-    
     protected bool Equals(Player other)
     {
-        return FirstName == other.FirstName && Surname == other.Surname && Birthdate.Equals(other.Birthdate);
+        return FirstName == other.FirstName && LastName == other.LastName && Birthdate.Equals(other.Birthdate);
     }
-
     public override bool Equals(object? obj)
     {
         if (obj is null) return false;
@@ -24,9 +20,8 @@ public class Player(Guid id, string firstName, string surname, DateOnly birthdat
         if (obj.GetType() != GetType()) return false;
         return Equals((Player)obj);
     }
-
     public override int GetHashCode()
     {
-        return HashCode.Combine(FirstName, Surname, Birthdate);
+        return HashCode.Combine(FirstName, LastName, Birthdate);
     }
 }

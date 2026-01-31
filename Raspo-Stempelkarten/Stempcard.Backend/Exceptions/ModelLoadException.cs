@@ -1,5 +1,13 @@
 namespace Raspo_Stempelkarten_Backend.Exceptions;
 
-public class ModelLoadException : Exception
+/// <inheritdoc />
+public class ModelLoadException : ModelException
 {
+    public ModelLoadException() : base()
+    {
+    }
+    
+    public ModelLoadException(string message) : base(message)
+    {
+    }
 }

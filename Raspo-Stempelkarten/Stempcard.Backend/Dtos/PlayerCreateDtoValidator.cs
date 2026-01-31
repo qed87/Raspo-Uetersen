@@ -9,7 +9,7 @@ public class PlayerCreateDtoValidator : AbstractValidator<PlayerCreateDto>
     public PlayerCreateDtoValidator()
     {
         RuleFor(dto => dto.FirstName).NotNull().NotEmpty();
-        RuleFor(dto => dto.Surname).NotNull().NotEmpty();
+        RuleFor(dto => dto.LastName).NotNull().NotEmpty();
         RuleFor(dto => dto.Birthdate).NotNull().NotEmpty();
     }
 }

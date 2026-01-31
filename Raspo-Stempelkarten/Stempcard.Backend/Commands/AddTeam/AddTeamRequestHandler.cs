@@ -1,20 +1,36 @@
 using System.Text.Json;
 using DispatchR.Abstractions.Send;
 using FluentResults;
+using FluentValidation;
 using JetBrains.Annotations;
 using KurrentDB.Client;
 using Raspo_Stempelkarten_Backend.Events;
+using Raspo_Stempelkarten_Backend.Services;
 
 namespace Raspo_Stempelkarten_Backend.Commands.AddTeam;
 
+/// <inheritdoc />
 [UsedImplicitly]
-public class AddTeamRequestHandler(KurrentDBClient kurrentDbClient) : IRequestHandler<AddTeamRequest, Task<Result<AddTeamResponse>>>
+public class AddTeamRequestHandler(
+    KurrentDBClient kurrentDbClient, 
+    ITeamService teamService,
+    IValidator<AddTeamRequest> validator) : IRequestHandler<AddTeamRequest, Task<Result<Guid>>>
 {
-    public async Task<Result<AddTeamResponse>> Handle(AddTeamRequest request, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task<Result<Guid>> Handle(AddTeamRequest request, CancellationToken cancellationToken)
     {
         try
         {
-            var streamId = $"{request.Club}-{request.BirthCohort:D4}";
+            var validationResult = await validator.ValidateAsync(request, cancellationToken);
+            if (!validationResult.IsValid) return Result.Fail(validationResult.Errors.Select(x => x.ErrorMessage)); 
+            var teams = await teamService.ListTeamsAsync(cancellationToken) ?? [];
+            if (teams.Exists(dto => dto.Name == request.Name))
+            {
+                return Result.Fail("Team mit dem gleichen Namen existiert bereits.");
+            }
+
+            var teamId = Guid.NewGuid();
+            var streamId = $"team-{teamId:N}";
             await kurrentDbClient.AppendToStreamAsync(
                 streamId,
                 StreamState.NoStream,
@@ -22,18 +38,19 @@ public class AddTeamRequestHandler(KurrentDBClient kurrentDbClient) : IRequestHa
                     new EventData(
                         Uuid.NewUuid(),
                         nameof(TeamAdded),
-                        JsonSerializer.SerializeToUtf8Bytes(new TeamAdded(request.Club, request.BirthCohort))),
-                    // new EventData(
-                    //     Uuid.NewUuid(),
-                    //     nameof(CoachAdded),
-                    //     JsonSerializer.SerializeToUtf8Bytes(new CoachAdded(request.Club, request.BirthCohort)))
+                        JsonSerializer.SerializeToUtf8Bytes(
+                            new TeamAdded(
+                                request.Club, 
+                                request.Name, 
+                                request.IssuedBy, 
+                                request.IssuedDate)))
                 ],
                 cancellationToken: cancellationToken);
-            return Result.Ok(new AddTeamResponse(streamId));
+            return Result.Ok(teamId);
         }
         catch (WrongExpectedVersionException)
         {
-            return Result.Fail<AddTeamResponse>("Team already exists!");
+            return Result.Fail<Guid>("Repository existiert bereits!");
         }
     }
 }

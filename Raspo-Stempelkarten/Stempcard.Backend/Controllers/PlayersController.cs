@@ -3,15 +3,22 @@ using DispatchR;
 using Microsoft.AspNetCore.Mvc;
 using Raspo_Stempelkarten_Backend.Commands.AddPlayer;
 using Raspo_Stempelkarten_Backend.Commands.DeletePlayer;
+using Raspo_Stempelkarten_Backend.Commands.GetPlayer;
+using Raspo_Stempelkarten_Backend.Commands.ListPlayers;
 using Raspo_Stempelkarten_Backend.Dtos;
-using Raspo_Stempelkarten_Backend.Queries.GetPlayer;
-using Raspo_Stempelkarten_Backend.Queries.ListPlayers;
 
 namespace Raspo_Stempelkarten_Backend.Controllers;
 
+/// <summary>
+/// Administrate players.
+/// </summary>
+/// <param name="mediator"></param>
 [Route("api/teams/{team}/[controller]/")]
 public class PlayersController(IMediator mediator) : ControllerBase
 {
+    /// <summary>
+    /// Create a new player.
+    /// </summary>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] PlayerCreateDto playerCreateDto, string team)
     {
@@ -20,16 +27,17 @@ public class PlayersController(IMediator mediator) : ControllerBase
             new AddPlayersRequest(team)
             {
                 FirstName = playerCreateDto.FirstName,
-                Surname = playerCreateDto.Surname,
+                LastName = playerCreateDto.LastName,
                 Birthdate = playerCreateDto.Birthdate,
-                // birthplace
+                Birthplace = playerCreateDto.Birthplace
             }, 
             CancellationToken.None);
-        return response.IsFailed 
-            ? Problem(string.Join(Environment.NewLine, response.Errors.Select(e => e.Message))) 
-            : Ok(response.Value);
+        return response.ToHttpResponse();
     }
     
+    /// <summary>
+    /// Lists all players.
+    /// </summary>
     [HttpGet]
     public async Task<IActionResult> List(string team)
     {
@@ -41,6 +49,9 @@ public class PlayersController(IMediator mediator) : ControllerBase
         return Ok(players);
     }
     
+    /// <summary>
+    /// Get a Player.
+    /// </summary>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id, string team)
     {
@@ -52,6 +63,11 @@ public class PlayersController(IMediator mediator) : ControllerBase
         return Ok(response);
     }
     
+    /// <summary>
+    /// Delete a player.
+    /// </summary>
+    /// <param name="id">The player id.</param>
+    /// <param name="team">The team.</param>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, string team)
     {

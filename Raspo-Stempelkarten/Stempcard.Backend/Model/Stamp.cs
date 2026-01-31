@@ -1,6 +1,6 @@
 namespace Raspo_Stempelkarten_Backend.Model;
 
-public class Stamp(Guid id, string reason, string issuedBy, DateTimeOffset issuedAt)
+public class Stamp(Guid id, string reason, string issuedBy, DateTimeOffset issuedDate)
 {
     public Stamp(string reason) 
         : this(Guid.NewGuid(), reason, "dbo", DateTimeOffset.UtcNow)
@@ -13,6 +13,6 @@ public class Stamp(Guid id, string reason, string issuedBy, DateTimeOffset issue
 
     public string IssuedBy { get; set; } = issuedBy;
 
-    public DateTimeOffset IssuedAt { get; set; } = issuedAt;
+    public DateTimeOffset IssuedDate { get; set; } = issuedDate;
     
 }

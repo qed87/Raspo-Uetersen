@@ -1,17 +1,17 @@
 namespace Raspo_Stempelkarten_Backend.Model;
 
-public class StampCard(Guid id, Guid issuedTo, DateTimeOffset issuedAt, short accountingYear)
+public class StampCard(Guid id, Guid playerId, DateTimeOffset issuedDate, short accountingYear)
 {
-    public StampCard(Guid issuedTo, short accountingYear)
-        : this(Guid.NewGuid(), issuedTo, DateTimeOffset.UtcNow, accountingYear)
+    public StampCard(Guid playerId, short accountingYear)
+        : this(Guid.NewGuid(), playerId, DateTimeOffset.UtcNow, accountingYear)
     {
     }
 
     public Guid Id { get; set; } = id;
     
-    public Guid IssuedTo { get; } = issuedTo;
+    public Guid PlayerId { get; } = playerId;
     
-    public DateTimeOffset IssuedAt { get; } = issuedAt;
+    public DateTimeOffset IssuedDate { get; } = issuedDate;
 
     public short AccountingYear { get; } = accountingYear;
 
@@ -19,7 +19,7 @@ public class StampCard(Guid id, Guid issuedTo, DateTimeOffset issuedAt, short ac
     
     protected bool Equals(StampCard other)
     {
-        return IssuedTo.Equals(other.IssuedTo) && AccountingYear == other.AccountingYear;
+        return PlayerId.Equals(other.PlayerId) && AccountingYear == other.AccountingYear;
     }
 
     public override bool Equals(object? obj)
@@ -32,6 +32,6 @@ public class StampCard(Guid id, Guid issuedTo, DateTimeOffset issuedAt, short ac
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(IssuedTo, AccountingYear);
+        return HashCode.Combine(PlayerId, AccountingYear);
     }
 }

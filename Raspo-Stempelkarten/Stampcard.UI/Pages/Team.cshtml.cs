@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Stampcard.UI.Clients;
+using Stampcard.UI.Dtos;
 
 namespace Stampcard.UI.Pages;
 
@@ -11,30 +12,41 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
     [Required]
     public string Id { get; set; }
     
-    public List<string> Items { get; set; } = [];
+    public TeamDetailedReadDto Item { get; set; }
+    
+    [BindProperty]
+    public string SetName { get; set; }
+    
+    [BindProperty]
+    public ulong SetConcurrencyToken { get; set; }
+    
+    public List<string> Coaches { get; set; } = [];
     
     [BindProperty]
     [Required]
     [EmailAddress]
-    public string Coach { get; set; }
+    public string NewCoach { get; set; }
 
     public async Task OnGetAsync()
     {
         await LoadItemsAsync();
+        SetName = Item.Name;
+        SetConcurrencyToken = Item.ConcurrencyToken;
     }
 
     private async Task LoadItemsAsync()
     {
-        var response = await teamHttpClient.ListCoachesAsync(Id);
-        Items.AddRange(response.Data ?? []);
+        var response = await teamHttpClient.GetTeamAsync(Id);
+        Item = response.Data;
+        Coaches.AddRange(response.Data.Coaches ?? []);
     }
     
-    public async Task<IActionResult> OnPutAsync()
+    public async Task<IActionResult> OnPostTeamAsync()
     {
         try
         {
-            //var response = await teamHttpClient.CreateCoachAsync(Id, Coach);
-            //if (!response.HasError) return RedirectToPage();
+            var response = await teamHttpClient.UpdateTeamAsync(SetName, SetConcurrencyToken);
+            if (!response.HasError) return RedirectToPage();
             await LoadItemsAsync();
             ModelState.AddModelError(string.Empty, response.Message);
             return Page();
@@ -54,7 +66,7 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
     {
         try
         {
-            var response = await teamHttpClient.CreateCoachAsync(Id, Coach);
+            var response = await teamHttpClient.CreateCoachAsync(Id, NewCoach);
             if (!response.HasError) return RedirectToPage();
             await LoadItemsAsync();
             ModelState.AddModelError(string.Empty, response.Message);

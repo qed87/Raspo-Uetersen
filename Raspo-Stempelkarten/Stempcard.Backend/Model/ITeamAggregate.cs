@@ -20,9 +20,25 @@ public interface ITeamAggregate
     /// </summary>
     bool Deleted { get; set; }
     /// <summary>
+    /// The team name.
+    /// </summary>
+    public string Name { get; set; }
+    /// <summary>
+    /// The club name.
+    /// </summary>
+    public string Club { get; set; }
+    /// <summary>
+    /// The issuer.
+    /// </summary>
+    public string CreatedBy { get; set; }
+    /// <summary>
+    /// The issued date.
+    /// </summary>
+    public DateTimeOffset CreatedOn { get; set; }
+    /// <summary>
     /// The players of the team.
     /// </summary>
-    List<Player> Players { get; }
+    List<Member> Members { get; }
     /// <summary>
     /// The stamp cards of the team.
     /// </summary>
@@ -32,6 +48,11 @@ public interface ITeamAggregate
     /// </summary>
     List<Coach> Coaches { get; }
     /// <summary>
+    /// Updates the name of the team.
+    /// </summary>
+    /// <param name="name">The new name.</param>
+    Task<Result> UpdateAsync(string name);
+    /// <summary>
     /// Add a player to the team.
     /// </summary>
     /// <param name="firstName">The first name of the player.</param>
@@ -39,20 +60,20 @@ public interface ITeamAggregate
     /// <param name="birthdate">The birthdate of the player.</param>
     /// <param name="birthplace">The birthplace of the player.</param>
     /// <return>The player id.</return>
-    Task<Result<Guid>> AddPlayerAsync(string firstName, string surname, DateOnly birthdate, string birthplace);
+    Task<Result<Guid>> AddMemberAsync(string firstName, string surname, DateOnly birthdate, string birthplace);
     /// <summary>
     /// Deletes a player.
     /// </summary>
-    /// <param name="playerId">The player id.</param>
+    /// <param name="memberId">The player id.</param>
     /// <returns>The id of the deleted player.</returns>
-    Task<Result<Guid>> DeletePlayerAsync(Guid playerId);
+    Task<Result<Guid>> RemoveMemberAsync(Guid memberId);
     /// <summary>
     /// Adds a stamp card to the team.
     /// </summary>
-    /// <param name="playerId">The player for that the stamp card was issued.</param>
+    /// <param name="memberId">The player for that the stamp card was issued.</param>
     /// <param name="accountingYear">The accounting year.</param>
     /// <returns></returns>
-    Task<Result<Guid>> AddStampCardAsync(Guid playerId, short accountingYear);
+    Task<Result<Guid>> AddStampCardAsync(Guid memberId, short accountingYear);
     /// <summary>
     /// Stamps a stamp card.
     /// </summary>
@@ -97,20 +118,17 @@ public interface ITeamAggregate
     /// <param name="id">The stamp card id.</param>
     /// <returns>The delete stamp card.</returns>
     Task<Result<Guid>> DeleteStampCard(Guid id);
-
     /// <summary>
     /// Adds a new coach to the team.
     /// </summary>
     /// <param name="email">The email of the coach.</param>
-    /// <param name="issuedBy">The name of the issuer.</param>
     /// <returns></returns>
-    Task<Result> AddCoach(string email, string issuedBy);
+    Task<Result> AddCoachAsync(string email);
 
     /// <summary>
     /// Removes a coach to the team.
     /// </summary>
     /// <param name="email">The email of the coach.</param>
-    /// <param name="issuedBy">The name of the issuer.</param>
     /// <returns></returns>
-    Task<Result> RemoveCoach(string email, string issuedBy);
+    Task<Result> RemoveCoach(string email);
 }

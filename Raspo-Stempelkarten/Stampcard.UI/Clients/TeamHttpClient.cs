@@ -6,6 +6,12 @@ namespace Stampcard.UI.Clients;
 
 public class TeamHttpClient(IRestClient restClient)
 {
+    public async Task<ResponseWrapperDto<TeamDetailedReadDto>> GetTeamAsync(string id)
+    {
+        var response = await restClient.ExecuteGetAsync<ResponseWrapperDto<TeamDetailedReadDto>>($"/api/teams/{id}");
+        return response.Data!;
+    }
+    
     public async Task<ResponseWrapperDto<List<string>>> ListCoachesAsync(string id)
     {
         var response = await restClient.ExecuteGetAsync<ResponseWrapperDto<List<string>>>($"/api/teams/{id}/coach");
@@ -49,5 +55,16 @@ public class TeamHttpClient(IRestClient restClient)
         var request = new RestRequest($"/api/teams/{id}/coach/{name}");
         var response = await restClient.ExecuteDeleteAsync<ResponseWrapperDto>(request);
         return response.Data!;
+    }
+
+    public async Task<ResponseWrapperDto> UpdateTeamAsync(string name, ulong concurrencyToken)
+    {
+        var request = new RestRequest("/api/teams");
+        request.AddParameter("name", name, ParameterType.GetOrPost);
+        request.AddParameter("concurrencyToken", concurrencyToken, ParameterType.GetOrPost);
+        var response = await restClient.ExecutePutAsync(request);
+        return JsonSerializer.Deserialize<ResponseWrapperDto>(
+            response.Content!, 
+            new JsonSerializerOptions {  PropertyNameCaseInsensitive = true })!;
     }
 }

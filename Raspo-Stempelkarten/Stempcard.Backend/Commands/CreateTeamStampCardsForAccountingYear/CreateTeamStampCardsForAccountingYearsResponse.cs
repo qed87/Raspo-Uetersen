@@ -1,5 +1,0 @@
-namespace Raspo_Stempelkarten_Backend.Commands.CreateTeamStampCardsForAccountingYear;
-
-public class CreateTeamStampCardsForAccountingYearsResponse
-{
-}

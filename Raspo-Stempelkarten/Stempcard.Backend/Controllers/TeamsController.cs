@@ -1,33 +1,65 @@
 using DispatchR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raspo_Stempelkarten_Backend.Commands.AddCoach;
 using Raspo_Stempelkarten_Backend.Commands.AddTeam;
 using Raspo_Stempelkarten_Backend.Commands.DeleteTeam;
-using Raspo_Stempelkarten_Backend.Commands.ListCoach;
-using Raspo_Stempelkarten_Backend.Commands.ListTeamsQuery;
 using Raspo_Stempelkarten_Backend.Commands.RemoveCoach;
+using Raspo_Stempelkarten_Backend.Commands.UpdateTeam;
 using Raspo_Stempelkarten_Backend.Dtos;
+using Raspo_Stempelkarten_Backend.Queries.GetTeam;
+using Raspo_Stempelkarten_Backend.Queries.ListCoach;
+using Raspo_Stempelkarten_Backend.Queries.ListTeamsQuery;
 
 namespace Raspo_Stempelkarten_Backend.Controllers;
 /// <summary>
 /// The teams controller. 
 /// </summary>
+[Authorize]
 [Route("api/[controller]")]
 public class TeamsController(IMediator mediator) : ControllerBase
 {
+    /// <summary>
+    /// Get the team.
+    /// </summary>
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetItemAsync(string id)
+    {
+        var response = await mediator.Send(
+            new GetTeamQuery(id), 
+            CancellationToken.None);
+        return Ok(ResponseWrapperDto.Ok(response!));
+    }
+    
     /// <summary>
     /// Create a new team.
     /// </summary>
     /// <param name="club">The club name.</param>
     /// <param name="name">Team name.</param>
-    //[Authorize("IsClubManager")]
+    [Authorize("IsManager")]
     [HttpPost]
-    public async Task<IActionResult> Create(string club, string name)
+    public async Task<IActionResult> CreateAsync(string club, string name)
     {
         var response = await mediator.Send(
-            new AddTeamRequest(club, name, User.Identity?.Name ?? "dbo"), 
+            new AddTeamCommand(club, name), 
             CancellationToken.None);
-        
+        var httpResponse = response.ToHttpResponse();
+        return httpResponse;
+    }
+    
+    /// <summary>
+    /// Create a new team.
+    /// </summary>
+    /// <param name="id">The stream id.</param>
+    /// <param name="name">The new team name.</param>
+    /// <param name="concurrencyToken">The concurrency token.</param>
+    [Authorize("IsManager")]
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateAsync(string id, string name, ulong concurrencyToken)
+    {
+        var response = await mediator.Send(
+            new UpdateTeamCommand(id, name, concurrencyToken), 
+            CancellationToken.None);
         var httpResponse = response.ToHttpResponse();
         return httpResponse;
     }
@@ -37,12 +69,12 @@ public class TeamsController(IMediator mediator) : ControllerBase
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    //[Authorize("IsClubManager")]
+    [Authorize("IsManager")]
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(string id)
+    public async Task<IActionResult> DeleteAsync(string id)
     {
         var response = await mediator.Send(
-            new DeleteTeamRequest(id), 
+            new DeleteTeamCommand(id), 
             CancellationToken.None);
         return response.ToHttpResponse();
     }
@@ -51,9 +83,8 @@ public class TeamsController(IMediator mediator) : ControllerBase
     /// List all available teams.
     /// </summary>
     /// <returns></returns>
-    //[Authorize("IsCoachOrClubManager")]
     [HttpGet]
-    public async Task<IActionResult> List()
+    public async Task<IActionResult> ListAsync()
     {
         var response = await mediator.Send(
             new ListTeamsQuery(), 
@@ -68,7 +99,7 @@ public class TeamsController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> ListCoachesAsync(string team)
     {
         var response = await mediator.Send(
-            new ListCoachQuery(team, User.Identity?.Name ?? "dbo"), 
+            new ListCoachQuery(team), 
             CancellationToken.None);
         return Ok(ResponseWrapperDto.Ok(response ?? []));
     }
@@ -76,24 +107,26 @@ public class TeamsController(IMediator mediator) : ControllerBase
     /// <summary>
     /// The coach of this team.
     /// </summary>
-    [HttpPost("{team}/coach/{name}")]
+    [Authorize("IsManager")]
+    [HttpPost("{team}/coach")]
     public async Task<IActionResult> CreateCoachAsync(string team, string name)
     {
         var response = await mediator.Send(
-            new AddCoach(team, name, User.Identity?.Name ?? "dbo"), 
+            new AddCoachCommand(team, name), 
             CancellationToken.None);
-        return Ok(response.ToHttpResponse());
+        return response.ToHttpResponse();
     }
     
     /// <summary>
     /// Delete the coach from the team.
     /// </summary>
+    [Authorize("IsManager")]
     [HttpDelete("{team}/coach/{name}")]
     public async Task<IActionResult> DeleteCoachAsync(string team, string name)
     {
         var response = await mediator.Send(
-            new RemoveCoach(team, name, User.Identity?.Name ?? "dbo"), 
+            new RemoveCoachCommand(team, name), 
             CancellationToken.None);
-        return Ok(response.ToHttpResponse());
+        return response.ToHttpResponse();
     }
 }

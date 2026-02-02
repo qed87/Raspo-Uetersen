@@ -30,12 +30,12 @@
         var team = Model.Items[i];
         <tr>
             <td>@(i + 1)</td>
-            <td>@team.Name</td>
+            <td>@team.Club - @team.Name</td>
             <td>
-                <x:a class="btn btn-dark" asp-route-target="Team" asp-route-id="@team.Id" asp-route-name="@team.Name" asp-page-handler="item">
+                <x:a class="btn btn-dark" asp-route-target="Team" asp-route-id="@team.Id" asp-page-handler="item">
                     <i class="bi bi-people-fill"> Team bearbeiten</i>
                 </x:a>
-                <x:a class="btn btn-dark" asp-route-target="Members" asp-route-id="@team" asp-page-handler="item">
+                <x:a class="btn btn-dark" asp-route-target="Members" asp-route-id="@team.Id" asp-page-handler="item">
                     <i class="bi bi-people-fill"> Mitglieder verwalten</i>
                 </x:a>
                 <x:a class="btn btn-dark" asp-route-target="StampCards" asp-route-id="@team.Id" asp-page-handler="item">

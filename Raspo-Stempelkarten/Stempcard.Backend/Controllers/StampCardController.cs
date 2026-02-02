@@ -1,14 +1,15 @@
 using System.Web;
 using DispatchR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raspo_Stempelkarten_Backend.Commands.CreateStampCard;
 using Raspo_Stempelkarten_Backend.Commands.DeleteStampCard;
 using Raspo_Stempelkarten_Backend.Commands.EraseStamp;
-using Raspo_Stempelkarten_Backend.Commands.GetStampCard;
-using Raspo_Stempelkarten_Backend.Commands.GetStampCardDetails;
-using Raspo_Stempelkarten_Backend.Commands.ListStampCards;
 using Raspo_Stempelkarten_Backend.Commands.StampStampCard;
 using Raspo_Stempelkarten_Backend.Dtos;
+using Raspo_Stempelkarten_Backend.Queries.GetStampCard;
+using Raspo_Stempelkarten_Backend.Queries.GetStampCardDetails;
+using Raspo_Stempelkarten_Backend.Queries.ListStampCards;
 
 namespace Raspo_Stempelkarten_Backend.Controllers;
 
@@ -16,6 +17,7 @@ namespace Raspo_Stempelkarten_Backend.Controllers;
 /// Administrate Stamp Cards.
 /// </summary>
 /// <param name="mediator"></param>
+[Authorize]
 [Route("api/teams/{team}/[controller]")]
 public class StampCardController(IMediator mediator) : ControllerBase
 {
@@ -27,14 +29,9 @@ public class StampCardController(IMediator mediator) : ControllerBase
     {
         team = HttpUtility.UrlDecode(team);
         var response = await mediator.Send(
-            new CreateStampCard(team)
-            {
-                AccountingYear = stampCardCreateDto.AccountingYear,
-                IssuedTo = stampCardCreateDto.IssuedTo
-            }, CancellationToken.None);
-        return response.IsFailed 
-            ? Problem(string.Join(Environment.NewLine, response.Errors.Select(e => e.Message))) 
-            : Ok(response.Value);
+            new CreateStampCardCommand(team, stampCardCreateDto.MemberId, stampCardCreateDto.AccountingYear), 
+            CancellationToken.None);
+        return response.ToHttpResponse();
     }
     
     /// <summary>
@@ -45,13 +42,9 @@ public class StampCardController(IMediator mediator) : ControllerBase
     {
         team = HttpUtility.UrlDecode(team);
         var response = await mediator.Send(
-            new StampStampCard(team, id)
-            {
-                Reason = reason,
-            }, CancellationToken.None);
-        return response.IsFailed 
-            ? Problem(string.Join(Environment.NewLine, response.Errors.Select(e => e.Message))) 
-            : Ok(response.Value);
+            new StampStampCardCommand(team, id, reason), 
+            CancellationToken.None);
+        return response.ToHttpResponse();
     }
     
     /// <summary>
@@ -62,11 +55,9 @@ public class StampCardController(IMediator mediator) : ControllerBase
     {
         team = HttpUtility.UrlDecode(team);
         var response = await mediator.Send(
-            new EraseStamp(stampId, id, team), 
+            new EraseStampCommand(stampId, id, team), 
             CancellationToken.None);
-        return response.IsFailed 
-            ? Problem(string.Join(Environment.NewLine, response.Errors.Select(e => e.Message))) 
-            : Ok(response.Value);
+        return response.ToHttpResponse();
     }
     
     /// <summary>
@@ -80,7 +71,7 @@ public class StampCardController(IMediator mediator) : ControllerBase
             new ListStampCardsQuery(team), 
             CancellationToken.None);
         var stampCards = await responseStream.ToListAsync();
-        return Ok(stampCards);
+        return Ok(ResponseWrapperDto.Ok(stampCards));
     }
     
     /// <summary>
@@ -104,8 +95,8 @@ public class StampCardController(IMediator mediator) : ControllerBase
                 CancellationToken.None); 
         }
         
-        if (response is null) return NotFound();
-        return Ok(response);
+        if(response == null) return NotFound();
+        return Ok(ResponseWrapperDto.Ok(response));
     }
     
     /// <summary>
@@ -116,10 +107,8 @@ public class StampCardController(IMediator mediator) : ControllerBase
     {
         team = HttpUtility.UrlDecode(team);
         var response = await mediator.Send(
-            new DeleteStampCard(id, team), 
+            new DeleteStampCardCommand(id, team), 
             CancellationToken.None);
-        return response.IsFailed 
-            ? Problem(string.Join(Environment.NewLine, response.Errors.Select(e => e.Message))) 
-            : Ok(response.Value);
+        return response.ToHttpResponse();
     }
 }

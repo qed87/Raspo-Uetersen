@@ -1,9 +1,10 @@
-using DispatchR.Extensions;
 using FluentValidation;
 using KurrentDB.Client;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Raspo_Stempelkarten_Backend;
+using Raspo_Stempelkarten_Backend.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -23,15 +24,15 @@ builder.Services.AddAuthentication().AddJwtBearer(options =>
         ValidateIssuer = jwtConfiguration.GetValue<bool>("ValidateIssuer"),
         ValidIssuer = jwtConfiguration.GetValue<string>("Authority"),
         ValidateAudience = jwtConfiguration.GetValue<bool>("ValidateAudience"),
-        ValidAudience = jwtConfiguration.GetValue<string>("Audience")
+        ValidAudience = jwtConfiguration.GetValue<string>("Audience"),
+        NameClaimType = jwtConfiguration.GetValue<string>("NameClaimType"),
     };
 });
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("IsClubManager", policy => policy.RequireRole("club-manager"));
-    options.AddPolicy("IsCoach", policy => policy.RequireRole("coach"));
-    options.AddPolicy("IsCoachOrClubManager", policy => policy.RequireRole("coach", "club-manager"));
-});
+
+builder.Services.AddSingleton<IAuthorizationHandler, TeamCoachRequirementHandler>();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("IsManager", policy => policy.RequireRole("manager"))
+    .AddPolicy("TeamCoachOnly", policy => policy.Requirements.Add(new TeamCoachRequirement()));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -92,7 +93,7 @@ if (!await projections.AnyAsync(projection => projection.Name == "all-club-teams
                     if (event.eventType !== "TeamAdded") return state;
                     if (!event.data) return state;
                     log("Event: " + JSON.stringify(event.data));
-                    state.teams.push({ "club": event.data.Club, "name": event.data.Name, "id": event.streamId });
+                    state.teams.push({ "club": event.data.Club, "name": event.data.Name, "id": event.streamId, "coaches": [] });
                     return state;
                 },
                 TeamDeleted: function (state, event) {
@@ -102,6 +103,25 @@ if (!await projections.AnyAsync(projection => projection.Name == "all-club-teams
                     const index = state.teams.findIndex((team) => event.data.Id === team.id);
                     if (index == -1) return state;
                     state.teams.splice(index, 1);
+                    return state;
+                },
+                CoachAdded: function (state, event) {
+                    if (event.eventType !== "CoachAdded") return state;
+                    if (!event.data) return state;
+                    log("Event: " + JSON.stringify(event.data));
+                    const index = state.teams.findIndex((team) => event.data.Id === event.streamId);
+                    if (index == -1) return state;
+                    state.teams[i].coaches.push(event.data.Email);
+                    return state;
+                },
+                CoachRemoved: function (state, event) {
+                    if (event.eventType !== "CoachRemoved") return state;
+                    if (!event.data) return state;
+                    log("Event: " + JSON.stringify(event.data));
+                    const index = state.teams.findIndex((team) => event.data.Id === event.streamId);
+                    if (index == -1) return state;
+                    var removeCoachIndex = state.teams[i].coaches.indexOf(event.data.Email);
+                    state.teams[i].coaches.splice(removeCoachIndex, 1);
                     return state;
                 }
             })

@@ -1,12 +1,14 @@
 using FluentValidation;
+using JetBrains.Annotations;
 using Raspo_Stempelkarten_Backend.Commands.AddTeam;
 
 namespace Raspo_Stempelkarten_Backend.Validators;
 
 /// <summary>
-/// Add team request validator.
+/// Update team request validator.
 /// </summary>
-public class AddTeamRequestValidator : AbstractValidator<AddTeamRequest>
+[UsedImplicitly]
+public class AddTeamRequestValidator : AbstractValidator<AddTeamCommand>
 {
     /// <summary>
     /// Creates a new validator.

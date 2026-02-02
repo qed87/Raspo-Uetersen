@@ -11,7 +11,7 @@
 </head>
 <body>
 <header>
-    <img src="rasensport-uetersen-logo.png" class="rounded float-end" style="width: 80px; margin: 10px 10px 10px 10px" alt="rasensport-uetersen-logo"/>
+    <img src="~/rasensport-uetersen-logo.png" class="rounded float-end" style="width: 80px; margin: 10px 10px 10px 10px" alt="rasensport-uetersen-logo"/>
     <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
         <div class="container">
             <a class="navbar-brand" asp-area="" asp-page="/Index">Stempelkarten</a>
@@ -25,14 +25,13 @@
                         <a class="nav-link text-dark" asp-area="" asp-page="/Index">Teams</a>
                     </li>
                 </ul>
-                <!-- Nur club-manager darf diesen Reiter sehen -->
                 <ul class="navbar-nav flex-grow-1">
                     <li class="nav-item">
                         <a class="nav-link text-dark" asp-area="" asp-page="/Billing">Abrechnung</a>
                     </li>
                 </ul>
                 <!-- Angemeldeter Nutzer -->
-                <!-- <partial name="_LoginPartial"/> -->
+                <partial name="_LoginPartial"/>
             </div>
         </div>
     </nav>

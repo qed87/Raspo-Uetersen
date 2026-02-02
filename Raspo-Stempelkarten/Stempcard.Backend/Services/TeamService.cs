@@ -1,7 +1,7 @@
 using System.Text.Json;
 using KurrentDB.Client;
-using Raspo_Stempelkarten_Backend.Commands.ListTeamsQuery;
 using Raspo_Stempelkarten_Backend.Dtos;
+using Raspo_Stempelkarten_Backend.Queries.ListTeamsQuery;
 
 namespace Raspo_Stempelkarten_Backend.Services;
 
@@ -10,14 +10,17 @@ namespace Raspo_Stempelkarten_Backend.Services;
 /// </summary>
 public class TeamService(KurrentDBProjectionManagementClient kurrentDbProjectionManagementClient) : ITeamService
 {
+    private const string StreamName = "all-club-teams";
+    
     /// <summary>
     /// List all available teams.
     /// </summary>
-    public async Task<List<TeamReadDto>?> ListTeamsAsync(CancellationToken cancellationToken = default)
+    public async Task<List<TeamReadDto>> ListTeamsAsync(CancellationToken cancellationToken = default)
     {
         var state = await kurrentDbProjectionManagementClient.GetStateAsync<AllClubTeamsState>(
-            "all-club-teams", cancellationToken: cancellationToken, serializerOptions: new JsonSerializerOptions
-                { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = true });
+            StreamName, cancellationToken: cancellationToken, serializerOptions: new JsonSerializerOptions
+            { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = true });
+        if (state.Teams is null) return [];
         return state.Teams;
     }
 }

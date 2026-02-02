@@ -1,5 +1,10 @@
+using Microsoft.AspNetCore.Mvc;
+
 namespace Raspo_Stempelkarten_Backend.Dtos;
 
+/// <summary>
+/// Generic wrapper for message responses.
+/// </summary>
 public class ResponseWrapperDto
 {
     private ResponseWrapperDto()

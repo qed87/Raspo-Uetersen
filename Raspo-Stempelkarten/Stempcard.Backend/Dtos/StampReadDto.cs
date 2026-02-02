@@ -1,8 +1,8 @@
 namespace Raspo_Stempelkarten_Backend.Dtos;
 
-public class StampReadDto
-{
-    public Guid Id { get; set; }
-    
-    public string Reason { get; set; }
-}
+/// <summary>
+/// Represents a stamp record for data transfer.
+/// </summary>
+/// <param name="Id"></param>
+/// <param name="Reason"></param>
+public record StampReadDto(Guid Id, string Reason);

@@ -5,4 +5,4 @@ namespace Raspo_Stempelkarten_Backend.Events;
 /// <summary>
 /// This event is fired when a coach is removed from a team.
 /// </summary>
-public record CoachRemoved(string Email, string IssuedBy, DateTimeOffset IssuedDate) : INotification;
+public record CoachRemoved(string Email, string Issuer, DateTimeOffset IssuedOn) : INotification;

@@ -1,9 +1,8 @@
 namespace Raspo_Stempelkarten_Backend.Dtos;
 
-public class StampCardCreateDto
-{
-    public short AccountingYear { get; set; }
-    
-    public Guid IssuedTo { get; set; }
-    
-}
+/// <summary>
+/// Transfer object for creating a new stamp card.
+/// </summary>
+/// <param name="MemberId"></param>
+/// <param name="AccountingYear"></param>
+public record StampCardCreateDto(Guid MemberId, short AccountingYear);

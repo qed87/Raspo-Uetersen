@@ -1,12 +1,10 @@
 namespace Raspo_Stempelkarten_Backend.Dtos;
 
-public record StampCardReadDto
-{
-    public Guid Id { get; set; }
-    
-    public Guid IssuedTo { get; set; }
-
-    public DateTimeOffset IssuedAt { get; set; }
-
-    public short AccountingYear { get; set; }
-}
+/// <summary>
+/// Read representation of a stamp card.
+/// </summary>
+/// <param name="Id"></param>
+/// <param name="AccountingYear"></param>
+/// <param name="Issuer"></param>
+/// <param name="IssuedOn"></param>
+public record StampCardReadDto(Guid Id, short AccountingYear, string Issuer, DateTimeOffset IssuedOn);

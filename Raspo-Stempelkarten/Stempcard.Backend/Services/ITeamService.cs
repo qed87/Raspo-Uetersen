@@ -10,5 +10,5 @@ public interface ITeamService
     /// <summary>
     /// Gets all available teams.
     /// </summary>
-    Task<List<TeamReadDto>?> ListTeamsAsync(CancellationToken cancellationToken = default);
+    Task<List<TeamReadDto>> ListTeamsAsync(CancellationToken cancellationToken = default);
 }

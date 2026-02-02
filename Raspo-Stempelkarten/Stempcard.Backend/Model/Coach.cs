@@ -1,12 +1,15 @@
 namespace Raspo_Stempelkarten_Backend.Model;
 
+/// <summary>
+/// A coach of the team.
+/// </summary>
 public class Coach
 {
     public string Email { get; set; }
     
-    public string IssuedBy { get; set; }
+    public string Issuer { get; set; }
     
-    public DateTimeOffset IssuedDate { get; set; }
+    public DateTimeOffset IssuedOn { get; set; }
 
     protected bool Equals(Coach other)
     {

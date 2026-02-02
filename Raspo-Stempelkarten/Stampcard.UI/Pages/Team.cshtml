@@ -6,59 +6,66 @@
     ViewData["Title"] = Model.Id + " bearbeiten";
 }
 
-<h1>Team @Model.Coach</h1>
-<x:form asp-area="" asp-page="" method="put">
+<h1>Team @Model.Id</h1>
+<div class="mb-3">
+<x:form asp-area="" asp-page="" asp-page-handler="team" method="post">
     <div class="mb-3">
-        <x:label asp-for="Id" class="form-label">Team-Name</x:label>
-        <x:input asp-for="Id" class="form-control"/>
+        <x:label asp-for="SetName" class="form-label">Team-Name</x:label>
+        <x:input asp-for="SetName" class="form-control"/>
+        <x:input hidden="hidden" asp-for="SetConcurrencyToken"/>
     </div>
     <button class="btn-primary btn">Aktualisieren</button>
 </x:form>
+</div>
 
 <h1>Team-Coaches</h1>
-<table class="table table-striped">
-    <thead>
-    <tr>
-        <th scope="col">#</th>
-        <th scope="col">Team-Coach</th>
-        <th scope="col"></th>
-    </tr>
-    </thead>
-    <tbody>
-    @if (Model.Items.Count == 0)
-    {
+<div class="mb-3">
+    <table class="table table-striped">
+        <thead>
         <tr>
-            <td colspan="3">Keine Daten</td>
+            <th scope="col">#</th>
+            <th scope="col">Team-Coach</th>
+            <th scope="col"></th>
         </tr>
-    }
-    else
-    {
-        @for (var i = 0; i < Model.Items.Count; i++)
+        </thead>
+        <tbody>
+        @if (Model.Coaches.Count == 0)
         {
-            var itemId = @Model.Items[i];
             <tr>
-                <td>@(i + 1)</td>
-                <td>
-                    @Model.Items[i]
-                </td>
-                <td>
-                    <x:a class="btn btn-dark" asp-page-handler="delete" asp-route-id="@itemId">
-                        <i class="bi bi-trash3-fill">Coach entfernen</i>
-                    </x:a>
-                </td>
+                <td colspan="3">Keine Daten</td>
             </tr>
         }
-    }
-    </tbody>
-</table>
+        else
+        {
+            @for (var i = 0; i < Model.Coaches.Count; i++)
+            {
+                var itemId = @Model.Coaches[i];
+                <tr>
+                    <td>@(i + 1)</td>
+                    <td>
+                        @Model.Coaches[i]
+                    </td>
+                    <td>
+                        <x:a class="btn btn-dark" asp-page-handler="delete" asp-route-name="@itemId">
+                            <i class="bi bi-trash3-fill">Coach entfernen</i>
+                        </x:a>
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+</div>
 
-<x:form asp-area="" asp-page="" asp-page-handler="coach" method="post">
-    <div class="mb-3">
-        <x:label asp-for="Coach" class="form-label">Coach (E-Mail)</x:label>
-        <x:input asp-for="Coach" class="form-control"/>
-    </div>
-    <button class="btn-primary btn">Hinzufügen</button>
-</x:form>
+<div class="mb-3">
+    <x:form asp-area="" asp-page="" asp-page-handler="coach" method="post">
+        <div class="mb-3">
+            <x:label asp-for="NewCoach" class="form-label">Coach (E-Mail)</x:label>
+            <x:input asp-for="NewCoach" class="form-control"/>
+        </div>
+        <button class="btn-primary btn">Hinzufügen</button>
+    </x:form>
+</div>
 
 @section scripts{
     <x:partial name="_ValidationScriptsPartial"/>

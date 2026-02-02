@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Stampcard.UI.Clients;
@@ -8,7 +7,7 @@ namespace Stampcard.UI.Pages;
 
 public class Index(TeamHttpClient teamHttpClient, ILogger<Index> logger) : PageModel
 {
-    public required List<(string Id, string Name)> Items { get; set; } = [];
+    public required List<TeamReadDto> Items { get; set; } = [];
     
     [BindProperty] public string Name { get; set; }
 
@@ -27,7 +26,7 @@ public class Index(TeamHttpClient teamHttpClient, ILogger<Index> logger) : PageM
         if (teamResponse.HasError) return teamResponse;
         foreach (var teamReadDto in teamResponse.Data)
         {
-            Items.Add((teamReadDto.Id, teamReadDto.Club + "-" + teamReadDto.Name));
+            Items.Add(teamReadDto);
         }
 
         return teamResponse;

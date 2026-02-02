@@ -1,25 +1,25 @@
 namespace Raspo_Stempelkarten_Backend.Model;
 
-public class StampCard(Guid id, Guid playerId, DateTimeOffset issuedDate, short accountingYear)
+/// <summary>
+/// A member stamp card for a given accounting year.
+/// </summary>
+public class StampCard(Guid id, Guid memberId, string issuer, DateTimeOffset issuedOn, short accountingYear)
 {
-    public StampCard(Guid playerId, short accountingYear)
-        : this(Guid.NewGuid(), playerId, DateTimeOffset.UtcNow, accountingYear)
+    public StampCard(Guid memberId, short accountingYear, string issuer, DateTimeOffset issuedOn)
+        : this(Guid.NewGuid(), memberId, issuer, issuedOn, accountingYear)
     {
     }
 
     public Guid Id { get; set; } = id;
-    
-    public Guid PlayerId { get; } = playerId;
-    
-    public DateTimeOffset IssuedDate { get; } = issuedDate;
-
+    public Guid MemberId { get; } = memberId;
     public short AccountingYear { get; } = accountingYear;
-
+    public string Issuer { get; } = issuer;
+    public DateTimeOffset IssuedOn { get; } = issuedOn;
     public List<Stamp> Stamps { get; } = [];
     
     protected bool Equals(StampCard other)
     {
-        return PlayerId.Equals(other.PlayerId) && AccountingYear == other.AccountingYear;
+        return MemberId.Equals(other.MemberId) && AccountingYear == other.AccountingYear;
     }
 
     public override bool Equals(object? obj)
@@ -32,6 +32,6 @@ public class StampCard(Guid id, Guid playerId, DateTimeOffset issuedDate, short 
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(PlayerId, AccountingYear);
+        return HashCode.Combine(MemberId, AccountingYear);
     }
 }

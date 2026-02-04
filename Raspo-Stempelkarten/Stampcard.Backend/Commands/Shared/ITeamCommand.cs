@@ -1,0 +1,22 @@
+using DispatchR.Abstractions.Send;
+
+namespace StampCard.Backend.Commands.Shared;
+
+/// <summary>
+/// Application specific request interface. 
+/// </summary>
+public interface ITeamCommand : IRequest
+{
+    /// <summary>
+    /// The team against which this command should be executed.
+    /// </summary>
+    public string Team { get; }
+}
+
+public interface IConcurrentCommand
+{
+    /// <summary>
+    /// The concurrency token.
+    /// </summary>
+    public ulong ConcurrencyToken { get; }
+}

@@ -5,7 +5,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		compose.yaml = compose.yaml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stempcard.Backend", "Stempcard.Backend\Stempcard.Backend.csproj", "{38072DB2-0921-448F-A500-CD48C7C51F3D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stampcard.Backend", "Stampcard.Backend\Stampcard.Backend.csproj", "{38072DB2-0921-448F-A500-CD48C7C51F3D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stampcard.UI", "Stampcard.UI\Stampcard.UI.csproj", "{BEAD04F4-A182-47AF-B93C-59570D056EFC}"
 EndProject

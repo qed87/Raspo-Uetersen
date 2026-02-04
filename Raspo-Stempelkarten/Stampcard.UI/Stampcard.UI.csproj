@@ -21,6 +21,7 @@
     </PropertyGroup>
     
     <ItemGroup>
+        <PackageReference Include="Duende.AccessTokenManagement.OpenIdConnect" Version="4.1.1" />
         <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.11"/>
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="9.0.12" />
         <PackageReference Include="RestSharp" Version="113.1.0" />
@@ -38,7 +39,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Stempcard.Backend\Stempcard.Backend.csproj" />
+      <ProjectReference Include="..\Stampcard.Backend\Stampcard.Backend.csproj" />
     </ItemGroup>
 
 </Project>

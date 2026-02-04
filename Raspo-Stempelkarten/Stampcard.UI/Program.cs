@@ -1,19 +1,30 @@
-using System.IdentityModel.Tokens.Jwt;
+using Duende.AccessTokenManagement.OpenIdConnect;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using RestSharp.Extensions.DependencyInjection;
+using RestSharp;
+using RestSharp.Authenticators;
 using Stampcard.UI.Clients;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddRestClient(options =>
+builder.Services.AddTransient<TeamHttpClient>(sp =>
 {
-    options.BaseUrl = new Uri("https://localhost:7184");
-    options.RemoteCertificateValidationCallback = (_, _, _, _) => true;
+    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+    var tokenResult = httpContextAccessor.HttpContext!.GetUserAccessTokenAsync()
+        .ConfigureAwait(true)
+        .GetAwaiter()
+        .GetResult();
+    var restClientOptions = new RestClientOptions
+    {
+        BaseUrl = new Uri(builder.Configuration.GetConnectionString("Backend")!),
+        Authenticator = new JwtAuthenticator(tokenResult.Token!.AccessToken),
+        RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true
+    };
+    var restClient = new RestClient(restClientOptions);
+    return new TeamHttpClient(restClient);
 });
-builder.Services.AddTransient<TeamHttpClient>();
 builder.Services.AddRazorPages();
 builder.Services.AddAuthentication(options =>
     {
@@ -24,7 +35,7 @@ builder.Services.AddAuthentication(options =>
     .AddOpenIdConnect(options =>
     {
         var oidcConfig = builder.Configuration.GetSection("OpenIDConnectSettings");
-        
+
         options.Authority = oidcConfig["Authority"];
         options.ClientId = oidcConfig["ClientId"];
         options.ClientSecret = oidcConfig["ClientSecret"];
@@ -36,9 +47,12 @@ builder.Services.AddAuthentication(options =>
         options.GetClaimsFromUserInfoEndpoint = true;
 
         options.MapInboundClaims = false;
-        options.TokenValidationParameters.NameClaimType = JwtRegisteredClaimNames.Name;
-        options.TokenValidationParameters.RoleClaimType = "roles";
+        options.TokenValidationParameters.NameClaimType = "preferred_username";
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.Scope.Add("offline_access");
     });
+builder.Services.AddOpenIdConnectAccessTokenManagement();
 
 // Force authenticated users for whole application
 var requireAuthPolicy = new AuthorizationPolicyBuilder()
@@ -49,7 +63,6 @@ builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(requireAuthPolicy);
 
 var app = builder.Build();
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

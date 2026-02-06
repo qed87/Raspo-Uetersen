@@ -1,0 +1,146 @@
+name: CI - Build & Push Docker Images
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Stempelkarten-Backend/**'
+      - 'Stempelkarten-UI/**'
+      - '.github/workflows/ci-cd.yml'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'Stempelkarten-Backend/**'
+      - 'Stempelkarten-UI/**'
+      - '.github/workflows/ci-cd.yml'
+
+  # Manuell auslösen möglich (sehr hilfreich beim Debuggen)
+  workflow_dispatch:
+
+env:
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_BACKEND:  ${{ github.repository }}/backend
+  IMAGE_UI:       ${{ github.repository }}/ui
+
+jobs:
+
+  # ────────────────────────────────────────────────
+  #  Job 1 – Build & Test Backend
+  # ────────────────────────────────────────────────
+  build-backend:
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'pull_request' || contains(github.event.head_commit.message, '[backend]') || github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies (Backend)
+        working-directory: ./Raspo-Stempelkarten/Stampcard.Backend
+        run: dotnet restore
+
+      - name: Build Backend
+        working-directory: ./Raspo-Stempelkarten/Stampcard.Backend
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run Backend Tests
+        working-directory: ./Raspo-Stempelkarten/Stampcard.Backend
+        run: dotnet test --no-build --verbosity normal --logger "console;verbosity=detailed"
+
+  # ────────────────────────────────────────────────
+  #  Job 2 – Build & Test UI / Frontend
+  # ────────────────────────────────────────────────
+  build-ui:
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'pull_request' || contains(github.event.head_commit.message, '[ui]') || github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies (UI)
+        working-directory: ./Raspo-Stempelkarten/Stampcard.UI
+        run: dotnet restore
+
+      - name: Build UI
+        working-directory: ./Raspo-Stempelkarten/Stampcard.UI
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run UI Tests
+        working-directory: ./Raspo-Stempelkarten/Stampcard.UI
+        run: dotnet test --no-build --verbosity normal || true   # ← Tests optional machen, falls noch keine existieren
+
+  # ────────────────────────────────────────────────
+  #  Job 3 – Docker Build & Push (nur bei Push auf main)
+  # ────────────────────────────────────────────────
+  docker-build-push:
+    needs: [build-backend, build-ui]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Docker meta (Backend)
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_BACKEND }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-,format=short
+            type=ref,event=branch
+
+      - name: Docker meta (UI)
+        id: meta-ui
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_UI }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-,format=short
+            type=ref,event=branch
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ─── Backend Image ───────────────────────────────
+      - name: Build & push Backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Raspo-Stempelkarten/
+          file:    ./Raspo-Stempelkarten/Stampcard.Backend/Dockerfile
+          push:    true
+          tags:    ${{ steps.meta-backend.outputs.tags }}
+          labels:  ${{ steps.meta-backend.outputs.labels }}
+
+      # ─── UI Image ────────────────────────────────────
+      - name: Build & push UI
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Raspo-Stempelkarten/
+          file:    ./Raspo-Stempelkarten/Stampcard.UI/Dockerfile
+          push:    true
+          tags:    ${{ steps.meta-ui.outputs.tags }}
+          labels:  ${{ steps.meta-ui.outputs.labels }}

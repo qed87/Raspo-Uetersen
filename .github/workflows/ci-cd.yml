@@ -129,7 +129,7 @@ jobs:
       - name: Build & push Backend
         uses: docker/build-push-action@v6
         with:
-          context: ./Raspo-Stempelkarten/Stampcard.Backend
+          context: ./Raspo-Stempelkarten/
           file:    ./Raspo-Stempelkarten/Stampcard.Backend/Dockerfile
           push:    true
           tags:    ${{ steps.meta-backend.outputs.tags }}
@@ -139,7 +139,7 @@ jobs:
       - name: Build & push UI
         uses: docker/build-push-action@v6
         with:
-          context: ./Raspo-Stempelkarten/Stampcard.UI
+          context: ./Raspo-Stempelkarten/
           file:    ./Raspo-Stempelkarten/Stampcard.UI/Dockerfile
           push:    true
           tags:    ${{ steps.meta-ui.outputs.tags }}

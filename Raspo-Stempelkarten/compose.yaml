@@ -1,10 +1,10 @@
 ﻿services:
   stampcard-ui:
-    image: ghcr.io/qed87/raspo-uetersen/ui:sha-8498dca
+    image: ghcr.io/qed87/raspo-uetersen/ui:sha-929f47f
     hostname: stampcard-ui
     depends_on:
       stampcard-backend:
-        condition: service_healthy
+        condition: service_started
         required: true
     env_file: "stampcard-ui.env"
     restart: always
@@ -22,7 +22,7 @@
     volumes:
       - ./Stampcard.UI/appsettings.json:/Stampcard.Backend/appsettings.json
   stampcard-backend:
-    image: ghcr.io/qed87/raspo-uetersen/backend:sha-8498dca
+    image: ghcr.io/qed87/raspo-uetersen/backend:sha-929f47f
     hostname: stampcard-backend
     restart: always
     env_file: "stampcard-backend.env"

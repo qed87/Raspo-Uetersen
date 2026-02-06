@@ -1,13 +1,17 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
-USER $APP_UID
 
-# Tools nachinstallieren (minimal, nur was du wirklich brauchst)
+# Als root arbeiten, um Pakete zu installieren
+USER root
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         curl \
         iputils-ping \
         dnsutils \
-    && rm -rf /var/lib/apt/lists/*     # Cache sofort löschen → Image bleibt klein
+    && rm -rf /var/lib/apt/lists/*
+
+# Danach wieder zurück zum non-root-User wechseln (Sicherheit!)
+USER $APP_UID
 
 WORKDIR /app
 EXPOSE 80

@@ -22,6 +22,7 @@ builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly, ServiceLife
 builder.Services.AddAuthentication().AddJwtBearer(options =>
 {
     options.Authority = jwtConfiguration.GetValue<string>("Authority");
+    options.Audience = jwtConfiguration.GetValue<string>("Audience");
     options.RequireHttpsMetadata = jwtConfiguration.GetValue<bool>("RequireHttpsMetadata"); // Only for develop
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -137,7 +138,7 @@ if (!await projections.AnyAsync(projection => projection.Name == "all-club-teams
                     if (event.eventType !== "TeamUpdated") return state;
                     if (!event.data) return state;
                     log("Event: " + JSON.stringify(event.data));
-                    const index = state.teams.findIndex((team)  => event.data.Id === team.id);
+                    const index = state.teams.findIndex((team)  => event.streamId === team.id);
                     if (index == -1) return state;
                     state.teams[index].name = event.data.Name;
                     return state;
@@ -146,7 +147,7 @@ if (!await projections.AnyAsync(projection => projection.Name == "all-club-teams
                     if (event.eventType !== "TeamDeleted") return state;
                     if (!event.data) return state;
                     log("Event: " + JSON.stringify(event.data));
-                    const index = state.teams.findIndex((team) => event.data.Id === team.id);
+                    const index = state.teams.findIndex((team) => event.streamId === team.id);
                     if (index == -1) return state;
                     state.teams.splice(index, 1);
                     return state;
@@ -155,19 +156,19 @@ if (!await projections.AnyAsync(projection => projection.Name == "all-club-teams
                     if (event.eventType !== "CoachAdded") return state;
                     if (!event.data) return state;
                     log("Event: " + JSON.stringify(event.data));
-                    const index = state.teams.findIndex((team) => event.data.Id === event.streamId);
+                    const index = state.teams.findIndex((team) => event.streamId === team.id);
                     if (index == -1) return state;
-                    state.teams[i].coaches.push(event.data.Email);
+                    state.teams[index].coaches.push(event.data.Email);
                     return state;
                 },
                 CoachRemoved: function (state, event) {
                     if (event.eventType !== "CoachRemoved") return state;
                     if (!event.data) return state;
                     log("Event: " + JSON.stringify(event.data));
-                    const index = state.teams.findIndex((team) => event.data.Id === event.streamId);
+                    const index = state.teams.findIndex((team) => event.streamId === team.id);
                     if (index == -1) return state;
-                    var removeCoachIndex = state.teams[i].coaches.indexOf(event.data.Email);
-                    state.teams[i].coaches.splice(removeCoachIndex, 1);
+                    var removeCoachIndex = state.teams[index].coaches.indexOf(event.data.Email);
+                    state.teams[index].coaches.splice(removeCoachIndex, 1);
                     return state;
                 }
             })

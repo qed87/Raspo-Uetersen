@@ -15,7 +15,7 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
     public TeamDetailedReadDto Item { get; set; }
     
     [BindProperty]
-    public string SetName { get; set; }
+    public string NewName { get; set; }
     
     [BindProperty]
     public ulong SetConcurrencyToken { get; set; }
@@ -30,14 +30,14 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
     public async Task OnGetAsync()
     {
         await LoadItemsAsync();
-        SetName = Item.Name;
-        SetConcurrencyToken = Item.ConcurrencyToken;
     }
 
     private async Task LoadItemsAsync()
     {
         var response = await teamHttpClient.GetTeamAsync(Id);
         Item = response.Data;
+        NewName = Item.Name;
+        SetConcurrencyToken = Item.ConcurrencyToken;
         Coaches.AddRange(response.Data.Coaches ?? []);
     }
     
@@ -45,7 +45,8 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
     {
         try
         {
-            var response = await teamHttpClient.UpdateTeamAsync(SetName, SetConcurrencyToken);
+            ModelState.Remove(nameof(NewCoach));
+            var response = await teamHttpClient.UpdateTeamAsync(Id, NewName, SetConcurrencyToken);
             if (!response.HasError) return RedirectToPage();
             await LoadItemsAsync();
             ModelState.AddModelError(string.Empty, response.Message);
@@ -66,6 +67,7 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
     {
         try
         {
+            ModelState.Remove(nameof(NewName));
             var response = await teamHttpClient.CreateCoachAsync(Id, NewCoach);
             if (!response.HasError) return RedirectToPage();
             await LoadItemsAsync();

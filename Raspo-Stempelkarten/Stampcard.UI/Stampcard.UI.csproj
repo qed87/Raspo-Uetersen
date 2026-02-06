@@ -38,8 +38,4 @@
       <_ContentIncludedByDefault Remove="Areas\Identity\Pages\_ViewStart.cshtml" />
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Stampcard.Backend\Stampcard.Backend.csproj" />
-    </ItemGroup>
-
 </Project>

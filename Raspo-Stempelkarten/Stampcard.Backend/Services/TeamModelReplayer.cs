@@ -35,8 +35,18 @@ public class TeamModelReplayer(ILogger<TeamModelReplayer> logger, Team team) : I
                     resolvedEvent.Event.Data.ToArray(), 
                     JsonSerializerOptions.Default);
                 if (teamDeleted is null) throw ModelReadError("TeamDeleted");
-                logger.LogTrace("Replayed [TeamDeleted]: Team={Id}.", teamDeleted.Id);
+                logger.LogTrace("Replayed [TeamDeleted] Id = {Id}", team.Id);
                 team.Deleted = true;
+                break;
+            case nameof(TeamUpdated):
+                var teamUpdated = JsonSerializer.Deserialize<TeamUpdated>(
+                    resolvedEvent.Event.Data.ToArray(), 
+                    JsonSerializerOptions.Default);
+                if (teamUpdated is null) throw ModelReadError("TeamUpdated");
+                logger.LogTrace("Replayed [TeamUpdated] Id = {Id}", team.Id);
+                team.Name = teamUpdated.Name;
+                team.LastUpdatedBy = teamUpdated.Issuer;
+                team.LastModified = teamUpdated.IssuedOn;
                 break;
             case nameof(TeamAdded):
             {

@@ -1,5 +1,5 @@
-@page "/Teams/{Team}/Members"
-@model Members
+@page "/Teams/{Team}/Players"
+@model Players
 @tagHelperPrefix x:
 
 @{
@@ -30,8 +30,8 @@
                 <x:input asp-for="Items[i].FirstName"/>
             </td>
             <td>
-                <x:label asp-for="Items[i].Surname" />
-                <x:input asp-for="Items[i].Surname"/>
+                <x:label asp-for="Items[i].LastName" />
+                <x:input asp-for="Items[i].LastName"/>
             </td>
             <td>
                 <x:label asp-for="Items[i].Birthdate" />
@@ -54,20 +54,20 @@
 <x:form asp-area="" asp-page="" method="post">
     <div class="row g-3">
         <div class="col-auto">
-            <x:label asp-for="NewMember.FirstName" class="form-label">Vorname</x:label>
-            <x:input asp-for="NewMember.FirstName" class="form-control"/>
+            <x:label asp-for="NewPlayer.FirstName" class="form-label">Vorname</x:label>
+            <x:input asp-for="NewPlayer.FirstName" class="form-control"/>
         </div>
         <div class="col-auto">
-            <x:label asp-for="NewMember.Surname" class="form-label">Nachname</x:label>
-            <x:input asp-for="NewMember.Surname" class="form-control"/>
+            <x:label asp-for="NewPlayer.LastName" class="form-label">Nachname</x:label>
+            <x:input asp-for="NewPlayer.LastName" class="form-control"/>
         </div>
         <div class="col-auto">
-            <x:label asp-for="NewMember.Birthdate" class="form-label">Geburtsjahr</x:label>
-            <x:input asp-for="NewMember.Birthdate" class="form-control"/>
+            <x:label asp-for="NewPlayer.Birthdate" class="form-label">Geburtsjahr</x:label>
+            <x:input asp-for="NewPlayer.Birthdate" class="form-control"/>
         </div>
         <div class="col-auto">
-            <x:label asp-for="NewMember.Birthplace" class="form-label">Geburtsort</x:label>
-            <x:input asp-for="NewMember.Birthplace" class="form-control"/>
+            <x:label asp-for="NewPlayer.Birthplace" class="form-label">Geburtsort</x:label>
+            <x:input asp-for="NewPlayer.Birthplace" class="form-control"/>
         </div>
         <div class="col-auto align-baseline">
             <button class="btn-primary btn">Anlegen</button>

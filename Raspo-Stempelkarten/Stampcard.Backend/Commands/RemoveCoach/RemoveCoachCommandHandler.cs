@@ -10,7 +10,7 @@ namespace StampCard.Backend.Commands.RemoveCoach;
 [UsedImplicitly]
 public class RemoveCoachCommandHandler(IServiceProvider serviceProvider, IAuthorizationService authorizationService, 
     IHttpContextAccessor httpContextAccessor, ILogger<RemoveCoachCommandHandler> logger) : 
-    OnlyTeamCoachHandlerBase<RemoveCoachCommand, Unit>(serviceProvider, authorizationService, httpContextAccessor, logger)
+    CommandHandlerBase<RemoveCoachCommand, Unit>(serviceProvider, logger)
 {
     /// <inheritdoc />
     protected override async Task ApplyCommandToModelAsync(ICommandExecutionContext context)

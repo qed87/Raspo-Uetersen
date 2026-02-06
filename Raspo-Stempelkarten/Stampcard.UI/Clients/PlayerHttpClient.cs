@@ -1,44 +1,38 @@
 using System.Text.Json;
 using RestSharp;
 using Stampcard.UI.Dtos;
+using ResponseWrapperDto = Stampcard.UI.Dtos.ResponseWrapperDto;
+using TeamReadDto = Stampcard.UI.Dtos.TeamReadDto;
 
 namespace Stampcard.UI.Clients;
 
-public class TeamHttpClient(IRestClient restClient)
+public class PlayerHttpClient(IRestClient restClient)
 {
-    public async Task<ResponseWrapperDto<TeamDetailedReadDto>> GetTeamAsync(string id)
+    public async Task<ResponseWrapperDto<PlayerReadDto>> GetAsync(string teamId, string id)
     {
-        var response = await restClient.ExecuteGetAsync<ResponseWrapperDto<TeamDetailedReadDto>>($"/api/teams/{id}");
+        var response = await restClient.ExecuteGetAsync<ResponseWrapperDto<PlayerReadDto>>($"/api/teams/{teamId}/players/{id}");
         return response.Data!;
     }
     
-    public async Task<ResponseWrapperDto<List<string>>> ListCoachesAsync(string id)
+    public async Task<ResponseWrapperDto<List<PlayerReadDto>>> ListAsync(string teamId)
     {
-        var response = await restClient.ExecuteGetAsync<ResponseWrapperDto<List<string>>>($"/api/teams/{id}/coach");
+        var response = await restClient.ExecuteGetAsync<ResponseWrapperDto<List<PlayerReadDto>>>($"/api/teams/{teamId}/players");
         return response.Data!;
     }
     
-
-    public async Task<ResponseWrapperDto<List<TeamReadDto>>> ListTeamsAsync()
+    public async Task<ResponseWrapperDto> CreateAsync(string teamId, string firstName, string lastName, DateOnly birthdate, string birthplace)
     {
-        var response = await restClient.ExecuteGetAsync<ResponseWrapperDto<List<TeamReadDto>>>("/api/teams");
-        return response.Data!;
-    }
-
-    public async Task<ResponseWrapperDto> CreateTeamAsync(string name)
-    {
-        var request = new RestRequest("/api/teams");
-        request.AddParameter("club", "raspo1926", ParameterType.GetOrPost);
-        request.AddParameter("name", name, ParameterType.GetOrPost);
+        var request = new RestRequest($"/api/teams{teamId}/players");
+        request.AddJsonBody(new PlayerCreateDto(firstName, lastName, birthdate, birthplace));
         var response = await restClient.ExecutePostAsync(request);
         return JsonSerializer.Deserialize<ResponseWrapperDto>(
             response.Content!, 
             new JsonSerializerOptions {  PropertyNameCaseInsensitive = true })!;
     }
 
-    public async Task<ResponseWrapperDto> DeleteTeamAsync(string id)
+    public async Task<ResponseWrapperDto> DeleteTeamAsync(string teamId, string id)
     {
-        var request = new RestRequest($"/api/teams/{id}");
+        var request = new RestRequest($"/api/teams/{teamId}/players/{id}");
         var response = await restClient.ExecuteDeleteAsync<ResponseWrapperDto>(request);
         return response.Data!;
     }

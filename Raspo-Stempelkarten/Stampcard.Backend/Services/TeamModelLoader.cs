@@ -32,7 +32,7 @@ public class TeamModelLoader(
             Direction.Forwards,
             streamId,
             startFromPosition);
-        var team = new Team(mediator, httpContextAccessor.HttpContext?.User ?? new ClaimsPrincipal());
+        var team = new Team(streamId, mediator, httpContextAccessor.HttpContext?.User ?? new ClaimsPrincipal());
         var replayer = new TeamModelReplayer(loggerFactory.CreateLogger<TeamModelReplayer>(), team);
         StreamPosition? streamRevision = null;
         if (await result.ReadState == ReadState.Ok)

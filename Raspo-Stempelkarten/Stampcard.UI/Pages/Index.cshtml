@@ -6,9 +6,6 @@
     ViewData["Title"] = "Teamverwaltung";
 }
 
-<x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
-</x:div>
-
 <h1>Teamverwaltung</h1>
 
 <table class="table table-striped">
@@ -35,7 +32,7 @@
                 <x:a class="btn btn-dark" asp-route-target="Team" asp-route-id="@team.Id" asp-page-handler="item">
                     <i class="bi bi-people-fill"> Team bearbeiten</i>
                 </x:a>
-                <x:a class="btn btn-dark" asp-route-target="Members" asp-route-id="@team.Id" asp-page-handler="item">
+                <x:a class="btn btn-dark" asp-route-target="Players" asp-route-id="@team.Id" asp-page-handler="item">
                     <i class="bi bi-people-fill"> Mitglieder verwalten</i>
                 </x:a>
                 <x:a class="btn btn-dark" asp-route-target="StampCards" asp-route-id="@team.Id" asp-page-handler="item">
@@ -50,17 +47,15 @@
     </tbody>
 </table>
 
-<x:form asp-page="" method="post">
-    <div class="mb-3">
-        <x:label asp-for="Name" class="form-label">Name</x:label>
-        <x:input asp-for="Name" class="form-control"/>    
-    </div>
-    
-    <button class="btn-primary btn">Anlegen</button>
-</x:form>
+@if (User.IsInRole("manager"))
+{
+    <x:form asp-page="" method="post" class="needs-spinner">
+        <div class="mb-3">
+            <x:label asp-for="Name" class="form-label">Name</x:label>
+            <x:input asp-for="Name" class="form-control"/>
+        </div>
 
-@section scripts{
-    <x:partial name="_ValidationScriptsPartial"/>
+        <button class="btn-primary btn">Anlegen</button>
+    </x:form>
 }
-
 

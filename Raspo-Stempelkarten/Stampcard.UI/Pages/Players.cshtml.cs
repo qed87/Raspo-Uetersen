@@ -1,39 +1,36 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Stampcard.UI.Clients;
 
 namespace Stampcard.UI.Pages;
 
-public class Members : PageModel
+public class Players(PlayerHttpClient playerHttpClient) : PageModel
 {
     [BindProperty(SupportsGet = true)]
     public string Team { get; set; }
     
     [BindProperty]
-    public Member NewMember { get; set; }
+    public Player NewPlayer { get; set; }
 
-    public List<Member> Items { get; set; } = [];
+    public List<Player> Items { get; set; } = [];
     
-    public void OnGet()
+    public async Task OnGetAsync()
     {
-        Items.Add(new Member
+        await LoadItemsAsync();
+    }
+
+    private async Task LoadItemsAsync()
+    {
+        var response = await playerHttpClient.ListAsync(Team);
+        Items = response.Data.Select(dto => new Player
         {
-            Id = Guid.NewGuid(),
-            FirstName = "Franz Leopold",
-            Surname = "Kirchner",
-            Birthdate = new DateOnly(2017, 8, 13),
-            Birthplace = "Hamburg"
-        });
-        
-        Items.Add(new Member
-        {
-            Id = Guid.NewGuid(),
-            FirstName = "Julius Richard",
-            Surname = "Kirchner",
-            Birthdate = new DateOnly(2020, 9, 7),
-            Birthplace = "Pinneberg"
-        });
-        
+            Id = dto.Id, 
+            FirstName = dto.FirstName, 
+            LastName = dto.LastName, 
+            Birthdate = dto.Birthdate, 
+            Birthplace = dto.Birthplace
+        }).ToList();
     }
 
     public IActionResult OnPost()
@@ -52,7 +49,7 @@ public class Members : PageModel
         return RedirectToPage();
     }
     
-    public class Member
+    public class Player
     {
         public Guid? Id { get; set; }
         
@@ -60,7 +57,7 @@ public class Members : PageModel
         public string FirstName { get; set; }
         
         [Required]
-        public string Surname { get; set; }
+        public string LastName { get; set; }
         
         [Required]
         [DataType(DataType.Date)]

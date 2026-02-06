@@ -8,7 +8,7 @@ namespace StampCard.Backend.Model;
 /// <summary>
 /// The team model.
 /// </summary>
-public class Team(IMediator mediator, IPrincipal userPrincipal) : ITeamAggregate
+public class Team(string id, IMediator mediator, IPrincipal userPrincipal) : ITeamAggregate
 {
     private const string TeamAlreadyDeleteMsg = "Team ist bereits gelöscht!"; 
     
@@ -19,7 +19,7 @@ public class Team(IMediator mediator, IPrincipal userPrincipal) : ITeamAggregate
     public ulong? Version { get; set; }
 
     /// <inheritdoc />
-    public string Id { get; set; } = string.Empty;
+    public string Id { get; set; } = id;
 
     /// <inheritdoc />
     public List<Player> Players { get; } = [];
@@ -67,7 +67,7 @@ public class Team(IMediator mediator, IPrincipal userPrincipal) : ITeamAggregate
         if (string.IsNullOrEmpty(name)) return Result.Fail("Name darf nicht leer sein.");
         Name = name;
         await mediator.Publish(
-            new TeamUpdated(Id, name, GetUserName(), DateTimeOffset.UtcNow), 
+            new TeamUpdated(name, GetUserName(), DateTimeOffset.UtcNow), 
             CancellationToken.None);
         return Result.Ok();
     }
@@ -243,7 +243,7 @@ public class Team(IMediator mediator, IPrincipal userPrincipal) : ITeamAggregate
     {
         Deleted = true;
         await mediator.Publish(
-            new TeamDeleted(Id, GetUserName(), DateTimeOffset.UtcNow), 
+            new TeamDeleted(GetUserName(), DateTimeOffset.UtcNow), 
             CancellationToken.None);
         return Id;
     }

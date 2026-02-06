@@ -7,17 +7,17 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Stampcard.UI2/Stampcard.UI2.csproj", "Stampcard.UI2/"]
-RUN dotnet restore "Stampcard.UI2/Stampcard.UI2.csproj"
+COPY ["Stampcard.UI/Stampcard.UI.csproj", "Stampcard.UI/"]
+RUN dotnet restore "Stampcard.UI/Stampcard.UI.csproj"
 COPY . .
-WORKDIR "/src/Stampcard.UI2"
-RUN dotnet build "./Stampcard.UI2.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/Stampcard.UI"
+RUN dotnet build "./Stampcard.UI.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Stampcard.UI2.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./Stampcard.UI.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Stampcard.UI2.dll"]
+ENTRYPOINT ["dotnet", "Stampcard.UI.dll"]

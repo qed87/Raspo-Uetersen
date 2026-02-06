@@ -84,7 +84,7 @@ public sealed class EventDataChangeTracker(ILogger<EventDataChangeTracker> logge
     /// <inheritdoc />
     public ValueTask Handle(TeamDeleted request, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Track change to model: Team deleted '{Id}'.", request.Id);
+        logger.LogInformation("Track change to model: Team deleted.");
         _changes.Add(new EventData(Uuid.NewUuid(), nameof(TeamDeleted), JsonSerializer.SerializeToUtf8Bytes(request)));
         return ValueTask.CompletedTask;
     }

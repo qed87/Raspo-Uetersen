@@ -1,5 +1,4 @@
 using Duende.AccessTokenManagement.OpenIdConnect;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
@@ -16,14 +15,32 @@ builder.Services.AddTransient<TeamHttpClient>(sp =>
         .ConfigureAwait(true)
         .GetAwaiter()
         .GetResult();
+    if (!tokenResult.Succeeded) throw new InvalidOperationException("Failed to get access token");
     var restClientOptions = new RestClientOptions
     {
         BaseUrl = new Uri(builder.Configuration.GetConnectionString("Backend")!),
-        Authenticator = new JwtAuthenticator(tokenResult.Token!.AccessToken),
+        Authenticator = new JwtAuthenticator(tokenResult.Token.IdentityToken.GetValueOrDefault()),
         RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true
     };
     var restClient = new RestClient(restClientOptions);
     return new TeamHttpClient(restClient);
+});
+builder.Services.AddTransient<PlayerHttpClient>(sp =>
+{
+    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+    var tokenResult = httpContextAccessor.HttpContext!.GetUserAccessTokenAsync()
+        .ConfigureAwait(true)
+        .GetAwaiter()
+        .GetResult();
+    if (!tokenResult.Succeeded) throw new InvalidOperationException("Failed to get access token");
+    var restClientOptions = new RestClientOptions
+    {
+        BaseUrl = new Uri(builder.Configuration.GetConnectionString("Backend")!),
+        Authenticator = new JwtAuthenticator(tokenResult.Token.IdentityToken.GetValueOrDefault()),
+        RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true
+    };
+    var restClient = new RestClient(restClientOptions);
+    return new PlayerHttpClient(restClient);
 });
 builder.Services.AddRazorPages();
 builder.Services.AddAuthentication(options =>
@@ -35,7 +52,6 @@ builder.Services.AddAuthentication(options =>
     .AddOpenIdConnect(options =>
     {
         var oidcConfig = builder.Configuration.GetSection("OpenIDConnectSettings");
-
         options.Authority = oidcConfig["Authority"];
         options.ClientId = oidcConfig["ClientId"];
         options.ClientSecret = oidcConfig["ClientSecret"];
@@ -46,9 +62,10 @@ builder.Services.AddAuthentication(options =>
         options.SaveTokens = true;
         options.GetClaimsFromUserInfoEndpoint = true;
 
-        options.MapInboundClaims = false;
+        options.MapInboundClaims = true;
         options.TokenValidationParameters.NameClaimType = "preferred_username";
         options.Scope.Add("openid");
+        options.Scope.Add("email");
         options.Scope.Add("profile");
         options.Scope.Add("offline_access");
     });
@@ -66,7 +83,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
+    app.UseExceptionHandler("Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }

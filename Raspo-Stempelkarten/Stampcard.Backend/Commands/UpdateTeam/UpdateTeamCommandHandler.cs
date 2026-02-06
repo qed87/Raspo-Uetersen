@@ -19,7 +19,11 @@ public class UpdateTeamCommandHandler(
     {
         var teams = await teamService.ListTeamsAsync();
         if (teams.Any(team => team.Name == context.Command.Name))
+        {
             context.SetResult(Result.Fail("Team mit demselben Namen existiert bereits."));
+            return;
+        }
+            
         logger.LogInformation("Update team name for team '{Team}'.", context.Command.Team);
         var result = await context.Model.UpdateAsync(context.Command.Name);
         context.SetResult(result);

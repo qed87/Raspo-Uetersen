@@ -8,6 +8,10 @@ using RestSharp.Authenticators;
 using Stampcard.UI.Clients;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration
+    .AddJsonFile("appsettings.json")
+    .AddEnvironmentVariables()
+    .AddCommandLine(args);
 builder.Services.AddTransient<TeamHttpClient>(sp =>
 {
     var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();

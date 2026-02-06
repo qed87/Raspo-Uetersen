@@ -10,8 +10,11 @@ using StampCard.Backend.Dtos;
 using StampCard.Backend.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration
+    .AddJsonFile("appsettings.json")
+    .AddEnvironmentVariables()
+    .AddCommandLine(args);
 builder.Services.AddControllers();
-
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSerilog();
 

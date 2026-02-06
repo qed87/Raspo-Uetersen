@@ -1,13 +1,65 @@
 ﻿services:
-  raspo-stempelkarten:
-    image: raspo-stempelkarten
-    build:
-      context: .
-      dockerfile: Raspo-Stempelkarten/Dockerfile
-
-  raspo-stempelkarten-backend:
-    image: raspo-stempelkarten-backend
-    build:
-      context: .
-      dockerfile: Raspo-Stempelkarten-Backend/Dockerfile
+  stampcard-ui:
+    image: ghcr.io/qed87/raspo-uetersen/ui:sha-8498dca
+    hostname: stampcard-ui
+    depends_on:
+      stampcard-backend:
+        condition: service_healthy
+        required: true
+    env_file: "stampcard-ui.env"
+    restart: always
+    ports:
+      - mode: host
+        host_ip: 127.0.0.1
+        target: 8080
+        published: "80"
+        protocol: tcp
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    volumes:
+      - ./Stampcard.UI/appsettings.json:/Stampcard.Backend/appsettings.json
+  stampcard-backend:
+    image: ghcr.io/qed87/raspo-uetersen/backend:sha-8498dca
+    hostname: stampcard-backend
+    restart: always
+    env_file: "stampcard-backend.env"
+    ports:
+      - mode: host
+        host_ip: 127.0.0.1
+        target: 8080
+        published: "5000"
+        protocol: tcp
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    volumes:
+      - ./Stampcard.Backend/appsettings.json:/Stampcard.Backend/appsettings.json
+      - ./Stampcard.Backend/Logs/:/Stampcard.Backend/Logs/
+  kurrentdb.db:
+    image: docker.kurrent.io/kurrent-latest/kurrentdb:latest
+    hostname: kurrent-db
+    environment:
+      - KURRENTDB_CLUSTER_SIZE=1
+      - KURRENTDB_RUN_PROJECTIONS=All
+      - KURRENTDB_START_STANDARD_PROJECTIONS=true
+      - KURRENTDB_NODE_PORT=2113
+      - KURRENTDB_INSECURE=true
+      - KURRENTDB_ENABLE_ATOM_PUB_OVER_HTTP=true
+    ports:
+      - "2113:2113"
+    volumes:
+      - type: volume
+        source: kurrentdb-volume-data
+        target: /var/lib/kurrentdb
+      - type: volume
+        source: kurrentdb-volume-logs
+        target: /var/log/kurrentdb
+volumes:
+  kurrentdb-volume-data:
+  kurrentdb-volume-logs:
 

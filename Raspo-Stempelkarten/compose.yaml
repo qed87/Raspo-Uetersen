@@ -46,7 +46,7 @@
       - ./Stampcard.Backend/Logs/:/app/Logs/
   kurrentdb.db:
     image: docker.kurrent.io/kurrent-latest/kurrentdb:latest
-    hostname: kurrent-db
+    hostname: kurrentdb
     environment:
       - KURRENTDB_CLUSTER_SIZE=1
       - KURRENTDB_RUN_PROJECTIONS=All
@@ -55,7 +55,11 @@
       - KURRENTDB_INSECURE=true
       - KURRENTDB_ENABLE_ATOM_PUB_OVER_HTTP=true
     ports:
-      - "2113:2113"
+      - mode: host
+        host_ip: 0.0.0.0
+        target: 2113
+        published: "2113"
+        protocol: tcp
     volumes:
       - type: volume
         source: kurrentdb-volume-data

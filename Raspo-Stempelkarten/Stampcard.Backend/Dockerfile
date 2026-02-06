@@ -1,5 +1,14 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 USER $APP_UID
+
+# Tools nachinstallieren (minimal, nur was du wirklich brauchst)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        curl \
+        iputils-ping \
+        dnsutils \
+    && rm -rf /var/lib/apt/lists/*     # Cache sofort löschen → Image bleibt klein
+
 WORKDIR /app
 EXPOSE 80
 

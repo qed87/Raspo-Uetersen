@@ -65,13 +65,13 @@ builder.Services.AddAuthentication(options =>
 
         options.SaveTokens = true;
         options.GetClaimsFromUserInfoEndpoint = true;
-
+        
         options.MapInboundClaims = true;
         options.TokenValidationParameters.NameClaimType = "preferred_username";
         options.Scope.Add("openid");
         options.Scope.Add("email");
         options.Scope.Add("profile");
-        options.Scope.Add("offline_access");
+        //options.Scope.Add("offline_access");
     });
 builder.Services.AddOpenIdConnectAccessTokenManagement();
 

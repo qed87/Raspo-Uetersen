@@ -22,7 +22,6 @@
     
     <ItemGroup>
         <PackageReference Include="Duende.AccessTokenManagement.OpenIdConnect" Version="4.1.1" />
-        <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.11"/>
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="9.0.12" />
         <PackageReference Include="RestSharp" Version="113.1.0" />
         <PackageReference Include="RestSharp.Extensions.DependencyInjection" Version="113.1.0" />

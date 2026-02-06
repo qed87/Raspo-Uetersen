@@ -9,7 +9,7 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Stampcard.Backend/Stampcard.Backend.csproj", "Stampcard.Backend/"]
 RUN dotnet restore "Stampcard.Backend/Stampcard.Backend.csproj"
-COPY ./Stampcard.Backend/ .
+COPY . .
 WORKDIR "/src/Stampcard.Backend"
 RUN dotnet build "./Stampcard.Backend.csproj" -c $BUILD_CONFIGURATION -o /app/build
 

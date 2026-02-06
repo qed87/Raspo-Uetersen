@@ -1,6 +1,6 @@
 ﻿services:
   stampcard-ui:
-    image: ghcr.io/qed87/raspo-uetersen/ui:sha-929f47f
+    image: ghcr.io/qed87/raspo-uetersen/ui:latest
     hostname: stampcard-ui
     depends_on:
       stampcard-backend:
@@ -22,10 +22,14 @@
     volumes:
       - ./Stampcard.UI/appsettings.json:/Stampcard.Backend/appsettings.json
   stampcard-backend:
-    image: ghcr.io/qed87/raspo-uetersen/backend:sha-929f47f
+    image: ghcr.io/qed87/raspo-uetersen/backend:latest
     hostname: stampcard-backend
     restart: always
     env_file: "stampcard-backend.env"
+    depends_on:
+      kurrentdb.db:
+        condition: service_started
+        required: true
     ports:
       - mode: host
         host_ip: 127.0.0.1
@@ -38,8 +42,8 @@
         max-size: "50m"
         max-file: "3"
     volumes:
-      - ./Stampcard.Backend/appsettings.json:/Stampcard.Backend/appsettings.json
-      - ./Stampcard.Backend/Logs/:/Stampcard.Backend/Logs/
+      - ./Stampcard.Backend/appsettings.json:/app/appsettings.json
+      - ./Stampcard.Backend/Logs/:/app/Logs/
   kurrentdb.db:
     image: docker.kurrent.io/kurrent-latest/kurrentdb:latest
     hostname: kurrent-db

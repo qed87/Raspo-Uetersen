@@ -117,66 +117,83 @@ if (app.Environment.IsDevelopment())
 app.MapSwagger();
 
 var kurrentDbProjection = app.Services.GetRequiredService<KurrentDBProjectionManagementClient>();
-await kurrentDbProjection.EnableAsync("$by_category");
-
-var projections = kurrentDbProjection.ListContinuousAsync();
-if (!await projections.AnyAsync(projection => projection.Name == "all-club-teams"))
+const int maxRetries = 10;
+for (var i = 0; i < maxRetries; i++)
 {
-    await kurrentDbProjection.CreateContinuousAsync("all-club-teams", """
-        fromCategory('team')
-            .when({
-                $init: function () {
-                    return {
-                        teams: []
-                    }
-                },
-                TeamAdded: function (state, event) {
-                    if (event.eventType !== "TeamAdded") return state;
-                    if (!event.data) return state;
-                    log("Event: " + JSON.stringify(event.data));
-                    state.teams.push({ "club": event.data.Club, "name": event.data.Name, "id": event.streamId, "coaches": [] });
-                    return state;
-                },
-                TeamUpdated: function (state, event) {
-                    if (event.eventType !== "TeamUpdated") return state;
-                    if (!event.data) return state;
-                    log("Event: " + JSON.stringify(event.data));
-                    const index = state.teams.findIndex((team)  => event.streamId === team.id);
-                    if (index == -1) return state;
-                    state.teams[index].name = event.data.Name;
-                    return state;
-                },
-                TeamDeleted: function (state, event) {
-                    if (event.eventType !== "TeamDeleted") return state;
-                    if (!event.data) return state;
-                    log("Event: " + JSON.stringify(event.data));
-                    const index = state.teams.findIndex((team) => event.streamId === team.id);
-                    if (index == -1) return state;
-                    state.teams.splice(index, 1);
-                    return state;
-                },
-                CoachAdded: function (state, event) {
-                    if (event.eventType !== "CoachAdded") return state;
-                    if (!event.data) return state;
-                    log("Event: " + JSON.stringify(event.data));
-                    const index = state.teams.findIndex((team) => event.streamId === team.id);
-                    if (index == -1) return state;
-                    state.teams[index].coaches.push(event.data.Email);
-                    return state;
-                },
-                CoachRemoved: function (state, event) {
-                    if (event.eventType !== "CoachRemoved") return state;
-                    if (!event.data) return state;
-                    log("Event: " + JSON.stringify(event.data));
-                    const index = state.teams.findIndex((team) => event.streamId === team.id);
-                    if (index == -1) return state;
-                    var removeCoachIndex = state.teams[index].coaches.indexOf(event.data.Email);
-                    state.teams[index].coaches.splice(removeCoachIndex, 1);
-                    return state;
-                }
-            })
-            .outputState();
-        """);
+    try
+    {
+        await Task.Delay((int) (Math.Pow(2, i) - 1) * 250);
+        var response = await kurrentDbProjection.GetStatusAsync("$by_category");
+        if (response is null) continue;
+        if (response.Status.Contains("Running"))
+        {
+            var projections = kurrentDbProjection.ListContinuousAsync();
+            if (await projections.AllAsync(projection => projection.Name != "all-club-teams"))
+            {
+                await kurrentDbProjection.CreateContinuousAsync("all-club-teams", """
+                    fromCategory('team')
+                        .when({
+                            $init: function () {
+                                return {
+                                    teams: []
+                                }
+                            },
+                            TeamAdded: function (state, event) {
+                                if (event.eventType !== "TeamAdded") return state;
+                                if (!event.data) return state;
+                                log("Event: " + JSON.stringify(event.data));
+                                state.teams.push({ "club": event.data.Club, "name": event.data.Name, "id": event.streamId, "coaches": [] });
+                                return state;
+                            },
+                            TeamUpdated: function (state, event) {
+                                if (event.eventType !== "TeamUpdated") return state;
+                                if (!event.data) return state;
+                                log("Event: " + JSON.stringify(event.data));
+                                const index = state.teams.findIndex((team)  => event.streamId === team.id);
+                                if (index == -1) return state;
+                                state.teams[index].name = event.data.Name;
+                                return state;
+                            },
+                            TeamDeleted: function (state, event) {
+                                if (event.eventType !== "TeamDeleted") return state;
+                                if (!event.data) return state;
+                                log("Event: " + JSON.stringify(event.data));
+                                const index = state.teams.findIndex((team) => event.streamId === team.id);
+                                if (index == -1) return state;
+                                state.teams.splice(index, 1);
+                                return state;
+                            },
+                            CoachAdded: function (state, event) {
+                                if (event.eventType !== "CoachAdded") return state;
+                                if (!event.data) return state;
+                                log("Event: " + JSON.stringify(event.data));
+                                const index = state.teams.findIndex((team) => event.streamId === team.id);
+                                if (index == -1) return state;
+                                state.teams[index].coaches.push(event.data.Email);
+                                return state;
+                            },
+                            CoachRemoved: function (state, event) {
+                                if (event.eventType !== "CoachRemoved") return state;
+                                if (!event.data) return state;
+                                log("Event: " + JSON.stringify(event.data));
+                                const index = state.teams.findIndex((team) => event.streamId === team.id);
+                                if (index == -1) return state;
+                                var removeCoachIndex = state.teams[index].coaches.indexOf(event.data.Email);
+                                state.teams[index].coaches.splice(removeCoachIndex, 1);
+                                return state;
+                            }
+                        })
+                        .outputState();
+                    """);
+            }
+            app.Logger.Log(LogLevel.Information, "Projections successfully initialized.");
+            break;
+        }
+    }
+    catch (Exception ex)
+    {
+        app.Logger.Log(LogLevel.Warning, ex, "Retry initialize projections");
+    }
 }
 
 await app.RunAsync();

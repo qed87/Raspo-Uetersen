@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StampCard.Backend.Commands.AddPlayer;
 using StampCard.Backend.Commands.RemovePlayer;
-using StampCard.Backend.Dtos;
 using StampCard.Backend.Queries.GetPlayer;
 using StampCard.Backend.Queries.ListPlayers;
+using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend.Controllers;
 

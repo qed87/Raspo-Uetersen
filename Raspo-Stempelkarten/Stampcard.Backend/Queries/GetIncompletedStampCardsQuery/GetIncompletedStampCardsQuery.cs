@@ -1,7 +1,7 @@
 using DispatchR.Abstractions.Send;
 using FluentResults;
 using StampCard.Backend.Commands.Shared;
-using StampCard.Backend.Dtos;
+using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend.Queries.GetIncompletedStampCardsQuery;
 

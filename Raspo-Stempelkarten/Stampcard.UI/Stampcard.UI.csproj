@@ -37,4 +37,8 @@
       <_ContentIncludedByDefault Remove="Areas\Identity\Pages\_ViewStart.cshtml" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Stampcard.Contracts\Stampcard.Contracts.csproj" />
+    </ItemGroup>
+
 </Project>

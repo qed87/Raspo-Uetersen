@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stampcard.Backend", "Stampc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stampcard.UI", "Stampcard.UI\Stampcard.UI.csproj", "{BEAD04F4-A182-47AF-B93C-59570D056EFC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stampcard.Contracts", "Stampcard.Contracts\Stampcard.Contracts.csproj", "{13935C78-23E4-4735-A9C4-7939EDF8A923}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,5 +25,9 @@ Global
 		{BEAD04F4-A182-47AF-B93C-59570D056EFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BEAD04F4-A182-47AF-B93C-59570D056EFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BEAD04F4-A182-47AF-B93C-59570D056EFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13935C78-23E4-4735-A9C4-7939EDF8A923}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13935C78-23E4-4735-A9C4-7939EDF8A923}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13935C78-23E4-4735-A9C4-7939EDF8A923}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13935C78-23E4-4735-A9C4-7939EDF8A923}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

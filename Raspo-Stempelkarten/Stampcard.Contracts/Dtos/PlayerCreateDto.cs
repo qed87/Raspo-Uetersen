@@ -1,4 +1,4 @@
-namespace Stampcard.UI.Dtos;
+namespace Stampcard.Contracts.Dtos;
 
 /// <summary>
 /// Represents a data transfer object for creating a new player.

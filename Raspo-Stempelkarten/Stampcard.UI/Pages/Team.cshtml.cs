@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Stampcard.Contracts.Dtos;
 using Stampcard.UI.Clients;
-using Stampcard.UI.Dtos;
 
 namespace Stampcard.UI.Pages;
 

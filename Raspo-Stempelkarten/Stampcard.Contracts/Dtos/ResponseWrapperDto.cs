@@ -1,9 +1,9 @@
-namespace StampCard.Backend.Dtos;
+namespace Stampcard.Contracts.Dtos;
 
 /// <summary>
 /// Generic wrapper for message responses.
 /// </summary>
-public class ResponseWrapperDto
+public sealed class ResponseWrapperDto
 {
     private ResponseWrapperDto()
     {
@@ -35,7 +35,7 @@ public class ResponseWrapperDto
     /// The error message.
     /// </summary>
     public string? Message { get; set; }
-
+    
     /// <summary>
     /// Creates a response object. 
     /// </summary>

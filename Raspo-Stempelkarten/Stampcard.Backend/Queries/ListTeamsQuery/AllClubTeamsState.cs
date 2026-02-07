@@ -1,5 +1,5 @@
 using JetBrains.Annotations;
-using StampCard.Backend.Dtos;
+using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend.Queries.ListTeamsQuery;
 

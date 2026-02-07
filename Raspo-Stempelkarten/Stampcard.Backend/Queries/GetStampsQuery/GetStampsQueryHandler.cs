@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using StampCard.Backend.Commands.Shared;
-using StampCard.Backend.Dtos;
 using StampCard.Backend.Model;
+using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend.Queries.GetStampsQuery;
 

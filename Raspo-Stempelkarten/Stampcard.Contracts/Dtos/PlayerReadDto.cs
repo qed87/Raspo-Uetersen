@@ -1,4 +1,4 @@
-namespace Stampcard.UI.Dtos;
+namespace Stampcard.Contracts.Dtos;
 
 /// <summary>
 /// A player representation for clients.

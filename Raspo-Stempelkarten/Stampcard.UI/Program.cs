@@ -12,56 +12,7 @@ builder.Configuration
     .AddJsonFile("appsettings.json")
     .AddEnvironmentVariables()
     .AddCommandLine(args);
-builder.Services.AddTransient<TeamHttpClient>(sp =>
-{
-    var logger = sp.GetRequiredService<ILogger<Program>>();
-    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
-    var tokenResult = httpContextAccessor.HttpContext!.GetUserAccessTokenAsync()
-        .ConfigureAwait(true)
-        .GetAwaiter()
-        .GetResult();
-    if (!tokenResult.Succeeded)
-    {
-        logger.LogError("Failed to get access token");
-        return null!;
-    }
-
-    var backendUrl = builder.Configuration.GetConnectionString("Backend")!;
-    logger.LogInformation("Setup RestClient with backend url {Url}", backendUrl);
-    var restClientOptions = new RestClientOptions
-    {
-        BaseUrl = new Uri(backendUrl),
-        Authenticator = new JwtAuthenticator(tokenResult.Token.IdentityToken.GetValueOrDefault()),
-        RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true
-    };
-    var restClient = new RestClient(restClientOptions);
-    return new TeamHttpClient(restClient);
-});
-builder.Services.AddTransient<PlayerHttpClient>(sp =>
-{
-    var logger = sp.GetRequiredService<ILogger<Program>>();
-    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
-    var tokenResult = httpContextAccessor.HttpContext!.GetUserAccessTokenAsync()
-        .ConfigureAwait(true)
-        .GetAwaiter()
-        .GetResult();
-    if (!tokenResult.Succeeded)
-    {
-        logger.LogError("Failed to get access token");
-        return null!;
-    }
-    
-    var backendUrl = builder.Configuration.GetConnectionString("Backend")!;
-    logger.LogInformation("Setup RestClient with backend url {Url}", backendUrl);
-    var restClientOptions = new RestClientOptions
-    {
-        BaseUrl = new Uri(backendUrl),
-        Authenticator = new JwtAuthenticator(tokenResult.Token.IdentityToken.GetValueOrDefault()),
-        RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true
-    };
-    var restClient = new RestClient(restClientOptions);
-    return new PlayerHttpClient(restClient);
-});
+builder.Services.AddBackendClients(builder.Configuration);
 builder.Services.AddRazorPages();
 builder.Services.AddAuthentication(options =>
     {
@@ -87,7 +38,6 @@ builder.Services.AddAuthentication(options =>
         options.Scope.Add("openid");
         options.Scope.Add("email");
         options.Scope.Add("profile");
-        //options.Scope.Add("offline_access");
     });
 builder.Services.AddOpenIdConnectAccessTokenManagement();
 

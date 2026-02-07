@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using DispatchR.Abstractions.Stream;
-using StampCard.Backend.Dtos;
 using StampCard.Backend.Services;
+using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend.Queries.ListStampCards;
 

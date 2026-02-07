@@ -17,7 +17,6 @@ using StampCard.Backend.Commands.RemovePlayer;
 using StampCard.Backend.Commands.Shared;
 using StampCard.Backend.Commands.StampStampCard;
 using StampCard.Backend.Commands.UpdateTeam;
-using StampCard.Backend.Dtos;
 using StampCard.Backend.Events;
 using StampCard.Backend.Queries.GetCompletedStampCardsQuery;
 using StampCard.Backend.Queries.GetIncompletedStampCardsQuery;
@@ -31,6 +30,7 @@ using StampCard.Backend.Queries.ListPlayers;
 using StampCard.Backend.Queries.ListStampCards;
 using StampCard.Backend.Queries.ListTeamsQuery;
 using StampCard.Backend.Services;
+using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend;
 

@@ -3,7 +3,6 @@ using DispatchR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StampCard.Backend.Commands.CreateTeamStampCardsForAccountingYear;
-using StampCard.Backend.Dtos;
 using StampCard.Backend.Queries.GetCompletedStampCardsQuery;
 using StampCard.Backend.Queries.GetIncompletedStampCardsQuery;
 

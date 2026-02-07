@@ -6,8 +6,8 @@ using Microsoft.OpenApi;
 using Serilog;
 using StampCard.Backend;
 using StampCard.Backend.Authorization;
-using StampCard.Backend.Dtos;
 using StampCard.Backend.Exceptions;
+using Stampcard.Contracts.Dtos;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration

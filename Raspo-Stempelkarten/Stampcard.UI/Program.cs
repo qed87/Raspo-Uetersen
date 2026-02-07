@@ -14,15 +14,23 @@ builder.Configuration
     .AddCommandLine(args);
 builder.Services.AddTransient<TeamHttpClient>(sp =>
 {
+    var logger = sp.GetRequiredService<ILogger>();
     var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
     var tokenResult = httpContextAccessor.HttpContext!.GetUserAccessTokenAsync()
         .ConfigureAwait(true)
         .GetAwaiter()
         .GetResult();
-    if (!tokenResult.Succeeded) throw new InvalidOperationException("Failed to get access token");
+    if (!tokenResult.Succeeded)
+    {
+        logger.LogError("Failed to get access token");
+        return null!;
+    }
+
+    var backendUrl = builder.Configuration.GetConnectionString("Backend")!;
+    logger.LogInformation("Setup RestClient with backend url {Url}", backendUrl);
     var restClientOptions = new RestClientOptions
     {
-        BaseUrl = new Uri(builder.Configuration.GetConnectionString("Backend")!),
+        BaseUrl = new Uri(backendUrl),
         Authenticator = new JwtAuthenticator(tokenResult.Token.IdentityToken.GetValueOrDefault()),
         RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true
     };
@@ -31,15 +39,23 @@ builder.Services.AddTransient<TeamHttpClient>(sp =>
 });
 builder.Services.AddTransient<PlayerHttpClient>(sp =>
 {
+    var logger = sp.GetRequiredService<ILogger>();
     var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
     var tokenResult = httpContextAccessor.HttpContext!.GetUserAccessTokenAsync()
         .ConfigureAwait(true)
         .GetAwaiter()
         .GetResult();
-    if (!tokenResult.Succeeded) throw new InvalidOperationException("Failed to get access token");
+    if (!tokenResult.Succeeded)
+    {
+        logger.LogError("Failed to get access token");
+        return null!;
+    }
+    
+    var backendUrl = builder.Configuration.GetConnectionString("Backend")!;
+    logger.LogInformation("Setup RestClient with backend url {Url}", backendUrl);
     var restClientOptions = new RestClientOptions
     {
-        BaseUrl = new Uri(builder.Configuration.GetConnectionString("Backend")!),
+        BaseUrl = new Uri(backendUrl),
         Authenticator = new JwtAuthenticator(tokenResult.Token.IdentityToken.GetValueOrDefault()),
         RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true
     };

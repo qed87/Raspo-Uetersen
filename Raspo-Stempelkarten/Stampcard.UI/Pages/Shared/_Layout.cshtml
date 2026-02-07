@@ -25,14 +25,6 @@
                         <a class="nav-link text-dark" asp-area="" asp-page="/Index">Teams</a>
                     </li>
                 </ul>
-                @if (User.IsInRole("manager"))
-                {
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Billing">Abrechnung</a>
-                        </li>
-                    </ul>
-                }
                 <!-- Angemeldeter Nutzer -->
                 <partial name="_LoginPartial"/>
             </div>

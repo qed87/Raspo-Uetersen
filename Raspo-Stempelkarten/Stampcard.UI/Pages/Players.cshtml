@@ -16,6 +16,7 @@
         <th scope="col">Nachname</th>
         <th scope="col">Geburtsdatum</th>
         <th scope="col">Geburtsort</th>
+        <th scope="col"></th>
     </tr>
     </thead>
     <tbody>
@@ -69,8 +70,8 @@
             <x:label asp-for="NewPlayer.Birthplace" class="form-label">Geburtsort</x:label>
             <x:input asp-for="NewPlayer.Birthplace" class="form-control"/>
         </div>
-        <div class="col-auto align-baseline">
-            <button class="btn-primary btn">Anlegen</button>
-        </div>
+    </div>
+    <div class="mb-3 align-baseline">
+        <button class="btn-primary btn">Anlegen</button>
     </div>
 </x:form>

@@ -9,10 +9,33 @@ public class Stamps : PageModel
     public string Team { get; set; }
     
     [BindProperty(SupportsGet = true)]
-    public string Id { get; set; }
+    public string StampCardId { get; set; }
     
+    public List<Stamp> Items { get; set; } = [];
+    
+    public UpdateStamp Fields = new();
+
     public void OnGet()
     {
         
     }
+}
+
+[BindProperties] 
+public class UpdateStamp
+{
+    [BindProperty]
+    public string Reason { get; set; }
+}
+
+public class Stamp
+{
+    public Guid Id { get; set; }
+    
+    public string Reason { get; set; }
+    
+    public string Issuer { get; set; }
+    
+    public DateTimeOffset IssuedOn { get; set; }
+    
 }

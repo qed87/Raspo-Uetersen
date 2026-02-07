@@ -48,23 +48,23 @@ public class Players(PlayerHttpClient playerHttpClient) : PageModel
     {
         return RedirectToPage();
     }
-    
-    public class Player
-    {
-        public Guid? Id { get; set; }
+}
+
+public class Player
+{
+    public Guid? Id { get; set; }
         
-        [Required]
-        public string FirstName { get; set; }
+    [Required]
+    public string FirstName { get; set; }
         
-        [Required]
-        public string LastName { get; set; }
+    [Required]
+    public string LastName { get; set; }
         
-        [Required]
-        [DataType(DataType.Date)]
-        public DateOnly Birthdate { get; set; }
+    [Required]
+    [DataType(DataType.Date)]
+    public DateOnly Birthdate { get; set; }
         
-        [Required]
-        [MinLength(2)]
-        public string Birthplace { get; set; }
-    }
+    [Required]
+    [MinLength(2)]
+    public string Birthplace { get; set; }
 }

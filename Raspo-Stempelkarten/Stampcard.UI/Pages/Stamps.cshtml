@@ -1,4 +1,4 @@
-@page "/Teams/{Team}/StampCard/{Id}/Stamps"
+@page "/Teams/{Team}/StampCard/{StampCardId}/Stamps"
 @model Stamps
 @tagHelperPrefix x:
 
@@ -7,3 +7,53 @@
 }
 
 <h1>Stempelkarten - @Model.Team</h1>
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th scope="col">#</th>
+        <th scope="col">Grund</th>
+        <th scope="col">Stempel erstellt von</th>
+        <th scope="col">Stempel erhalten am</th>
+        <th scope="col"></th>
+    </tr>
+    </thead>
+    <tbody>
+        @for (var i = 0; i < Model.Items.Count; i++)
+        {
+            var itemId = Model.Items[i].Id;
+            <tr>
+                <td>@(i+1)</td>
+                <td>
+                    <x:label asp-for="Items[i].Reason"/>
+                    <x:input asp-for="Items[i].Reason"/>
+                </td>
+                <td>
+                    <x:label asp-for="Items[i].Issuer" />
+                    <x:input asp-for="Items[i].Issuer"/>
+                </td>
+                <td>
+                    <x:label asp-for="Items[i].IssuedOn" />
+                    <x:input asp-for="Items[i].IssuedOn"/>
+                </td>
+                <td>
+                    <x:a class="btn btn-dark" asp-route-id="@itemId" asp-page-handler="delete">
+                        <i class="bi bi-trash3-fill"> Stempelkarte löschen</i>
+                    </x:a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<x:form asp-area="" asp-page="" method="post">
+    <div class="row g-3">
+        <div class="col-auto">
+            <x:label asp-for="@Model.Fields.Reason" class="form-label">Grund</x:label>
+            <x:input asp-for="@Model.Fields.Reason" class="form-control"/>
+        </div>
+    </div>
+    <div class="mb-3">
+        <button class="btn-primary btn">Stempeln</button>
+    </div>
+</x:form>

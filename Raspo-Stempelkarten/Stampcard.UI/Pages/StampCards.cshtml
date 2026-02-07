@@ -7,3 +7,58 @@
 }
 
 <h1>Stempelkarten - @Model.Team</h1>
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th scope="col">#</th>
+        <th scope="col">Spieler</th>
+        <th scope="col">Geschäftsjahr</th>
+        <th scope="col"></th>
+    </tr>
+    </thead>
+    <tbody>
+    @for (var i = 0; i < Model.Items.Count; i++)
+    {
+        var teamId = Model.Items[i].Id;
+        <tr>
+            <td>@(i+1)</td>
+            <td>
+                <x:input asp-for="Items[i].Id" type="hidden" />
+                <x:label asp-for="Items[i].PlayerName"/>
+                <x:input asp-for="Items[i].PlayerName"/>
+            </td>
+            <td>
+                <x:label asp-for="Items[i].AccountingYear" />
+                <x:input asp-for="Items[i].AccountingYear"/>
+            </td>
+            <td>
+                <x:a class="btn btn-dark" asp-route-target="Team" asp-route-id="@Model.Items[i].Id" asp-page-handler="item">
+                    <i class="bi bi-people-fill">Stempelkarte bearbeiten</i>
+                </x:a>
+                <x:a class="btn btn-dark" asp-route-id="@Model.Items[i].Id" asp-page-handler="delete">
+                    <i class="bi bi-trash3-fill"> Stempelkarte löschen</i>
+                </x:a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<x:form asp-area="" asp-page="" method="post">
+    <div class="row g-3">
+        <div class="col-auto">
+            <x:label asp-for="@Model.PlayerName" class="form-label">Spieler</x:label>
+            <x:select asp-for="@Model.PlayerName" class="form-control">
+                
+            </x:select>
+        </div>
+        <div class="col-auto">
+            <x:label asp-for="@Model.AccountingYear" class="form-label">Geschäftsjahr</x:label>
+            <x:input asp-for="@Model.AccountingYear" class="form-control"/>
+        </div>
+        <div class="col-auto align-baseline">
+            <button class="btn-primary btn">Anlegen</button>
+        </div>
+    </div>
+</x:form>

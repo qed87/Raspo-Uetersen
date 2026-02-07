@@ -14,7 +14,7 @@ builder.Configuration
     .AddCommandLine(args);
 builder.Services.AddTransient<TeamHttpClient>(sp =>
 {
-    var logger = sp.GetRequiredService<ILogger>();
+    var logger = sp.GetRequiredService<Logger<Program>>();
     var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
     var tokenResult = httpContextAccessor.HttpContext!.GetUserAccessTokenAsync()
         .ConfigureAwait(true)
@@ -39,7 +39,7 @@ builder.Services.AddTransient<TeamHttpClient>(sp =>
 });
 builder.Services.AddTransient<PlayerHttpClient>(sp =>
 {
-    var logger = sp.GetRequiredService<ILogger>();
+    var logger = sp.GetRequiredService<Logger<Program>>();
     var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
     var tokenResult = httpContextAccessor.HttpContext!.GetUserAccessTokenAsync()
         .ConfigureAwait(true)

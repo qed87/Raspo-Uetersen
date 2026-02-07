@@ -21,6 +21,9 @@
         max-file: "3"
     volumes:
       - ./config/Stampcard.UI/appsettings.json:/Stampcard.Backend/appsettings.json
+    networks:
+      - proxy-net
+
   stampcard-backend:
     image: ghcr.io/qed87/raspo-uetersen/backend:latest
     hostname: stampcard-backend
@@ -32,7 +35,7 @@
         required: true
     ports:
       - mode: host
-        host_ip: 127.0.0.1
+        host_ip: 0.0.0.0
         target: 8080
         published: "5001"
         protocol: tcp
@@ -44,6 +47,9 @@
     volumes:
       - ./config/Stampcard.Backend/appsettings.json:/app/appsettings.json
       - ./Stampcard.Backend/Logs/:/app/Logs/
+    networks:
+      - proxy-net
+
   kurrentdb:
     image: docker.kurrent.io/kurrent-latest/kurrentdb:latest
     hostname: kurrentdb
@@ -67,7 +73,14 @@
       - type: volume
         source: kurrentdb-volume-logs
         target: /var/log/kurrentdb
+    networks:
+      - proxy-net
+      
 volumes:
   kurrentdb-volume-data:
   kurrentdb-volume-logs:
+
+networks:
+  proxy-net:
+    driver: bridge
 

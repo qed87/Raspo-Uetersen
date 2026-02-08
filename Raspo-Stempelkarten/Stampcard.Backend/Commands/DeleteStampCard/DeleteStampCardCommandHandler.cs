@@ -18,6 +18,6 @@ public class DeleteStampCardCommandHandler(
     protected override async Task ApplyCommandToModelAsync(ICommandExecutionContext context)
     {
         logger.LogInformation("Delete stamp card with Id '{StampCardId}'.", context.Command.Id);
-        await context.Model.DeleteStampCard(context.Command.Id);
+        await context.Model.DeleteStampCardAsync(context.Command.Id);
     }
 }

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Stampcard.Contracts.Dtos;
 using Stampcard.UI.Clients;
-using Stampcard.UI.Dtos;
 
 namespace Stampcard.UI.Pages;
 
@@ -23,7 +23,7 @@ public class Index(TeamHttpClient teamHttpClient, ILogger<Index> logger) : PageM
     private async Task<ResponseWrapperDto<List<TeamReadDto>>?> LoadItemsAsync()
     {
         var teamResponse = await teamHttpClient.ListTeamsAsync();
-        if (teamResponse.HasError) return teamResponse;
+        if (teamResponse is null || teamResponse.HasError) return teamResponse;
         foreach (var teamReadDto in teamResponse.Data)
         {
             Items.Add(teamReadDto);

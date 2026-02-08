@@ -3,7 +3,7 @@ namespace StampCard.Backend.Model;
 /// <summary>
 /// Add a player of the team.
 /// </summary>
-public class Player(Guid id, string firstName, string lastName, DateOnly birthdate, string birthplace, bool deleted = false)
+public class Player(Guid id, string firstName, string lastName, DateOnly birthdate, string birthplace, bool active = true)
 {
     /// <summary>
     /// Gets or sets the player id.
@@ -31,9 +31,9 @@ public class Player(Guid id, string firstName, string lastName, DateOnly birthda
     public string Birthplace { get; set; } = birthplace;
     
     /// <summary>
-    /// Gets or sets a value indicating whether the player is deleted.
+    /// Gets or sets a value indicating whether the player is active or inactive.
     /// </summary>
-    public bool Deleted { get; set; } = deleted;
+    public bool Active { get; set; } = active;
     
     /// <summary>
     /// Compares to another player. 
@@ -41,7 +41,8 @@ public class Player(Guid id, string firstName, string lastName, DateOnly birthda
     /// <param name="other">another player</param>
     protected bool Equals(Player other)
     {
-        return FirstName == other.FirstName && LastName == other.LastName && Birthdate.Equals(other.Birthdate);
+        return FirstName == other.FirstName && LastName == other.LastName && Birthdate.Equals(other.Birthdate) 
+               && Birthplace.Equals(other.Birthplace);
     }
 
     /// <inheritdoc />
@@ -56,6 +57,6 @@ public class Player(Guid id, string firstName, string lastName, DateOnly birthda
     /// <inheritdoc />
     public override int GetHashCode()
     {
-        return HashCode.Combine(FirstName, LastName, Birthdate);
+        return HashCode.Combine(FirstName, LastName, Birthdate, Birthplace);
     }
 }

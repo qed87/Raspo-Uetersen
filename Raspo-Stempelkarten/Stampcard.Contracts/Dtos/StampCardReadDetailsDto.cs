@@ -1,4 +1,4 @@
-namespace StampCard.Backend.Dtos;
+namespace Stampcard.Contracts.Dtos;
 
 /// <summary>
 /// Stamp card read details.

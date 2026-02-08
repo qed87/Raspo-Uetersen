@@ -6,8 +6,8 @@ namespace StampCard.Backend.Model;
 public class Stamp(Guid id, string reason, string issuer, DateTimeOffset issuedOn)
 {
     /// <inheritdoc />
-    public Stamp(string reason) 
-        : this(Guid.NewGuid(), reason, "dbo", DateTimeOffset.UtcNow)
+    public Stamp(string reason, string issuer, DateTimeOffset issuedOn) 
+        : this(Guid.NewGuid(), reason, issuer, issuedOn)
     {
     }
 

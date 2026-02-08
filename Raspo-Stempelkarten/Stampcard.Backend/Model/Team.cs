@@ -61,7 +61,7 @@ public class Team(string id, IMediator mediator, IPrincipal userPrincipal) : ITe
     public DateTimeOffset LastModified { get; set; }
 
     /// <inheritdoc />
-    public async Task<Result> UpdateAsync(string name)
+    public async Task<Result> UpdateTeamAsync(string name)
     {
         if (Deleted) return Result.Fail(TeamAlreadyDeleteMsg);
         if (string.IsNullOrEmpty(name)) return Result.Fail("Name darf nicht leer sein.");
@@ -71,29 +71,28 @@ public class Team(string id, IMediator mediator, IPrincipal userPrincipal) : ITe
             CancellationToken.None);
         return Result.Ok();
     }
+    
+    /// <inheritdoc />
+    public async Task<Result<string>> DeleteTeamAsync()
+    {
+        Deleted = true;
+        await mediator.Publish(
+            new TeamDeleted(GetUserName(), DateTimeOffset.UtcNow), 
+            CancellationToken.None);
+        return Id;
+    }
 
     /// <inheritdoc />
-    public async Task<Result<Guid>> AddPlayerAsync(string firstName, string surname, DateOnly birthdate, string birthplace)
+    public async Task<Result<Guid>> AddPlayerAsync(string firstName, string lastName, DateOnly birthdate, string birthplace)
     {
         if (Deleted) return Result.Fail(TeamAlreadyDeleteMsg);
         if (string.IsNullOrEmpty(firstName)) return Result.Fail("Vorname is leer");
-        if (string.IsNullOrEmpty(surname)) return Result.Fail("Nachname is leer");
+        if (string.IsNullOrEmpty(lastName)) return Result.Fail("Nachname is leer");
+        if (string.IsNullOrEmpty(birthplace)) return Result.Fail("Geburtsort is leer");
         if (birthdate > DateOnly.FromDateTime(DateTime.Now)) return Result.Fail("Geburtsdatum darf nicht in der Zukunft liegen.");
-        var newPlayer = new Player(Guid.NewGuid(), firstName, surname, birthdate, birthplace);
+        var newPlayer = new Player(Guid.NewGuid(), firstName, lastName, birthdate, birthplace);
         var playerFound = Players.SingleOrDefault(player => player.Equals(newPlayer));
-        if (playerFound is not null && playerFound.Deleted)
-        {
-            // reactivate player
-            playerFound.Deleted = false;
-            await mediator.Publish(
-                new PlayerAdded(playerFound.Id, playerFound.FirstName, playerFound.LastName, 
-                    playerFound.Birthdate, playerFound.Birthplace, 
-                    GetUserName(), DateTimeOffset.UtcNow), 
-                CancellationToken.None);
-            return Result.Ok(playerFound.Id);
-        }
-        
-        if (playerFound is not null && !playerFound.Deleted)
+        if (playerFound is not null)
         {
             return Result.Fail("Spieler existiert bereits.");
         }
@@ -104,6 +103,52 @@ public class Team(string id, IMediator mediator, IPrincipal userPrincipal) : ITe
                 newPlayer.Birthdate, newPlayer.Birthplace, GetUserName(), DateTimeOffset.UtcNow), 
             CancellationToken.None);
         return Result.Ok(newPlayer.Id);
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> UpdatePlayerAsync(
+        Guid playerId,
+        string firstName,
+        string lastName,
+        DateOnly birthdate,
+        string birthplace,
+        bool active)
+    {
+        if (Deleted) return Result.Fail(TeamAlreadyDeleteMsg);
+        if (string.IsNullOrEmpty(firstName)) return Result.Fail("Vorname is leer");
+        if (string.IsNullOrEmpty(lastName)) return Result.Fail("Nachname is leer");
+        if (string.IsNullOrEmpty(birthplace)) return Result.Fail("Geburtsort is leer");
+        if (birthdate > DateOnly.FromDateTime(DateTime.Now)) return Result.Fail("Geburtsdatum darf nicht in der Zukunft liegen.");
+        var playerToUpdate = Players.SingleOrDefault(player => player.Id == playerId);
+        if (playerToUpdate is null) return Result.Fail("Spieler konnte nicht gefunden werden!");
+        playerToUpdate.FirstName = firstName;
+        playerToUpdate.LastName = lastName;
+        playerToUpdate.Birthdate = birthdate;
+        playerToUpdate.Birthplace = birthplace;
+        playerToUpdate.Active = active;
+        if (Players.Any(player => player.Id != playerId && player.Equals(playerToUpdate)))
+        {
+            return Result.Fail("Spieler existiert bereits.");
+        }
+        
+        await mediator.Publish(
+            new PlayerUpdated(playerToUpdate.Id, playerToUpdate.FirstName, playerToUpdate.LastName, 
+                playerToUpdate.Birthdate, playerToUpdate.Birthplace,playerToUpdate.Active, GetUserName(), 
+                DateTimeOffset.UtcNow), 
+            CancellationToken.None);
+        return Result.Ok();
+    }
+    
+    /// <inheritdoc />
+    public async Task<Result<Guid>> RemovePlayerAsync(Guid playerId)
+    {
+        if (Deleted) return Result.Fail(TeamAlreadyDeleteMsg);
+        var playerFound = Players.SingleOrDefault(player => player.Id.Equals(playerId));
+        if (playerFound is null) return Result.Fail("Spieler nicht gefunden.");
+        await mediator.Publish(
+            new PlayerRemoved(playerFound.Id, GetUserName(), DateTimeOffset.UtcNow), 
+            CancellationToken.None);
+        return Result.Ok(playerFound.Id);
     }
 
     /// <inheritdoc />
@@ -131,9 +176,9 @@ public class Team(string id, IMediator mediator, IPrincipal userPrincipal) : ITe
             CancellationToken.None);
         return Result.Ok();
     }
-
+    
     /// <inheritdoc />
-    public Task<List<Stamp>> GetStampsFromStampCardAsync(Guid stampCardId)
+    public Task<List<Stamp>> ListStamps(Guid stampCardId)
     {
         if (Deleted) return Task.FromResult<List<Stamp>>([]);
         var card = Cards.SingleOrDefault(card => card.Id == stampCardId);
@@ -142,25 +187,12 @@ public class Team(string id, IMediator mediator, IPrincipal userPrincipal) : ITe
     }
 
     /// <inheritdoc />
-    public async Task<Result<Guid>> RemovePlayerAsync(Guid playerId)
-    {
-        if (Deleted) return Result.Fail(TeamAlreadyDeleteMsg);
-        var playerFound = Players.SingleOrDefault(player => player.Id.Equals(playerId));
-        if (playerFound is null) return Result.Fail("Spieler nicht gefunden.");
-        playerFound.Deleted = true;
-        await mediator.Publish(
-            new PlayerRemoved(playerFound.Id, GetUserName(), DateTimeOffset.UtcNow), 
-                CancellationToken.None);
-        return Result.Ok(playerFound.Id);
-    }
-
-    /// <inheritdoc />
     public async Task<Result<Guid>> AddStampCardAsync(Guid playerId, short accountingYear)
     {
         if (Deleted) return Result.Fail(TeamAlreadyDeleteMsg);
-        var playerResponse = GetActivePlayerById(playerId);
-        if(!playerResponse.IsSuccess) return playerResponse.ToResult();
-        var newStampCard = new StampCard(playerResponse.Value.Id, accountingYear, GetUserName(), DateTimeOffset.UtcNow);
+        var playerResponse = Players.SingleOrDefault(player => player.Id.Equals(playerId));
+        if(playerResponse is null) return Result.Fail("Spieler konnte nicht gefunden werden!");
+        var newStampCard = new StampCard(playerResponse.Id, accountingYear, GetUserName(), DateTimeOffset.UtcNow);
         var cardFound = Cards.SingleOrDefault(stampCard => stampCard.Equals(newStampCard));
         if (cardFound is not null) return Result.Fail("Stempelkarte existiert bereits.");
         Cards.Add(newStampCard);
@@ -170,14 +202,27 @@ public class Team(string id, IMediator mediator, IPrincipal userPrincipal) : ITe
             CancellationToken.None);
         return Result.Ok(newStampCard.Id);
     }
+    
+    /// <inheritdoc />
+    public async Task<Result<Guid>> DeleteStampCardAsync(Guid id)
+    {
+        if (Deleted) return Result.Fail(TeamAlreadyDeleteMsg);
+        var stampCard = Cards.SingleOrDefault(card => card.Id == id);
+        if(stampCard is null) return Result.Fail("StampCard not found");
+        Cards.Remove(stampCard);
+        await mediator.Publish(
+            new StampCardRemoved(id, GetUserName(), DateTimeOffset.UtcNow), 
+            CancellationToken.None);
+        return Result.Ok(id);
+    }
 
     /// <inheritdoc />
-    public async Task<Result<Guid>> StampStampCardAsync(Guid stampCardId, string reason)
+    public async Task<Result<Guid>> StampAsync(Guid stampCardId, string reason)
     {
         if (Deleted) return Result.Fail(TeamAlreadyDeleteMsg);
         var stampCard = Cards.SingleOrDefault(card => card.Id == stampCardId);
         if(stampCard is null) return Result.Fail("Stempelkarte nicht gefunden.");
-        var newStamp = new Stamp(reason);
+        var newStamp = new Stamp(reason, GetUserName(), DateTimeOffset.UtcNow);
         stampCard.Stamps.Add(newStamp);
         await mediator.Publish(
             new StampAdded(newStamp.Id, stampCard.Id, newStamp.Reason, newStamp.Issuer, newStamp.IssuedOn), 
@@ -201,9 +246,9 @@ public class Team(string id, IMediator mediator, IPrincipal userPrincipal) : ITe
     }
 
     /// <inheritdoc />
-    public async Task<Result> CreateNewAccountingYearAsync(int accountingYear)
+    public async Task<Result> AddStampCardsAsync(int accountingYear)
     {
-        foreach (var player in Players)
+        foreach (var player in Players.Where(player => player.Active))
             await AddStampCardAsync(player.Id, (short)accountingYear);
 
         return Result.Ok();
@@ -238,37 +283,20 @@ public class Team(string id, IMediator mediator, IPrincipal userPrincipal) : ITe
             .ToList());
     }
 
-    /// <inheritdoc />
-    public async Task<Result<string>> DeleteTeamAsync()
-    {
-        Deleted = true;
-        await mediator.Publish(
-            new TeamDeleted(GetUserName(), DateTimeOffset.UtcNow), 
-            CancellationToken.None);
-        return Id;
-    }
-
-    /// <inheritdoc />
-    public async Task<Result<Guid>> DeleteStampCard(Guid id)
-    {
-        if (Deleted) return Result.Fail(TeamAlreadyDeleteMsg);
-        var stampCard = Cards.SingleOrDefault(card => card.Id == id);
-        if(stampCard is null) return Result.Fail("StampCard not found");
-        Cards.Remove(stampCard);
-        await mediator.Publish(
-            new StampCardRemoved(id, GetUserName(), DateTimeOffset.UtcNow), 
-            CancellationToken.None);
-        return Result.Ok(id);
-    }
-
+    /// <summary>
+    /// Gets all active players of the team.
+    /// </summary>
     private Result<Player> GetActivePlayerById(Guid playerId)
     {
-        var playerFound = Players.SingleOrDefault(player => player.Id.Equals(playerId) && !player.Deleted);
+        var playerFound = Players.SingleOrDefault(player => player.Id.Equals(playerId) && player.Active);
         return playerFound is null 
-            ? Result.Fail($"No player found with Id = {playerId}") 
+            ? Result.Fail($"Es konnte kein Spieler mit Id = '{playerId}' gefunden werden!") 
             : Result.Ok(playerFound);
     }
 
+    /// <summary>
+    /// Provides the current user name.
+    /// </summary>
     private string GetUserName()
     {
         return userPrincipal.Identity?.Name ?? string.Empty;

@@ -6,7 +6,7 @@
     ViewData["Title"] = "Stempelkarten - " + Model.Team;
 }
 
-<h1>Stempelkarten - @Model.Team</h1>
+<h2>Stempelkarten - @Model.Team/@Model.StampCardId</h2>
 
 <table class="table table-striped">
     <thead>
@@ -19,35 +19,42 @@
     </tr>
     </thead>
     <tbody>
+    @if(Model.Items.Count > 0) 
+    {
         @for (var i = 0; i < Model.Items.Count; i++)
         {
             var itemId = Model.Items[i].Id;
             <tr>
-                <td>@(i+1)</td>
+                <td>@(i + 1)</td>
                 <td>
-                    <x:label asp-for="Items[i].Reason"/>
-                    <x:input asp-for="Items[i].Reason"/>
+                    @Model.Items[i].Reason
                 </td>
                 <td>
-                    <x:label asp-for="Items[i].Issuer" />
-                    <x:input asp-for="Items[i].Issuer"/>
+                    @Model.Items[i].Issuer
                 </td>
                 <td>
-                    <x:label asp-for="Items[i].IssuedOn" />
-                    <x:input asp-for="Items[i].IssuedOn"/>
+                    @Model.Items[i].IssuedOn
                 </td>
                 <td>
-                    <x:a class="btn btn-dark" asp-route-id="@itemId" asp-page-handler="delete">
+                    <x:a class="btn btn-dark" asp-route-id="@itemId" asp-page-handler="delete" data-loading="true">
                         <i class="bi bi-trash3-fill"> Stempelkarte löschen</i>
                     </x:a>
                 </td>
             </tr>
         }
+    }
+    else
+    {
+        <td colspan="5">Keine Daten</td>
+    }
     </tbody>
 </table>
 
 <x:form asp-area="" asp-page="" method="post">
-    <div class="row g-3">
+    <!-- Validation summary -->
+    <x:div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert">
+    </x:div>
+    <div class="row g-3 mb-3">
         <div class="col-auto">
             <x:label asp-for="@Model.Fields.Reason" class="form-label">Grund</x:label>
             <x:input asp-for="@Model.Fields.Reason" class="form-control"/>

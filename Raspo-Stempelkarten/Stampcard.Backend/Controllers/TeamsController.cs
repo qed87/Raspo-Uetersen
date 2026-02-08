@@ -6,10 +6,10 @@ using StampCard.Backend.Commands.AddTeam;
 using StampCard.Backend.Commands.DeleteTeam;
 using StampCard.Backend.Commands.RemoveCoach;
 using StampCard.Backend.Commands.UpdateTeam;
-using StampCard.Backend.Dtos;
 using StampCard.Backend.Queries.GetTeam;
 using StampCard.Backend.Queries.ListCoach;
 using StampCard.Backend.Queries.ListTeamsQuery;
+using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend.Controllers;
 /// <summary>

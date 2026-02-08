@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using DispatchR.Abstractions.Stream;
-using StampCard.Backend.Dtos;
 using StampCard.Backend.Services;
+using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend.Queries.ListStampCards;
 
@@ -22,6 +22,7 @@ public class ListStampCardQueryHandler(IServiceProvider serviceProvider, ILogger
         {
             var stampCardReadDto = new StampCardReadDto(
                 stampCard.Id, 
+                stampCard.PlayerId,
                 stampCard.AccountingYear, 
                 stampCard.Issuer,
                 stampCard.IssuedOn);

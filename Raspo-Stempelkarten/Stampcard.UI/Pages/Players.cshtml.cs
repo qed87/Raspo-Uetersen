@@ -15,38 +15,50 @@ public class Players(PlayerHttpClient playerHttpClient) : PageModel
 
     public List<Player> Items { get; set; } = [];
     
-    public async Task OnGetAsync()
+    public async Task<IActionResult> OnGetAsync()
     {
         await LoadItemsAsync();
+        return Page();
     }
 
     private async Task LoadItemsAsync()
     {
         var response = await playerHttpClient.ListAsync(Team);
-        Items = response.Data.Select(dto => new Player
+        if (!response.HasError)
         {
-            Id = dto.Id, 
-            FirstName = dto.FirstName, 
-            LastName = dto.LastName, 
-            Birthdate = dto.Birthdate, 
-            Birthplace = dto.Birthplace
-        }).ToList();
-    }
-
-    public IActionResult OnPost()
-    {
-        if (ModelState.IsValid)
-        {
-            // Member Speichern
-            return RedirectToPage();
+            Items = response.Data.Select(dto => new Player
+            {
+                Id = dto.Id, 
+                FirstName = dto.FirstName, 
+                LastName = dto.LastName, 
+                Birthdate = dto.Birthdate, 
+                Birthplace = dto.Birthplace,
+                Active = dto.Active
+            }).ToList();
+            return;
         }
         
+        ModelState.AddModelError(string.Empty, response.Message ?? "");
+    }
+
+    public async Task<IActionResult> OnPostAsync()
+    {
+        var response = await playerHttpClient.CreateAsync(Team, NewPlayer.FirstName, NewPlayer.LastName, NewPlayer.Birthdate, NewPlayer.Birthplace);
+        if (!response.HasError) return RedirectToPage();
+        
+        ModelState.AddModelError(string.Empty, response.Message!);
+        await LoadItemsAsync();
         return Page();
     }
     
-    public IActionResult OnGetDelete(Guid id)
+    public async Task<IActionResult> OnGetDeleteAsync(Guid id)
     {
-        return RedirectToPage();
+        var response = await playerHttpClient.DeleteAsync(Team, id);
+        if (!response.HasError) return RedirectToPage();
+        
+        ModelState.AddModelError(string.Empty, response.Message!);
+        await LoadItemsAsync();
+        return Page();
     }
 }
 
@@ -54,17 +66,21 @@ public class Player
 {
     public Guid? Id { get; set; }
         
-    [Required]
+    [Required(ErrorMessage = "Vorname darf nicht leer sein!")]
     public string FirstName { get; set; }
         
-    [Required]
+    [Required(ErrorMessage = "Nachname darf nicht leer sein!")]
     public string LastName { get; set; }
         
-    [Required]
-    [DataType(DataType.Date)]
+    [Required(ErrorMessage = "Geburstdatum darf nicht leer sein!")]
+    [DataType(DataType.Date, ErrorMessage = "Ungültiges Datum!")]
     public DateOnly Birthdate { get; set; }
         
-    [Required]
-    [MinLength(2)]
+    [Required(ErrorMessage = "Geburtsort darf nicht leer sein!")]
+    [MinLength(2, ErrorMessage = "Geburtsort muss mehr länger als 1 Zeichen sein!")]
     public string Birthplace { get; set; }
+    
+    public bool Active { get; set; }
+    
+    public ulong ConcurrencyToken { get; set; }
 }

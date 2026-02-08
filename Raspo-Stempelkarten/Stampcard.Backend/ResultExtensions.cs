@@ -3,7 +3,7 @@ using FluentResults;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using StampCard.Backend.Dtos;
+using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend;
 

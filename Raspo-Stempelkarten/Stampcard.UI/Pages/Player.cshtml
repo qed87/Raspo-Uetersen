@@ -1,0 +1,37 @@
+@page "/Teams/{Team}/Players/{id}"
+@model PlayerModel
+@tagHelperPrefix x:
+
+<h2>Spieler: @Model.PlayerId</h2>
+
+<x:form asp-page="">
+    <!-- Validation summary -->
+    <x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
+    </x:div>
+    
+    <div class="row g-3 mb-3">
+        <x:input asp-for="Player.Id" type="hidden" />
+        <x:input asp-for="Player.ConcurrencyToken" type="hidden" />
+        <div class="col-auto">
+            <x:label asp-for="Player.FirstName" class="form-label">Vorname</x:label>
+            <x:input asp-for="Player.FirstName" class="form-control"/>
+        </div>
+        <div class="col-auto">
+            <x:label asp-for="Player.LastName" class="form-label">Nachname</x:label>
+            <x:input asp-for="Player.LastName" class="form-control"/>
+        </div>
+        <div class="col-auto">
+            <x:label asp-for="Player.Birthdate" class="form-label">Geburtsjahr</x:label>
+            <x:input asp-for="Player.Birthdate" class="form-control"/>
+        </div>
+        <div class="col-auto">
+            <x:label asp-for="Player.Birthplace" class="form-label">Geburtsort</x:label>
+            <x:input asp-for="Player.Birthplace" class="form-control"/>
+        </div>
+        <div class="col-auto">
+            <x:label asp-for="Player.Active" class="form-check-label">Aktiv</x:label>
+            <x:input asp-for="Player.Active" class="form-check-input" type="checkbox"/>
+        </div>
+    </div>
+    <button class="btn-primary btn">Aktualisieren</button>
+</x:form>

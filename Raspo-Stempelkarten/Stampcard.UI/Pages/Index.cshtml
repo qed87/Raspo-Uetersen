@@ -6,56 +6,56 @@
     ViewData["Title"] = "Teamverwaltung";
 }
 
-<h1>Teamverwaltung</h1>
-
-<table class="table table-striped">
-    <thead>
-    <tr>
-        <th scope="col">#</th>
-        <th scope="col">Team Name</th>
-        <th scope="col"></th>
-    </tr>
-    </thead>
-    <tbody>
-    @if (Model.Items.Count == 0)
-    {
-        <td colspan="3">Keine Daten</td>    
-    }
-    
-    @for (var i = 0; i < Model.Items.Count; i++)
-    {
-        var team = Model.Items[i];
+<h2>Teamverwaltung</h2>
+<x:form asp-page="" method="post">
+    <x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
+    </x:div>
+    <table class="table table-striped">
+        <thead>
         <tr>
-            <td>@(i + 1)</td>
-            <td>@team.Club - @team.Name</td>
-            <td>
-                <x:a class="btn btn-dark" asp-route-target="Team" asp-route-id="@team.Id" asp-page-handler="item">
-                    <i class="bi bi-people-fill"> Team bearbeiten</i>
-                </x:a>
-                <x:a class="btn btn-dark" asp-route-target="Players" asp-route-id="@team.Id" asp-page-handler="item">
-                    <i class="bi bi-people-fill"> Mitglieder verwalten</i>
-                </x:a>
-                <x:a class="btn btn-dark" asp-route-target="StampCards" asp-route-id="@team.Id" asp-page-handler="item">
-                    <i class="bi bi-postage"> Stempelkarten verwalten</i>
-                </x:a>
-                <x:a class="btn btn-dark" asp-route-id="@team.Id" asp-page-handler="delete">
-                    <i class="bi bi-trash3-fill"> Team löschen</i>
-                </x:a>
-            </td>
+            <th scope="col">#</th>
+            <th scope="col">Team Name</th>
+            <th scope="col"></th>
         </tr>
-    }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+        @if (Model.Items.Count == 0)
+        {
+            <td colspan="3">Keine Daten</td>
+        }
 
-@if (User.IsInRole("manager"))
-{
-    <x:form asp-page="" method="post" class="needs-spinner">
+        @for (var i = 0; i < Model.Items.Count; i++)
+        {
+            var team = Model.Items[i];
+            <tr>
+                <td>@(i + 1)</td>
+                <td>@team.Club - @team.Name</td>
+                <td>
+                    <x:a class="btn btn-dark" asp-route-target="Team" asp-route-id="@team.Id" asp-page-handler="item">
+                        <i class="bi bi-diagram-3"> Team bearbeiten</i>
+                    </x:a>
+                    <x:a class="btn btn-dark" asp-route-target="Players" asp-route-id="@team.Id" asp-page-handler="item">
+                        <i class="bi bi-people-fill"> Spieler verwalten</i>
+                    </x:a>
+                    <x:a class="btn btn-dark" asp-route-target="StampCards" asp-route-id="@team.Id" asp-page-handler="item">
+                        <i class="bi bi-postage"> Stempelkarten verwalten</i>
+                    </x:a>
+                    <x:a class="btn btn-dark" asp-route-id="@team.Id" asp-page-handler="delete" data-loading="true">
+                        <i class="bi bi-trash3-fill"> Team löschen</i>
+                    </x:a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+
+    @if (User.IsInRole("manager"))
+    {
         <div class="mb-3">
             <x:label asp-for="Name" class="form-label">Name</x:label>
             <x:input asp-for="Name" class="form-control"/>
         </div>
 
         <button class="btn-primary btn">Anlegen</button>
-    </x:form>
-}
-
+    }
+</x:form>

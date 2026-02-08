@@ -8,7 +8,6 @@ using StampCard.Backend.Commands.AddCoach;
 using StampCard.Backend.Commands.AddPlayer;
 using StampCard.Backend.Commands.AddTeam;
 using StampCard.Backend.Commands.CreateStampCard;
-using StampCard.Backend.Commands.CreateTeamStampCardsForAccountingYear;
 using StampCard.Backend.Commands.DeleteStampCard;
 using StampCard.Backend.Commands.DeleteTeam;
 using StampCard.Backend.Commands.EraseStamp;
@@ -16,8 +15,8 @@ using StampCard.Backend.Commands.RemoveCoach;
 using StampCard.Backend.Commands.RemovePlayer;
 using StampCard.Backend.Commands.Shared;
 using StampCard.Backend.Commands.StampStampCard;
+using StampCard.Backend.Commands.UpdatePlayer;
 using StampCard.Backend.Commands.UpdateTeam;
-using StampCard.Backend.Dtos;
 using StampCard.Backend.Events;
 using StampCard.Backend.Queries.GetCompletedStampCardsQuery;
 using StampCard.Backend.Queries.GetIncompletedStampCardsQuery;
@@ -31,6 +30,7 @@ using StampCard.Backend.Queries.ListPlayers;
 using StampCard.Backend.Queries.ListStampCards;
 using StampCard.Backend.Queries.ListTeamsQuery;
 using StampCard.Backend.Services;
+using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend;
 
@@ -55,6 +55,7 @@ public static class ServiceCollectionExtensions
         // notifications
         services.AddScoped<INotificationHandler<TeamUpdated>>(provider => provider.GetRequiredService<EventDataChangeTracker>());
         services.AddScoped<INotificationHandler<PlayerAdded>>(provider => provider.GetRequiredService<EventDataChangeTracker>());
+        services.AddScoped<INotificationHandler<PlayerUpdated>>(provider => provider.GetRequiredService<EventDataChangeTracker>());
         services.AddScoped<INotificationHandler<PlayerRemoved>>(provider => provider.GetRequiredService<EventDataChangeTracker>());
         services.AddScoped<INotificationHandler<TeamAdded>>(provider => provider.GetRequiredService<EventDataChangeTracker>());
         services.AddScoped<INotificationHandler<TeamDeleted>>(provider => provider.GetRequiredService<EventDataChangeTracker>());
@@ -69,9 +70,9 @@ public static class ServiceCollectionExtensions
         // commands
         services.AddScoped<IRequestHandler<AddCoachCommand, Task<Result<Unit>>>, AddCoachCommandHandler>();
         services.AddScoped<IRequestHandler<AddPlayerCommand, Task<Result<Guid>>>, AddPlayerCommandHandler>();
+        services.AddScoped<IRequestHandler<UpdatePlayerCommand, Task<Result<Unit>>>, UpdatePlayerCommandHandler>();
         services.AddScoped<IRequestHandler<AddTeamCommand, Task<Result<string>>>, AddTeamCommandHandler>();
-        services.AddScoped<IRequestHandler<CreateStampCardCommand, Task<Result<Guid>>>, CreateStampCardCommandHandler>();
-        services.AddScoped<IRequestHandler<CreateTeamStampCardsForAccountingYearsCommand, Task<Result<Unit>>>, CreateTeamStampCardsForAccountingYearsCommandHandler>();
+        services.AddScoped<IRequestHandler<CreateStampCardCommand, Task<Result<Unit>>>, CreateStampCardCommandHandler>();
         services.AddScoped<IRequestHandler<DeleteStampCardCommand, Task<Result<Unit>>>, DeleteStampCardCommandHandler>();
         services.AddScoped<IRequestHandler<DeleteTeamCommand, Task<Result<string>>>, DeleteTeamCommandHandler>();
         services.AddScoped<IRequestHandler<EraseStampCommand, Task<Result<Guid>>>, EraseStampCommandHandler>();

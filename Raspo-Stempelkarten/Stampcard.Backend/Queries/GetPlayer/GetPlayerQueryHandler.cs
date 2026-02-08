@@ -1,7 +1,7 @@
 using FluentResults;
 using StampCard.Backend.Commands.Shared;
-using StampCard.Backend.Dtos;
 using StampCard.Backend.Model;
+using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend.Queries.GetPlayer;
 
@@ -12,9 +12,10 @@ public class GetPlayerQueryHandler(IServiceProvider serviceProvider, ILogger<Get
     /// <inheritdoc />
     protected override Task<PlayerReadDto?> GetResult(ITeamAggregate model, GetPlayerQuery request)
     {
-        var player = model.Players.SingleOrDefault(player => player.Id == request.Id && !player.Deleted);
+        var player = model.Players.SingleOrDefault(player => player.Id == request.Id);
         if (player is null) return Task.FromResult<PlayerReadDto?>(null);
-        var playerReadDto = new PlayerReadDto(player.Id, player.FirstName, player.LastName, player.Birthdate, player.Birthplace);
+        var playerReadDto = new PlayerReadDto(player.Id, player.FirstName, player.LastName, player.Birthdate, 
+            player.Birthplace, player.Active, model.Version ?? 0);
         return Task.FromResult(playerReadDto)!;
     }
 }

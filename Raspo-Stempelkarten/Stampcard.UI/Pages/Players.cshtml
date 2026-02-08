@@ -6,54 +6,70 @@
     ViewData["Title"] = "Spieler: " + Model.Team;
 }
 
-<h1>Spielerverwaltung: @Model.Team</h1>
+<h2>Spielerverwaltung: @Model.Team</h2>
 
-<table class="table table-striped">
-    <thead>
-    <tr>
-        <th scope="col">#</th>
-        <th scope="col">Vorname</th>
-        <th scope="col">Nachname</th>
-        <th scope="col">Geburtsdatum</th>
-        <th scope="col">Geburtsort</th>
-        <th scope="col"></th>
-    </tr>
-    </thead>
-    <tbody>
-    @for (var i = 0; i < Model.Items.Count; i++)
-    {
-        var teamId = Model.Items[i].Id;
+<x:form asp-page="" method="post">
+    <!-- Validation summary -->
+    <x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
+    </x:div>
+
+    <table class="table table-striped">
+        <thead>
         <tr>
-            <td>@(i+1)</td>
-            <td>
-                <x:input asp-for="Items[i].Id" type="hidden" />
-                <x:label asp-for="Items[i].FirstName"/>
-                <x:input asp-for="Items[i].FirstName"/>
-            </td>
-            <td>
-                <x:label asp-for="Items[i].LastName" />
-                <x:input asp-for="Items[i].LastName"/>
-            </td>
-            <td>
-                <x:label asp-for="Items[i].Birthdate" />
-                <x:input asp-for="Items[i].Birthdate"/>
-            </td>
-            <td>
-                <x:label asp-for="Items[i].Birthplace" />
-                <x:input asp-for="Items[i].Birthplace"/>
-            </td>
-            <td>
-                <x:a class="btn btn-dark" asp-route-id="@teamId" asp-page-handler="delete">
-                    <i class="bi bi-trash3-fill">Spieler löschen</i>
-                </x:a>
-            </td>
+            <th scope="col">#</th>
+            <th scope="col">Vorname</th>
+            <th scope="col">Nachname</th>
+            <th scope="col">Geburtsdatum</th>
+            <th scope="col">Geburtsort</th>
+            <th scope="col">Aktiviert</th>
+            <th scope="col"></th>
         </tr>
-    }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+        @if (Model.Items.Count > 0)
+        {
+            @for (var i = 0; i < Model.Items.Count; i++)
+            {
+                var itemId = Model.Items[i].Id;
+                <tr>
+                    <td>@(i + 1)</td>
+                    <td>
+                        @Model.Items[i].FirstName
+                    </td>
+                    <td>
+                        @Model.Items[i].LastName
+                    </td>
+                    <td>
+                        @Model.Items[i].Birthdate
+                    </td>
+                    <td>
+                        @Model.Items[i].Birthplace
+                    </td>
+                    <td>
+                        <x:input asp-for="Items[i].Active" class="form-check-input" type="checkbox" disabled="true" />
+                    </td>
+                    <td>
+                        <x:a class="btn btn-dark" asp-page="Player" asp-route-team="@Model.Team" asp-route-id="@itemId">
+                            <i class="bi bi-person-fill"> Spieler bearbeiten</i>
+                        </x:a>
+                        <x:a class="btn btn-dark" asp-route-id="@itemId" asp-page-handler="delete" data-loading="true">
+                            <i class="bi bi-trash3-fill"> Spieler löschen</i>
+                        </x:a>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="6">Keine Daten</td>
+            </tr>
+        }
+        
+        </tbody>
+    </table>
 
-<x:form asp-area="" asp-page="" method="post">
-    <div class="row g-3">
+    <div class="row g-3 mb-3">
         <div class="col-auto">
             <x:label asp-for="NewPlayer.FirstName" class="form-label">Vorname</x:label>
             <x:input asp-for="NewPlayer.FirstName" class="form-control"/>
@@ -71,7 +87,5 @@
             <x:input asp-for="NewPlayer.Birthplace" class="form-control"/>
         </div>
     </div>
-    <div class="mb-3 align-baseline">
-        <button class="btn-primary btn">Anlegen</button>
-    </div>
+    <button type="submit" class="btn-primary btn">Anlegen</button>
 </x:form>

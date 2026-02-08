@@ -1,17 +1,16 @@
 using System.Web;
 using DispatchR;
-using FluentResults;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StampCard.Backend.Commands.CreateStampCard;
 using StampCard.Backend.Commands.DeleteStampCard;
 using StampCard.Backend.Commands.EraseStamp;
 using StampCard.Backend.Commands.StampStampCard;
-using StampCard.Backend.Dtos;
 using StampCard.Backend.Queries.GetStampCard;
 using StampCard.Backend.Queries.GetStampCardDetails;
 using StampCard.Backend.Queries.GetStampsQuery;
 using StampCard.Backend.Queries.ListStampCards;
+using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend.Controllers;
 
@@ -21,17 +20,17 @@ namespace StampCard.Backend.Controllers;
 /// <param name="mediator"></param>
 [Authorize]
 [Route("api/teams/{team}/[controller]")]
-public class StampCardController(IMediator mediator) : ControllerBase
+public class StampCardsController(IMediator mediator) : ControllerBase
 {
     /// <summary>
-    /// Create a new stamp card.
+    /// Create a new stamp card (manually or automatically).
     /// </summary>
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] StampCardCreateDto stampCardCreateDto, string team)
+    public async Task<IActionResult> Create(StampCardCreateDto stampCardCreateDto, string team, string flag)
     {
         team = HttpUtility.UrlDecode(team);
         var response = await mediator.Send(
-            new CreateStampCardCommand(team, stampCardCreateDto.PlayerId, stampCardCreateDto.AccountingYear), 
+            new CreateStampCardCommand(team, stampCardCreateDto.PlayerId, stampCardCreateDto.AccountingYear, flag), 
             CancellationToken.None);
         return response.ToHttpResponse();
     }
@@ -39,7 +38,7 @@ public class StampCardController(IMediator mediator) : ControllerBase
     /// <summary>
     /// Stamps a stamp card.
     /// </summary>
-    [HttpPost("{id:guid}/stamp")]
+    [HttpPost("{id:guid}/stamps")]
     public async Task<IActionResult> Stamp(Guid id, [FromForm] string reason, string team)
     {
         team = HttpUtility.UrlDecode(team);
@@ -52,7 +51,7 @@ public class StampCardController(IMediator mediator) : ControllerBase
     /// <summary>
     /// List all stamps.
     /// </summary>
-    [HttpGet("{id:guid}/stamp")]
+    [HttpGet("{id:guid}/stamps")]
     public async Task<IActionResult> ListStamps(Guid id, string team)
     {
         team = HttpUtility.UrlDecode(team);
@@ -65,7 +64,7 @@ public class StampCardController(IMediator mediator) : ControllerBase
     /// <summary>
     /// Erase a stamp.
     /// </summary>
-    [HttpDelete("{stampId:guid}/stamp/{id:guid}")]
+    [HttpDelete("{stampId:guid}/stamps/{id:guid}")]
     public async Task<IActionResult> EraseStamp(Guid stampId, Guid id, string team)
     {
         team = HttpUtility.UrlDecode(team);

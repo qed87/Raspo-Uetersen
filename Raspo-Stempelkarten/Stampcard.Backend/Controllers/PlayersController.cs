@@ -4,9 +4,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StampCard.Backend.Commands.AddPlayer;
 using StampCard.Backend.Commands.RemovePlayer;
-using StampCard.Backend.Dtos;
+using StampCard.Backend.Commands.UpdatePlayer;
 using StampCard.Backend.Queries.GetPlayer;
 using StampCard.Backend.Queries.ListPlayers;
+using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend.Controllers;
 
@@ -22,13 +23,27 @@ public class PlayersController(IMediator mediator) : ControllerBase
     /// Create a new member.
     /// </summary>
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] PlayerCreateDto playerCreateDto, string team)
+    public async Task<IActionResult> Create(PlayerCreateDto playerCreateDto, string team)
     {
         team = HttpUtility.UrlDecode(team);
         var response = await mediator.Send(
             new AddPlayerCommand(team, playerCreateDto.FirstName, playerCreateDto.LastName, 
                 playerCreateDto.Birthdate, playerCreateDto.Birthplace), 
                 CancellationToken.None);
+        return response.ToHttpResponse();
+    }
+    
+    /// <summary>
+    /// Create a new member.
+    /// </summary>
+    [HttpPut("{id:Guid}")]
+    public async Task<IActionResult> Update(PlayerUpdateDto playerUpdateDto, string team)
+    {
+        team = HttpUtility.UrlDecode(team);
+        var response = await mediator.Send(
+            new UpdatePlayerCommand(team, playerUpdateDto.Id, playerUpdateDto.FirstName, playerUpdateDto.LastName,
+                playerUpdateDto.Birthdate, playerUpdateDto.Birthplace, playerUpdateDto.ConcurrencyToken, playerUpdateDto.Active), 
+            CancellationToken.None);
         return response.ToHttpResponse();
     }
     

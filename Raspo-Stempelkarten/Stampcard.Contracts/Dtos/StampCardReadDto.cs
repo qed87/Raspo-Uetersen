@@ -1,10 +1,11 @@
-namespace StampCard.Backend.Dtos;
+namespace Stampcard.Contracts.Dtos;
 
 /// <summary>
 /// Read representation of a stamp card.
 /// </summary>
 /// <param name="Id"></param>
+/// <param name="PlayerId"></param>
 /// <param name="AccountingYear"></param>
 /// <param name="Issuer"></param>
 /// <param name="IssuedOn"></param>
-public record StampCardReadDto(Guid Id, short AccountingYear, string Issuer, DateTimeOffset IssuedOn);
+public record StampCardReadDto(Guid Id, Guid PlayerId, short AccountingYear, string Issuer, DateTimeOffset IssuedOn);

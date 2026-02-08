@@ -15,6 +15,7 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
     public TeamDetailedReadDto Item { get; set; }
     
     [BindProperty]
+    [MinLength(2, ErrorMessage = "Team Name darf nicht leer sein!")]
     public string NewName { get; set; }
     
     [BindProperty]
@@ -23,8 +24,8 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
     public List<string> Coaches { get; set; } = [];
     
     [BindProperty]
-    [Required]
-    [EmailAddress]
+    [Required(ErrorMessage = "E-Mail darf nicht leer sein!")]
+    [EmailAddress(ErrorMessage = "Ungültige E-Mail Adresse!")]
     public string NewCoach { get; set; }
 
     public async Task OnGetAsync()

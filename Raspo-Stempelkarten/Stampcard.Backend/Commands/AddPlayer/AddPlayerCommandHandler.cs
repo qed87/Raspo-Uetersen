@@ -27,7 +27,7 @@ public class AddPlayerCommandHandler(
             return;
         }
         
-        logger.LogInformation("Add player with {FirstName}, {LastName}, {Birthdate}, {Birthplace}.", 
+        logger.LogInformation("Add player with FirstName = {FirstName}, LastName = {LastName}, Birthdate = {Birthdate}, Birthplace = {Birthplace}.", 
             context.Command.FirstName, context.Command.LastName, context.Command.Birthdate, context.Command.Birthplace);
         var result = await context.Model.AddPlayerAsync(context.Command.FirstName, context.Command.LastName, 
             context.Command.Birthdate, context.Command.Birthplace);

@@ -23,14 +23,14 @@ namespace StampCard.Backend.Controllers;
 public class StampCardsController(IMediator mediator) : ControllerBase
 {
     /// <summary>
-    /// Create a new stamp card.
+    /// Create a new stamp card (manually or automatically).
     /// </summary>
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] StampCardCreateDto stampCardCreateDto, string team)
+    public async Task<IActionResult> Create(StampCardCreateDto stampCardCreateDto, string team, string flag)
     {
         team = HttpUtility.UrlDecode(team);
         var response = await mediator.Send(
-            new CreateStampCardCommand(team, stampCardCreateDto.PlayerId, stampCardCreateDto.AccountingYear), 
+            new CreateStampCardCommand(team, stampCardCreateDto.PlayerId, stampCardCreateDto.AccountingYear, flag), 
             CancellationToken.None);
         return response.ToHttpResponse();
     }

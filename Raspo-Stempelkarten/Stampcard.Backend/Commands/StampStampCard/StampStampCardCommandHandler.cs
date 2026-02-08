@@ -14,7 +14,7 @@ public class StampStampCardCommandHandler(IServiceProvider serviceProvider, IAut
     protected override async Task ApplyCommandToModelAsync(ICommandExecutionContext context)
     {
         logger.LogInformation("Stamp stamp card '{StampCardId}'.", context.Command.StampCardId);
-        var result = await context.Model.StampStampCardAsync(context.Command.StampCardId, context.Command.Reason);
+        var result = await context.Model.StampAsync(context.Command.StampCardId, context.Command.Reason);
         context.SetResult(result);
     }
 }

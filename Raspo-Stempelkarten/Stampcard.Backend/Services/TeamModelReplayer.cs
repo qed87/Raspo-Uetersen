@@ -1,5 +1,6 @@
 using System.Text.Json;
 using KurrentDB.Client;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using StampCard.Backend.Events;
 using StampCard.Backend.Exceptions;
 using StampCard.Backend.Model;
@@ -92,25 +93,32 @@ public class TeamModelReplayer(ILogger<TeamModelReplayer> logger, Team team) : I
                     JsonSerializerOptions.Default);
                 if (playerAdded is null) throw ModelReadError("PlayerAdded");
                 var playerToAdd = team.Players.SingleOrDefault(player => playerAdded.Id.Equals(player.Id));
-                if (playerToAdd is not null)
-                {
-                    playerToAdd.Deleted = false;
-                    logger.LogTrace("Replay [PlayerAdded]: Reactivated deleted player with Id {Id}.", 
-                        playerAdded.Id);
-                }
-                else
-                {
-                    team.Players.Add(
-                        new Player(
-                            playerAdded.Id, 
-                            playerAdded.FirstName, 
-                            playerAdded.LastName, 
-                            playerAdded.Birthdate,
-                            playerAdded.Birthplace));    
-                    logger.LogTrace("Replayed [PlayerAdded]: Id='{Id}', FirstName='{FirstName}', LastName='{LastName}'.", 
-                        playerAdded.Id, playerAdded.FirstName, playerAdded.LastName);
-                }
-
+                if (playerToAdd is not null) throw ModelReadError("PlayerAdded");
+                team.Players.Add(
+                    new Player(
+                        playerAdded.Id, 
+                        playerAdded.FirstName, 
+                        playerAdded.LastName, 
+                        playerAdded.Birthdate,
+                        playerAdded.Birthplace));    
+                logger.LogTrace("Replayed [PlayerAdded]: Id='{Id}', FirstName='{FirstName}', LastName='{LastName}'.", 
+                    playerAdded.Id, playerAdded.FirstName, playerAdded.LastName);
+                break;
+            }
+            case nameof(PlayerUpdated):
+            {
+                var playerUpdated = JsonSerializer.Deserialize<PlayerUpdated>(
+                    resolvedEvent.Event.Data.ToArray(), 
+                    JsonSerializerOptions.Default);
+                if (playerUpdated is null) throw ModelReadError("PlayerUpdated");
+                var playerToUpdate = team.Players.SingleOrDefault(player => playerUpdated.Id.Equals(player.Id));
+                if (playerToUpdate is null) throw ModelReadError("PlayerUpdated");
+                playerToUpdate.FirstName = playerUpdated.FirstName;
+                playerToUpdate.LastName = playerUpdated.LastName;
+                playerToUpdate.Birthdate = playerUpdated.Birthdate;
+                playerToUpdate.Birthplace = playerUpdated.Birthplace;
+                playerToUpdate.Active = playerUpdated.Active;
+                logger.LogTrace("Replay [PlayerUpdated]: Player with Id {Id}.", playerUpdated.Id);
                 break;
             }
             case nameof(PlayerRemoved):
@@ -119,10 +127,9 @@ public class TeamModelReplayer(ILogger<TeamModelReplayer> logger, Team team) : I
                     resolvedEvent.Event.Data.ToArray(), 
                     JsonSerializerOptions.Default);
                 if (playerDeleted is null) throw ModelReadError("PlayerDeleted");
-                var playerToDelete = team.Players.Single(player => playerDeleted.Id.Equals(player.Id));
-                playerToDelete.Deleted = true;
-                logger.LogTrace("Replay [PlayerDeleted]: Id='{Id}'.", 
-                    playerToDelete.Id);
+                team.Players.RemoveAll(player => player.Id.Equals(playerDeleted.Id));
+                team.Cards.RemoveAll(card => card.PlayerId.Equals(playerDeleted.Id));
+                logger.LogTrace("Replay [PlayerDeleted]: Id='{Id}'.", playerDeleted.Id);
                 break;
             }
             case nameof(StampCardAdded):

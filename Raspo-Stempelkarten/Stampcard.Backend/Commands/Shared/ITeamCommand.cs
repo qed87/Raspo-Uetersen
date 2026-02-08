@@ -13,6 +13,9 @@ public interface ITeamCommand : IRequest
     public string Team { get; }
 }
 
+/// <summary>
+/// Signals that a command contains a concurrency token that should be checked during model loading.
+/// </summary>
 public interface IConcurrentCommand
 {
     /// <summary>

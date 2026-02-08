@@ -36,7 +36,7 @@ public class TeamHttpClient(IRestClient restClient)
     public async Task<ResponseWrapperDto<List<TeamReadDto>>> ListTeamsAsync()
     {
         var response = await restClient.ExecuteGetAsync<ResponseWrapperDto<List<TeamReadDto>>>("/api/teams");
-        return response.Data!;
+        return response.Data ?? ResponseWrapperDto<List<TeamReadDto>>.Fail("Unerwarteter Fehler.");
     }
 
     /// <summary>

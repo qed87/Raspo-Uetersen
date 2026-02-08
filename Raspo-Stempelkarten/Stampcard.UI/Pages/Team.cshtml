@@ -6,20 +6,19 @@
     ViewData["Title"] = Model.Id + " bearbeiten";
 }
 
-<x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
-</x:div>
-
-<h1>Team @Model.Id</h1>
-<div class="mb-3">
-<x:form asp-area="" asp-page="" asp-page-handler="team" method="post">
+<h2>Team @Model.Id</h2>
+<x:form asp-page="" asp-page-handler="team" method="post">
+    <x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
+    </x:div>
     <div class="mb-3">
-        <x:label asp-for="NewName" class="form-label">Team-Name</x:label>
-        <x:input asp-for="NewName" class="form-control"/>
-        <x:input hidden="hidden" asp-for="SetConcurrencyToken"/>
+        <div class="mb-3">
+            <x:label asp-for="NewName" class="form-label">Team-Name</x:label>
+            <x:input asp-for="NewName" class="form-control"/>
+            <x:input hidden="hidden" asp-for="SetConcurrencyToken"/>
+        </div>
+        <button class="btn-primary btn">Aktualisieren</button>
     </div>
-    <button class="btn-primary btn">Aktualisieren</button>
 </x:form>
-</div>
 
 <h1>Team-Coaches</h1>
 <div class="mb-3">
@@ -60,16 +59,14 @@
     </table>
 </div>
 
-<div class="mb-3">
-    <x:form asp-area="" asp-page="" asp-page-handler="coach" method="post">
+<x:form asp-page="" asp-page-handler="coach" method="post">
+    <x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
+    </x:div>
+    <div class="mb-3">
         <div class="mb-3">
             <x:label asp-for="NewCoach" class="form-label">Coach (E-Mail)</x:label>
             <x:input asp-for="NewCoach" class="form-control"/>
         </div>
         <button class="btn-primary btn">Hinzufügen</button>
-    </x:form>
-</div>
-
-@section scripts{
-    <x:partial name="_ValidationScriptsPartial"/>
-}
+    </div>
+</x:form>

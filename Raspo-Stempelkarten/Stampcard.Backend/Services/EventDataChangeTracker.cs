@@ -12,6 +12,7 @@ namespace StampCard.Backend.Services;
 public sealed class EventDataChangeTracker(ILogger<EventDataChangeTracker> logger) : 
     IEventDataChangeTracker, 
     INotificationHandler<PlayerAdded>, 
+    INotificationHandler<PlayerUpdated>, 
     INotificationHandler<PlayerRemoved>, 
     INotificationHandler<TeamAdded>, 
     INotificationHandler<TeamDeleted>,
@@ -30,6 +31,14 @@ public sealed class EventDataChangeTracker(ILogger<EventDataChangeTracker> logge
     {
         logger.LogInformation("Track change to model: Player added '{FirstName}' and '{LastName}'.", request.FirstName, request.LastName);
         _changes.Add(new EventData(Uuid.NewUuid(), nameof(PlayerAdded), JsonSerializer.SerializeToUtf8Bytes(request)));
+        return ValueTask.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public ValueTask Handle(PlayerUpdated request, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Track change to model: Player updated '{FirstName}' and '{LastName}'.", request.FirstName, request.LastName);
+        _changes.Add(new EventData(Uuid.NewUuid(), nameof(PlayerUpdated), JsonSerializer.SerializeToUtf8Bytes(request)));
         return ValueTask.CompletedTask;
     }
 

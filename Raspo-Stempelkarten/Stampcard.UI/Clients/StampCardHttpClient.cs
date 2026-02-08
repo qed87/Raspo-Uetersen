@@ -29,7 +29,7 @@ public class StampCardHttpClient(IRestClient restClient)
     public async Task<ResponseWrapperDto<List<StampCardReadDto>>> ListAsync(string teamId)
     {
         var response = await restClient.ExecuteGetAsync<ResponseWrapperDto<List<StampCardReadDto>>>($"/api/teams/{teamId}/stampcards/");
-        return response.Data!;
+        return response.Data ?? ResponseWrapperDto<List<StampCardReadDto>>.Fail("Unerwarteter Fehler.");
     }
     
     /// <summary>
@@ -38,11 +38,26 @@ public class StampCardHttpClient(IRestClient restClient)
     /// <param name="teamId">The team id (stream name).</param>
     /// <param name="playerId">The player id.</param>
     /// <param name="accountingYear">The accounting year.</param>
-    public async Task<ResponseWrapperDto> CreateAsync(string teamId, Guid playerId, int accountingYear)
+    public async Task<ResponseWrapperDto> CreateManualAsync(string teamId, Guid playerId, int accountingYear)
     {
-        var request = new RestRequest($"api/teams/{teamId}/players", Method.Post);
+        var request = new RestRequest($"api/teams/{teamId}/stampcards", Method.Post);
         request.AddOrUpdateParameter("playerId", playerId, ParameterType.GetOrPost);
         request.AddOrUpdateParameter("accountingYear", accountingYear, ParameterType.GetOrPost);
+        request.AddQueryParameter("flag", "manual");
+        var response = await restClient.ExecutePostAsync<ResponseWrapperDto>(request);
+        return response.Data!;
+    }
+    
+    /// <summary>
+    /// Creates stamp cards for all members/players of the given <param name="teamId">Team</param> and <param name="accountingYear">Geschäftsjahr</param>.
+    /// </summary>
+    /// <param name="teamId">The team id (stream name).</param>
+    /// <param name="accountingYear">The accounting year.</param>
+    public async Task<ResponseWrapperDto> CreateAutoAsync(string teamId, int accountingYear)
+    {
+        var request = new RestRequest($"api/teams/{teamId}/stampcards", Method.Post);
+        request.AddOrUpdateParameter("accountingYear", accountingYear, ParameterType.GetOrPost);
+        request.AddQueryParameter("flag", "auto");
         var response = await restClient.ExecutePostAsync<ResponseWrapperDto>(request);
         return response.Data!;
     }
@@ -52,7 +67,7 @@ public class StampCardHttpClient(IRestClient restClient)
     /// </summary>
     /// <param name="teamId">The team id (stream name).</param>
     /// <param name="id">The stamp card id.</param>
-    public async Task<ResponseWrapperDto> DeleteAsync(string teamId, string id)
+    public async Task<ResponseWrapperDto> DeleteAsync(string teamId, Guid id)
     {
         var response = await restClient.ExecuteDeleteAsync<ResponseWrapperDto>($"api/teams/{teamId}/stampcards/{id}");
         return response.Data!;
@@ -66,7 +81,7 @@ public class StampCardHttpClient(IRestClient restClient)
     /// <param name="reason">Reason for the stamp.</param>
     public async Task<ResponseWrapperDto> StampAsync(string teamId, Guid id, string reason)
     {
-        var request = new RestRequest($"api/teams/{teamId}/stampcard/{id}/stamps", Method.Post);
+        var request = new RestRequest($"api/teams/{teamId}/stampcards/{id}/stamps", Method.Post);
         request.AddOrUpdateParameter("reason", reason, ParameterType.GetOrPost);
         var response = await restClient.ExecutePostAsync<ResponseWrapperDto>(request);
         return response.Data!;
@@ -89,7 +104,7 @@ public class StampCardHttpClient(IRestClient restClient)
     /// </summary>
     /// <param name="teamId">The team id (stream name).</param>
     /// <param name="stampCardId">The stamp card id.</param>
-    public async Task<ResponseWrapperDto<List<StampReadDto>>> ListStampsAsync(string teamId, string stampCardId)
+    public async Task<ResponseWrapperDto<List<StampReadDto>>> ListStampsAsync(string teamId, Guid stampCardId)
     {
         var response = await restClient.ExecuteGetAsync<ResponseWrapperDto<List<StampReadDto>>>($"/api/teams/{teamId}/stampcards/{stampCardId}/stamps/");
         return response.Data!;

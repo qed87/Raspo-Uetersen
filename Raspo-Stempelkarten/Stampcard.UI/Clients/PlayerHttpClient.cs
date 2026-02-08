@@ -27,7 +27,7 @@ public class PlayerHttpClient(IRestClient restClient)
     public async Task<ResponseWrapperDto<List<PlayerReadDto>>> ListAsync(string teamId)
     {
         var response = await restClient.ExecuteGetAsync<ResponseWrapperDto<List<PlayerReadDto>>>($"/api/teams/{teamId}/players/");
-        return response.Data!;
+        return response.Data ?? ResponseWrapperDto<List<PlayerReadDto>>.Fail("Unerwarteter Fehler.");
     }
     
     /// <summary>
@@ -47,6 +47,31 @@ public class PlayerHttpClient(IRestClient restClient)
         request.AddOrUpdateParameter("birthDate", birthDate, ParameterType.GetOrPost);
         request.AddOrUpdateParameter("birthPlace", birthplace, ParameterType.GetOrPost);
         var response = await restClient.ExecutePostAsync<ResponseWrapperDto>(request);
+        return response.Data!;
+    }
+    
+    /// <summary>
+    /// Updates the <param name="playerId">Player</param> of the <param name="team">Team</param>.
+    /// </summary>
+    /// <param name="team">The team id (stream name).</param>
+    /// <param name="playerId">The player id.</param>
+    /// <param name="firstName">The first name of the player to add.</param>
+    /// <param name="lastName">The last name of the player to add.</param>
+    /// <param name="birthdate">The birthdate of the player to add.</param>
+    /// <param name="birthplace">The birthplace of the player to add.</param>
+    /// <param name="active">A value indicating whether the player is active or inactive.</param>
+    /// <param name="concurrencyToken">The concurrency token.</param>
+    public async Task<ResponseWrapperDto> UpdateAsync(string team, Guid playerId, string firstName, string lastName, 
+        DateOnly birthdate, string birthplace, bool active, ulong concurrencyToken)
+    {
+        var request = new RestRequest($"api/teams/{team}/players/{playerId}", Method.Post);
+        request.AddOrUpdateParameter("firstName", firstName, ParameterType.GetOrPost);
+        request.AddOrUpdateParameter("lastName", lastName, ParameterType.GetOrPost);
+        request.AddOrUpdateParameter("birthDate", birthdate, ParameterType.GetOrPost);
+        request.AddOrUpdateParameter("birthPlace", birthplace, ParameterType.GetOrPost);
+        request.AddOrUpdateParameter("active", active, ParameterType.GetOrPost);
+        request.AddOrUpdateParameter("concurrencyToken", concurrencyToken, ParameterType.GetOrPost);
+        var response = await restClient.ExecutePutAsync<ResponseWrapperDto>(request);
         return response.Data!;
     }
     

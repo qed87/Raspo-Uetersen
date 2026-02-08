@@ -51,16 +51,28 @@ public interface ITeamAggregate
     /// Updates the name of the team.
     /// </summary>
     /// <param name="name">The new name.</param>
-    Task<Result> UpdateAsync(string name);
+    Task<Result> UpdateTeamAsync(string name);
     /// <summary>
     /// Add a player to the team.
     /// </summary>
     /// <param name="firstName">The first name of the player.</param>
-    /// <param name="surname">The surname of the player.</param>
+    /// <param name="lastName">The surname of the player.</param>
     /// <param name="birthdate">The birthdate of the player.</param>
     /// <param name="birthplace">The birthplace of the player.</param>
     /// <return>The player id.</return>
-    Task<Result<Guid>> AddPlayerAsync(string firstName, string surname, DateOnly birthdate, string birthplace);
+    Task<Result<Guid>> AddPlayerAsync(string firstName, string lastName, DateOnly birthdate, string birthplace);
+    /// <summary>
+    /// Updates a player of a team.
+    /// </summary>
+    /// <param name="playerId">The playerId of the player.</param>
+    /// <param name="firstName">The first name of the player.</param>
+    /// <param name="lastName">The surname of the player.</param>
+    /// <param name="birthdate">The birthdate of the player.</param>
+    /// <param name="birthplace">The birthplace of the player.</param>
+    /// <param name="active">Checks whether the current player is active or inactive.</param>
+    /// <return>The player id.</return>
+    Task<Result> UpdatePlayerAsync(Guid playerId, string firstName, string lastName, 
+        DateOnly birthdate, string birthplace, bool active);
     /// <summary>
     /// Deletes a player.
     /// </summary>
@@ -80,7 +92,7 @@ public interface ITeamAggregate
     /// <param name="stampCardId">The stamp card id.</param>
     /// <param name="reason">The reason for the stamp on the stamp card.</param>
     /// <returns>The created stamp.</returns>
-    Task<Result<Guid>> StampStampCardAsync(Guid stampCardId, string reason);
+    Task<Result<Guid>> StampAsync(Guid stampCardId, string reason);
     /// <summary>
     /// Erase a stamp from a stamp card.
     /// </summary>
@@ -93,7 +105,7 @@ public interface ITeamAggregate
     /// </summary>
     /// <param name="accountingYear">The accounting year.</param>
     /// <returns>All the stamp cards.</returns>
-    Task<Result> CreateNewAccountingYearAsync(int accountingYear);
+    Task<Result> AddStampCardsAsync(int accountingYear);
     /// <summary>
     /// Determines all stamp cards that are incomplete for the given accounting year.
     /// </summary>
@@ -117,7 +129,7 @@ public interface ITeamAggregate
     /// </summary>
     /// <param name="id">The stamp card id.</param>
     /// <returns>The delete stamp card.</returns>
-    Task<Result<Guid>> DeleteStampCard(Guid id);
+    Task<Result<Guid>> DeleteStampCardAsync(Guid id);
     /// <summary>
     /// Adds a new coach to the team.
     /// </summary>
@@ -137,5 +149,5 @@ public interface ITeamAggregate
     /// </summary>
     /// <param name="stampCardId">The stamp card id.</param>
     /// <returns></returns>
-    Task<List<Stamp>> GetStampsFromStampCardAsync(Guid stampCardId);
+    Task<List<Stamp>> ListStamps(Guid stampCardId);
 }

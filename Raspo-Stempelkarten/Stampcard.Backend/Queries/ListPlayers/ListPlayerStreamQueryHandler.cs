@@ -19,10 +19,10 @@ public class ListPlayerStreamQueryHandler(IServiceProvider serviceProvider,
         logger.LogTrace("Loading team from database...");
         var model = await modelLoader.LoadModelAsync(request.Team);
         if (model is null) yield break;
-        foreach (var player in model.Players.Where(player => !player.Deleted))
+        foreach (var player in model.Players)
         {
             var playerReadDto = new PlayerReadDto(player.Id, player.FirstName, player.LastName, 
-                player.Birthdate, player.Birthplace);
+                player.Birthdate, player.Birthplace, player.Active, model.Version ?? 0);
             yield return playerReadDto;
         }
     }

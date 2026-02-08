@@ -2,7 +2,6 @@ using System.Web;
 using DispatchR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using StampCard.Backend.Commands.CreateTeamStampCardsForAccountingYear;
 using StampCard.Backend.Queries.GetCompletedStampCardsQuery;
 using StampCard.Backend.Queries.GetIncompletedStampCardsQuery;
 
@@ -15,19 +14,6 @@ namespace StampCard.Backend.Controllers;
 [Route("api/teams/{team}/[controller]")]
 public class AccountingController(IMediator mediator) : ControllerBase
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    [HttpPost("{year:int}")]
-    public async Task<IActionResult> CreateFiscalYear(int year, string team)
-    {
-        team = HttpUtility.UrlDecode(team);
-        var response = await mediator.Send(
-            new CreateTeamStampCardsForAccountingYearsCommand(team, year),
-            CancellationToken.None);
-        return response.ToHttpResponse();
-    }
-    
     /// <summary>
     /// 
     /// </summary>

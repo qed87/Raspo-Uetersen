@@ -13,7 +13,7 @@ public class GetStampQueryHandler(IServiceProvider serviceProvider, ILogger<GetS
     /// <inheritdoc />
     protected override async Task<List<StampReadDto>> GetResult(ITeamAggregate model, GetStampsQuery request)
     {
-        var result = await model.GetStampsFromStampCardAsync(request.StampCardId);
+        var result = await model.ListStamps(request.StampCardId);
         return result.Select(stamp => new StampReadDto(stamp.Id, stamp.Reason, stamp.Issuer, stamp.IssuedOn)).ToList();
     }
 }

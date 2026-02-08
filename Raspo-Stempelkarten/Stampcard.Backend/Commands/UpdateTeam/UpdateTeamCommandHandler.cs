@@ -25,7 +25,7 @@ public class UpdateTeamCommandHandler(
         }
             
         logger.LogInformation("Update team name for team '{Team}'.", context.Command.Team);
-        var result = await context.Model.UpdateAsync(context.Command.Name);
+        var result = await context.Model.UpdateTeamAsync(context.Command.Name);
         context.SetResult(result);
     }
 

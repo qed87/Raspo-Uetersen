@@ -86,8 +86,8 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
     KnownNetworks =
     {
         new IPNetwork(
-            System.Net.IPAddress.Parse(knownNetworksConfig.GetValue<string>("Ip")!), 
-            knownNetworksConfig.GetValue<int>("PrefixLength"))
+            System.Net.IPAddress.Parse(prefixIp), 
+            prefixLength)
     }
 });
 

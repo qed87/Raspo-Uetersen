@@ -78,7 +78,8 @@ var app = builder.Build();
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost, 
-    RequireHeaderSymmetry = false
+    RequireHeaderSymmetry = false,
+    KnownNetworks = { new IPNetwork(System.Net.IPAddress.Parse("172.19.0.0"), 16) },
 });
 
 // Configure the HTTP request pipeline.

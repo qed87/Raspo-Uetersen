@@ -30,7 +30,31 @@ builder.Services.AddAuthentication(options =>
 
         options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         options.ResponseType = OpenIdConnectResponseType.Code;
+        
+        options.Events = new OpenIdConnectEvents
+        {
+            OnRedirectToIdentityProvider = context =>
+            {
+                // Logge den redirect_uri
+                var redirectUri = context.ProtocolMessage.RedirectUri;
+                context.HttpContext.RequestServices
+                    .GetRequiredService<ILoggerFactory>()
+                    .CreateLogger("OIDC")
+                    .LogInformation("Redirect URI sent to IDP: {RedirectUri}", redirectUri);
 
+                return Task.CompletedTask;
+            },
+
+            // Optional: Logge auch bei Fehlern
+            OnRemoteFailure = context =>
+            {
+                context.HandleResponse();
+                context.Response.StatusCode = 500;
+                context.Response.WriteAsync("OIDC Failure: " + context.Failure?.Message);
+                return Task.CompletedTask;
+            }
+        };
+        
         options.SaveTokens = true;
         options.GetClaimsFromUserInfoEndpoint = true;
         

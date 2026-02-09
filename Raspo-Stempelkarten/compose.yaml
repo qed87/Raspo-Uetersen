@@ -1,4 +1,31 @@
 ﻿services:
+  version: "2.1"
+  swag:
+    image: lscr.io/linuxserver/swag:latest
+    container_name: swag
+    cap_add:
+      - NET_ADMIN                      # Für Let's Encrypt
+    environment:
+      - PUID=1000                      # Dein User-ID (id -u)
+      - PGID=1000                      # Deine Group-ID (id -g)
+      - TZ=Europe/Berlin
+      - URL=rasp1926.info              # ← deine Hauptdomain (ohne www)
+      - SUBDOMAINS=www                 # ← optional, z. B. www,app,api → www.app.deine-domain.de
+      # - VALIDATION=http              # Einfachste Methode (Port 80 muss offen sein)
+      - VALIDATION=dns                 # Alternativ, wenn Port 80/443 blockiert → z. B. mit Cloudflare API
+      - DNSPLUGIN=ionos                # ← Das ist der entscheidende Wert!
+      - PROPAGATION=60                 # Optional: Wartezeit in Sekunden (IONOS propagiert schnell, 30–120 reicht meist)
+      - EMAIL=enno.kirchner@gmail.com  # Für Let's Encrypt Benachrichtigungen
+      - ONLY_SUBDOMAINS=false          # false = auch Root-Domain mit Zertifikat
+      - EXTRA_DOMAINS=                 # Falls weitere Domains
+    volumes:
+      - ./config/swag:/config
+    ports:
+      - 443:443
+      - 80:80                 # Wichtig für http-Validation + Redirect
+    restart: unless-stopped
+    networks:
+      - proxy-net
   stampcard-ui:
     image: ghcr.io/qed87/raspo-uetersen/ui:latest
     hostname: stampcard-ui    
@@ -7,7 +34,7 @@
         condition: service_started
         required: true
     env_file: "stampcard-ui.env"
-    restart: always
+    restart: unless-stopped
     ports:
       - mode: host
         host_ip: 0.0.0.0
@@ -27,7 +54,7 @@
   stampcard-backend:
     image: ghcr.io/qed87/raspo-uetersen/backend:latest
     hostname: stampcard-backend
-    restart: always
+    restart: unless-stopped
     env_file: "stampcard-backend.env"
     depends_on:
       kurrentdb:
@@ -60,6 +87,7 @@
       - KURRENTDB_NODE_PORT=2113
       - KURRENTDB_INSECURE=true
       - KURRENTDB_ENABLE_ATOM_PUB_OVER_HTTP=true
+    restart: unless-stopped
     ports:
       - mode: host
         host_ip: 0.0.0.0
@@ -75,6 +103,35 @@
         target: /var/log/kurrentdb
     networks:
       - proxy-net
+
+  kurrentdb-backup:
+    image: offen/docker-volume-backup:latest                   # immer aktuelle Version empfohlen
+    restart: unless-stopped
+    depends_on:
+      - kurrentdb
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro           # wichtig für Labels & Stop/Start
+      - ./backups:/archive                                     # ← hier landen die .tar.gz Dateien
+      - /etc/localtime:/etc/localtime:ro                       # für korrekte Zeit
+      # Wenn du deine Volumes direkt mounten willst (Alternative zu Labels):
+      - kurrentdb-volume-data:/backup/kurrentdb:ro
+    environment:
+      # ──────────────────────────────────────────────
+      # Zeitplan: täglich um 03:17 Uhr morgens
+      BACKUP_CRON_EXPRESSION: "17 3 * * *"
+      # Aufbewahrung: nur die letzten 14 Tage behalten
+      BACKUP_RETENTION_DAYS: "14"
+      # Pruning nur für Backups mit diesem Prefix (wichtig bei mehreren Services!)
+      BACKUP_PRUNING_PREFIX: "kurrentdb-"
+      BACKUP_STOP_DURING_BACKUP: "kurrentdb"
+      # Dateiname – mit Datum, damit sortierbar
+      BACKUP_FILENAME: "kurrentdb-%Y-%m-%d_%H-%M-%S.tar.gz"
+      # Optional: Backup-Ordner im Container (wenn du nicht /archive nutzt)
+      BACKUP_ARCHIVE: "/archive"
+      # Weitere sinnvolle Defaults
+      BACKUP_COMPRESSION: "gzip"                              # oder "" für unkomprimiert, "zstd" usw.
+      BACKUP_LOG_LEVEL: "info"
+      TZ: "Europe/Berlin"                                     # falls /etc/localtime nicht reicht
       
 volumes:
   kurrentdb-volume-data:

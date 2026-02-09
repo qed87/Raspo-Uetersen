@@ -75,11 +75,17 @@ builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(requireAuthPolicy);
 
 var app = builder.Build();
+var knownNetworksConfig = app.Configuration.GetRequiredSection("KnownNetworks");
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost, 
     RequireHeaderSymmetry = false,
-    KnownNetworks = { new IPNetwork(System.Net.IPAddress.Parse("172.19.0.0"), 16) },
+    KnownNetworks =
+    {
+        new IPNetwork(
+            System.Net.IPAddress.Parse(knownNetworksConfig.GetValue<string>("Ip")!), 
+            knownNetworksConfig.GetValue<int>("PrefixLength"))
+    }
 });
 
 // Configure the HTTP request pipeline.

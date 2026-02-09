@@ -9,7 +9,7 @@ services:
       - PUID=1000 # Dein User-ID (id -u)
       - PGID=1000 # Deine Group-ID (id -g)
       - TZ=Europe/Berlin
-      - URL=rasp1926.info # ← deine Hauptdomain (ohne www)
+      - URL=raspo1926.info # ← deine Hauptdomain (ohne www)
       - SUBDOMAINS=www # ← optional, z. B. www,app,api → www.app.deine-domain.de
       # - VALIDATION=http              # Einfachste Methode (Port 80 muss offen sein)
       - VALIDATION=dns # Alternativ, wenn Port 80/443 blockiert → z. B. mit Cloudflare API
@@ -36,7 +36,7 @@ services:
     env_file: "stampcard-ui.env"
     restart: unless-stopped
     ports:
-      - "127.0.0.1:5000:8080"
+      - "0.0.0.0:5000:8080"
     logging:
       driver: "json-file"
       options:
@@ -56,7 +56,7 @@ services:
       kurrentdb:
         condition: service_started
     ports:
-      - "127.0.0.1:5001:8080"
+      - "0.0.0.0:5001:8080"
     logging:
       driver: "json-file"
       options:
@@ -80,7 +80,7 @@ services:
       - KURRENTDB_ENABLE_ATOM_PUB_OVER_HTTP=true
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2113:2113"
+      - "0.0.0.0:2113:2113"
     volumes:
       - type: volume
         source: kurrentdb-volume-data
@@ -116,7 +116,7 @@ services:
       # Optional: Backup-Ordner im Container (wenn du nicht /archive nutzt)
       BACKUP_ARCHIVE: "/archive"
       # Weitere sinnvolle Defaults
-      BACKUP_COMPRESSION: "gzip" # oder "" für unkomprimiert, "zstd" usw.
+      BACKUP_COMPRESSION: "gz" # oder "" für unkomprimiert, "zstd" usw.
       BACKUP_LOG_LEVEL: "info"
       TZ: "Europe/Berlin" # falls /etc/localtime nicht reicht
 

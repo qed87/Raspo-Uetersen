@@ -76,6 +76,9 @@ builder.Services.AddAuthorizationBuilder()
 
 var app = builder.Build();
 var knownNetworksConfig = app.Configuration.GetRequiredSection("KnownNetworks");
+var prefixIp = knownNetworksConfig.GetValue<string>("PrefixIp")!;
+var prefixLength = knownNetworksConfig.GetValue<int>("PrefixLength");
+app.Logger.Log(LogLevel.Information, "Loaded KnownNetworks from configuration Prefix: {PrefixIp}, PrefixLength: {PrefixLength}", prefixIp, prefixLength);
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost, 

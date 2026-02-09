@@ -43,7 +43,7 @@ services:
         max-size: "50m"
         max-file: "3"
     volumes:
-      - ./config/Stampcard.UI/appsettings.json:/Stampcard.Backend/appsettings.json
+      - ./config/Stampcard.UI/appsettings.json:/app/appsettings.json
     networks:
       - proxy-net
 

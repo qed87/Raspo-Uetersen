@@ -1,3 +1,4 @@
+using System.Net;
 using Duende.AccessTokenManagement.OpenIdConnect;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -76,19 +77,14 @@ builder.Services.AddAuthorizationBuilder()
 
 var app = builder.Build();
 var knownNetworksConfig = app.Configuration.GetRequiredSection("KnownNetworks");
-var prefixIp = knownNetworksConfig.GetValue<string>("PrefixIp")!;
-var prefixLength = knownNetworksConfig.GetValue<int>("PrefixLength");
-app.Logger.Log(LogLevel.Information, "Loaded KnownNetworks from configuration Prefix: {PrefixIp}, PrefixLength: {PrefixLength}", prefixIp, prefixLength);
+var proxyIp = knownNetworksConfig.GetValue<string>("ProxyIp")!;
+app.Logger.Log(LogLevel.Information, "Loaded KnownProxies from configuration; IP: {ProxyIp}.", proxyIp);
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost, 
     RequireHeaderSymmetry = false,
-    KnownNetworks =
-    {
-        new IPNetwork(
-            System.Net.IPAddress.Parse(prefixIp), 
-            prefixLength)
-    }
+    ForwardLimit = 2,
+    KnownProxies = { IPAddress.Parse(proxyIp) }
 });
 
 // Configure the HTTP request pipeline.

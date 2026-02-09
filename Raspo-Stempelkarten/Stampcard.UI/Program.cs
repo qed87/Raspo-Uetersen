@@ -76,8 +76,7 @@ builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(requireAuthPolicy);
 
 var app = builder.Build();
-var knownNetworksConfig = app.Configuration.GetRequiredSection("KnownNetworks");
-var proxyIp = knownNetworksConfig.GetValue<string>("ProxyIp")!;
+var proxyIp = app.Configuration.GetValue<string>("ProxyIp")!;
 app.Logger.Log(LogLevel.Information, "Loaded KnownProxies from configuration; IP: {ProxyIp}.", proxyIp);
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {

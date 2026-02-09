@@ -53,7 +53,8 @@ builder.Services.AddAuthorizationBuilder()
 var app = builder.Build();
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost, 
+    RequireHeaderSymmetry = false
 });
 
 // Configure the HTTP request pipeline.

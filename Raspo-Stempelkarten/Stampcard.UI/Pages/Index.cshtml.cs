@@ -11,12 +11,18 @@ public class Index(TeamHttpClient teamHttpClient, ILogger<Index> logger) : PageM
     
     [BindProperty] public string Name { get; set; }
 
-    public async Task OnGetAsync()
+    public async Task<IActionResult> OnGetAsync()
     {
-        var response = await LoadItemsAsync();
-        if (response!.HasError)
+        try
         {
-            ModelState.AddModelError(string.Empty, response.Message);
+            var response = await LoadItemsAsync();
+            if (response!.HasError)
+                ModelState.AddModelError(string.Empty, response.Message!);
+            return Page();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return RedirectToPage("/Index");
         }
     }
 

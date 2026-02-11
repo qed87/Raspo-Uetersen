@@ -28,9 +28,17 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
     [EmailAddress(ErrorMessage = "Ungültige E-Mail Adresse!")]
     public string NewCoach { get; set; }
 
-    public async Task OnGetAsync()
+    public async Task<IActionResult> OnGetAsync()
     {
-        await LoadItemsAsync();
+        try
+        {
+            await LoadItemsAsync();
+            return Page();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return RedirectToPage("/Index");
+        }
     }
 
     private async Task LoadItemsAsync()

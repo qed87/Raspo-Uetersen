@@ -22,8 +22,15 @@ public class StampCards(StampCardHttpClient stampCardHttpClient, PlayerHttpClien
 
     public async Task<IActionResult> OnGetAsync()
     {
-        await LoadItemsAsync();
-        return Page();
+        try
+        {
+            await LoadItemsAsync();
+            return Page();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return RedirectToPage("/Index");
+        }
     }
 
     private async Task LoadItemsAsync()

@@ -1,6 +1,8 @@
+using System.Net;
 using Duende.AccessTokenManagement.OpenIdConnect;
 using RestSharp;
 using RestSharp.Authenticators;
+using RestSharp.Interceptors;
 
 namespace Stampcard.UI.Clients;
 
@@ -43,10 +45,26 @@ public static class ServiceCollectionExtensions
         var restClientOptions = new RestClientOptions
         {
             BaseUrl = new Uri(backendUrl),
+            Interceptors = [new UnauthorizedRedirectInterceptor(httpContextAccessor)],
             Authenticator = new JwtAuthenticator(tokenResult.Token.AccessToken),
             RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true
         };
         restClient = new RestClient(restClientOptions);
         return true;
     }
+}
+
+internal class UnauthorizedRedirectInterceptor(IHttpContextAccessor httpContextAccessor) : Interceptor
+{
+    public override ValueTask AfterRequest(RestResponse response, CancellationToken cancellationToken)
+    {
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            throw new UnauthorizedAccessException();
+        }
+        
+        return base.AfterRequest(response, cancellationToken);
+    }
+    
+    
 }

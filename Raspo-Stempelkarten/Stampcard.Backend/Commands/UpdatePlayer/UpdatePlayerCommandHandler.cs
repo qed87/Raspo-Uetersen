@@ -3,6 +3,7 @@ using FluentValidation;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Authorization;
 using StampCard.Backend.Commands.Shared;
+using StampCard.Backend.Commands.Shared.Interfaces;
 
 namespace StampCard.Backend.Commands.UpdatePlayer;
 
@@ -10,11 +11,9 @@ namespace StampCard.Backend.Commands.UpdatePlayer;
 [UsedImplicitly]
 public class UpdatePlayerCommandHandler(
     IServiceProvider serviceProvider,
-    IHttpContextAccessor httpContextAccessor,
-    IAuthorizationService authorizationService,
     IValidator<UpdatePlayerCommand> validator,
     ILogger<UpdatePlayerCommandHandler> logger) 
-    : OnlyTeamCoachHandlerBase<UpdatePlayerCommand, Unit>(serviceProvider, authorizationService, httpContextAccessor, logger)
+    : CommandHandlerBase<UpdatePlayerCommand, Unit>(serviceProvider, logger)
 {
     /// <inheritdoc />
     protected override async Task ApplyCommandToModelAsync(ICommandExecutionContext context)

@@ -1,7 +1,9 @@
 using DispatchR.Abstractions.Send;
 using FluentResults;
+using StampCard.Backend.Commands.Shared.Interfaces;
 using StampCard.Backend.Model;
 using StampCard.Backend.Services;
+using StampCard.Backend.Services.Interfaces;
 
 namespace StampCard.Backend.Commands.Shared;
 

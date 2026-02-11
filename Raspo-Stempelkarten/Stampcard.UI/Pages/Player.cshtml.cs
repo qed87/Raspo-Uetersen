@@ -24,9 +24,17 @@ public class PlayerModel(PlayerHttpClient playerHttpClient) : PageModel
         return Page();
     }
 
-    public async Task OnGetAsync()
+    public async Task<IActionResult> OnGetAsync()
     {
-        await LoadItemAsync();
+        try
+        {
+            await LoadItemAsync();
+            return Page();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return RedirectToPage("/Index");
+        }
     }
 
     private async Task LoadItemAsync()

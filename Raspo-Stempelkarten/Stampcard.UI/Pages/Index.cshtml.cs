@@ -11,19 +11,25 @@ public class Index(TeamHttpClient teamHttpClient, ILogger<Index> logger) : PageM
     
     [BindProperty] public string Name { get; set; }
 
-    public async Task OnGetAsync()
+    public async Task<IActionResult> OnGetAsync()
     {
-        var response = await LoadItemsAsync();
-        if (response!.HasError)
+        try
         {
-            ModelState.AddModelError(string.Empty, response.Message);
+            var response = await LoadItemsAsync();
+            if (response!.HasError)
+                ModelState.AddModelError(string.Empty, response.Message!);
+            return Page();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return RedirectToPage("/Index");
         }
     }
 
     private async Task<ResponseWrapperDto<List<TeamReadDto>>?> LoadItemsAsync()
     {
         var teamResponse = await teamHttpClient.ListTeamsAsync();
-        if (teamResponse is null || teamResponse.HasError) return teamResponse;
+        if (teamResponse.HasError) return teamResponse;
         foreach (var teamReadDto in teamResponse.Data)
         {
             Items.Add(teamReadDto);
@@ -39,7 +45,7 @@ public class Index(TeamHttpClient teamHttpClient, ILogger<Index> logger) : PageM
             var response = await teamHttpClient.CreateTeamAsync(Name);
             if (!response.HasError) return RedirectToPage();
             await LoadItemsAsync();
-            ModelState.AddModelError(string.Empty, response.Message);
+            ModelState.AddModelError(string.Empty, response.Message!);
             return Page();
         }
         catch (Exception exception)

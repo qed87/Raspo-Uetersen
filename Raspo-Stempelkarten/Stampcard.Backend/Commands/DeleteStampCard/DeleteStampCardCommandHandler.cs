@@ -1,18 +1,16 @@
 using FluentResults;
-using Microsoft.AspNetCore.Authorization;
 using StampCard.Backend.Commands.Shared;
+using StampCard.Backend.Commands.Shared.Interfaces;
 using StampCard.Backend.Model;
 
 namespace StampCard.Backend.Commands.DeleteStampCard;
 
 /// <inheritdoc />
 public class DeleteStampCardCommandHandler(
-    IServiceProvider serviceProvider, 
-    IAuthorizationService authorizationService, 
-    IHttpContextAccessor httpContextAccessor,
+    IServiceProvider serviceProvider,
     ILogger<DeleteStampCardCommandHandler> logger) 
-    : OnlyTeamCoachHandlerBase<DeleteStampCardCommand, Unit>(
-        serviceProvider, authorizationService, httpContextAccessor, logger)
+    : CommandHandlerBase<DeleteStampCardCommand, Unit>(
+        serviceProvider, logger)
 {
     /// <inheritdoc />
     protected override async Task ApplyCommandToModelAsync(ICommandExecutionContext context)

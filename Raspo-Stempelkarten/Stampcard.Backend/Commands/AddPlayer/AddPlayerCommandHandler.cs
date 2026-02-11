@@ -1,7 +1,6 @@
 using FluentResults;
 using FluentValidation;
 using JetBrains.Annotations;
-using Microsoft.AspNetCore.Authorization;
 using StampCard.Backend.Commands.Shared;
 using StampCard.Backend.Model;
 
@@ -11,11 +10,9 @@ namespace StampCard.Backend.Commands.AddPlayer;
 [UsedImplicitly]
 public class AddPlayerCommandHandler(
     IServiceProvider serviceProvider,
-    IHttpContextAccessor httpContextAccessor,
-    IAuthorizationService authorizationService,
     IValidator<AddPlayerCommand> validator,
     ILogger<AddPlayerCommandHandler> logger) 
-    : OnlyTeamCoachHandlerBase<AddPlayerCommand, Guid>(serviceProvider, authorizationService, httpContextAccessor, logger)
+    : CommandHandlerBase<AddPlayerCommand, Guid>(serviceProvider, logger)
 {
     /// <inheritdoc />
     protected override async Task ApplyCommandToModelAsync(ICommandExecutionContext context)

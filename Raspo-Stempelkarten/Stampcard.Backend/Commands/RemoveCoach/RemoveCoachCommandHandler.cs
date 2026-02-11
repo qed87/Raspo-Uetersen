@@ -2,6 +2,7 @@ using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Authorization;
 using StampCard.Backend.Commands.Shared;
+using StampCard.Backend.Commands.Shared.Interfaces;
 using StampCard.Backend.Model;
 
 namespace StampCard.Backend.Commands.RemoveCoach;

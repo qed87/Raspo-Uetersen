@@ -1,4 +1,4 @@
-namespace StampCard.Backend.Services;
+namespace StampCard.Backend.Services.Interfaces;
 
 /// <summary>
 /// User provider service.

@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using StampCard.Backend.Commands.Shared;
 using StampCard.Backend.Model;
 using StampCard.Backend.Services;
+using StampCard.Backend.Services.Interfaces;
 
 namespace StampCard.Backend.Commands.DeleteTeam;
 

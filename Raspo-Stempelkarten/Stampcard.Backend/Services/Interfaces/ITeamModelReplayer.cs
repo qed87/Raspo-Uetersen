@@ -1,7 +1,7 @@
 using KurrentDB.Client;
 using StampCard.Backend.Model;
 
-namespace StampCard.Backend.Services;
+namespace StampCard.Backend.Services.Interfaces;
 
 /// <summary>
 /// 

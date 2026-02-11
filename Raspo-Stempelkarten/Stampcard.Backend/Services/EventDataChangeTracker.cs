@@ -3,6 +3,7 @@ using System.Text.Json;
 using DispatchR.Abstractions.Notification;
 using KurrentDB.Client;
 using StampCard.Backend.Events;
+using StampCard.Backend.Services.Interfaces;
 
 namespace StampCard.Backend.Services;
 

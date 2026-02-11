@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using KurrentDB.Client;
 using StampCard.Backend.Exceptions;
 using StampCard.Backend.Model;
+using StampCard.Backend.Services.Interfaces;
 
 namespace StampCard.Backend.Services;
 

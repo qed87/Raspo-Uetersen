@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using DispatchR.Abstractions.Stream;
 using JetBrains.Annotations;
 using StampCard.Backend.Services;
+using StampCard.Backend.Services.Interfaces;
 using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend.Queries.ListPlayers;

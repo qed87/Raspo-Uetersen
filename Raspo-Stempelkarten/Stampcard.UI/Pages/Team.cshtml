@@ -1,9 +1,18 @@
 @page "/Teams/{Team}"
+@using SmartBreadcrumbs.Nodes
 @model Team
 @tagHelperPrefix x:
 
 @{
     ViewData["Title"] = Model.Id + " bearbeiten";
+    ViewData["BreadcrumbNode"] = new RazorPageBreadcrumbNode("Team", "Team")
+    {
+        Parent = new RazorPageBreadcrumbNode("Index", "Startseite"),
+        RouteValues = new Dictionary<string, object>
+        {
+            { "Team", Model.Id }
+        }
+    };
 }
 
 <h2>Team @Model.Id</h2>

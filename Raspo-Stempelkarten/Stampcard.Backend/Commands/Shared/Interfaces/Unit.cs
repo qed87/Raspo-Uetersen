@@ -1,4 +1,4 @@
-namespace StampCard.Backend.Commands.Shared;
+namespace StampCard.Backend.Commands.Shared.Interfaces;
 
 /// <summary>
 /// Represents an empty (void) result.

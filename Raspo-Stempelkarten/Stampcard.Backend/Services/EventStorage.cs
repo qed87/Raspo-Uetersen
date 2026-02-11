@@ -1,6 +1,7 @@
 using JetBrains.Annotations;
 using KurrentDB.Client;
 using Polly;
+using StampCard.Backend.Services.Interfaces;
 
 namespace StampCard.Backend.Services;
 

@@ -1,9 +1,26 @@
 @page "/Teams/{Team}/StampCard/{StampCardId}/Stamps"
+@using SmartBreadcrumbs.Nodes
 @model Stamps
 @tagHelperPrefix x:
 
 @{
     ViewData["Title"] = "Stempelkarten - " + Model.Team;
+    ViewData["BreadcrumbNode"] = new RazorPageBreadcrumbNode("Stamps", "Stempel")
+    {
+        Parent = new RazorPageBreadcrumbNode("StampCards", "Stempelkarten")
+        {
+            Parent = new RazorPageBreadcrumbNode("Index", "Startseite"),
+            RouteValues = new Dictionary<string, object>
+            {
+                { "Team", Model.Team }
+            }
+        },
+        RouteValues = new Dictionary<string, object>
+        {
+            { "Team", Model.Team },
+            { "StampCardId", Model.StampCardId }
+        }
+    };
 }
 
 <h2>Stempelkarten - @Model.Team/@Model.StampCardId</h2>
@@ -37,7 +54,7 @@
                 </td>
                 <td>
                     <x:a class="btn btn-dark" asp-route-id="@itemId" asp-page-handler="delete" data-loading="true">
-                        <i class="bi bi-trash3-fill"> Stempelkarte löschen</i>
+                        <i class="bi bi-trash3-fill"> Stempel löschen</i>
                     </x:a>
                 </td>
             </tr>

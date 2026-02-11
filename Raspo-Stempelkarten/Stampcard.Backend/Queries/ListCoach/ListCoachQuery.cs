@@ -2,6 +2,7 @@ using DispatchR.Abstractions.Send;
 using FluentResults;
 using JetBrains.Annotations;
 using StampCard.Backend.Commands.Shared;
+using StampCard.Backend.Commands.Shared.Interfaces;
 
 namespace StampCard.Backend.Queries.ListCoach;
 

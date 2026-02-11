@@ -1,14 +1,12 @@
 using FluentResults;
-using Microsoft.AspNetCore.Authorization;
 using StampCard.Backend.Commands.Shared;
 using StampCard.Backend.Model;
 
 namespace StampCard.Backend.Commands.EraseStamp;
 
 /// <inheritdoc />
-public class EraseStampCommandHandler(IServiceProvider serviceProvider, IAuthorizationService authorizationService, 
-    IHttpContextAccessor httpContextAccessor, ILogger<EraseStampCommandHandler> logger) 
-    : OnlyTeamCoachHandlerBase<EraseStampCommand, Guid>(serviceProvider, authorizationService, httpContextAccessor, logger)
+public class EraseStampCommandHandler(IServiceProvider serviceProvider, ILogger<EraseStampCommandHandler> logger) 
+    : CommandHandlerBase<EraseStampCommand, Guid>(serviceProvider, logger)
 {
     /// <inheritdoc />
     protected override async Task ApplyCommandToModelAsync(ICommandExecutionContext context)

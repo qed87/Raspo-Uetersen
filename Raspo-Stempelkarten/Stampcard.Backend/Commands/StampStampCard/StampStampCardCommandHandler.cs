@@ -8,7 +8,7 @@ namespace StampCard.Backend.Commands.StampStampCard;
 /// <inheritdoc />
 public class StampStampCardCommandHandler(IServiceProvider serviceProvider, IAuthorizationService  authorizationService, 
     IHttpContextAccessor  httpContextAccessor, ILogger<StampStampCardCommandHandler> logger) 
-    : OnlyTeamCoachHandlerBase<StampStampCardCommand, Guid>(serviceProvider, authorizationService, httpContextAccessor, logger)
+    : CommandHandlerBase<StampStampCardCommand, Guid>(serviceProvider, logger)
 {
     /// <inheritdoc />
     protected override async Task ApplyCommandToModelAsync(ICommandExecutionContext context)

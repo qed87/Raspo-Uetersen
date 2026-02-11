@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using KurrentDB.Client;
 using StampCard.Backend.Events;
 using StampCard.Backend.Services;
+using StampCard.Backend.Services.Interfaces;
 
 namespace StampCard.Backend.Commands.AddTeam;
 

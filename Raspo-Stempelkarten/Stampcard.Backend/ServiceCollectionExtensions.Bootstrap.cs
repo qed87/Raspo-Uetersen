@@ -14,6 +14,7 @@ using StampCard.Backend.Commands.EraseStamp;
 using StampCard.Backend.Commands.RemoveCoach;
 using StampCard.Backend.Commands.RemovePlayer;
 using StampCard.Backend.Commands.Shared;
+using StampCard.Backend.Commands.Shared.Interfaces;
 using StampCard.Backend.Commands.StampStampCard;
 using StampCard.Backend.Commands.UpdatePlayer;
 using StampCard.Backend.Commands.UpdateTeam;

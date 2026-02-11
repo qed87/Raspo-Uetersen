@@ -1,6 +1,7 @@
 using DispatchR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using StampCard.Backend.Authorization;
 using StampCard.Backend.Commands.AddCoach;
 using StampCard.Backend.Commands.AddTeam;
 using StampCard.Backend.Commands.DeleteTeam;
@@ -22,6 +23,7 @@ public class TeamsController(IMediator mediator) : ControllerBase
     /// <summary>
     /// Get the team.
     /// </summary>
+    [Authorize("IsManager")]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetItemAsync(string id)
     {
@@ -95,6 +97,7 @@ public class TeamsController(IMediator mediator) : ControllerBase
     /// <summary>
     /// List coaches of the team.
     /// </summary>
+    [Authorize("IsManager")]
     [HttpGet("{team}/coach")]
     public async Task<IActionResult> ListCoachesAsync(string team)
     {

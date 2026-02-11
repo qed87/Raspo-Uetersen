@@ -1,6 +1,5 @@
 using FluentResults;
 using JetBrains.Annotations;
-using Microsoft.AspNetCore.Authorization;
 using StampCard.Backend.Commands.Shared;
 using StampCard.Backend.Model;
 
@@ -8,9 +7,8 @@ namespace StampCard.Backend.Commands.RemovePlayer;
 
 /// <inheritdoc />
 [UsedImplicitly]
-public class RemoveMemberCommandHandler(IServiceProvider serviceProvider, IAuthorizationService authorizationService, 
-    IHttpContextAccessor httpContextAccessor, ILogger<RemoveMemberCommandHandler> logger) 
-    : OnlyTeamCoachHandlerBase<RemoveMemberCommand, Guid>(serviceProvider, authorizationService, httpContextAccessor, logger)
+public class RemoveMemberCommandHandler(IServiceProvider serviceProvider, ILogger<RemoveMemberCommandHandler> logger) 
+    : CommandHandlerBase<RemoveMemberCommand, Guid>(serviceProvider, logger)
 {
     /// <inheritdoc />
     protected override async Task ApplyCommandToModelAsync(ICommandExecutionContext context)

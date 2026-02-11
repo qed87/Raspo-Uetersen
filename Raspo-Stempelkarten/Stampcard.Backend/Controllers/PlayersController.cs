@@ -2,6 +2,7 @@ using System.Web;
 using DispatchR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using StampCard.Backend.Authorization;
 using StampCard.Backend.Commands.AddPlayer;
 using StampCard.Backend.Commands.RemovePlayer;
 using StampCard.Backend.Commands.UpdatePlayer;
@@ -16,6 +17,7 @@ namespace StampCard.Backend.Controllers;
 /// </summary>
 /// <param name="mediator"></param>
 [Authorize]
+[TeamCoachRequired("team")]
 [Route("api/teams/{team}/[controller]/")]
 public class PlayersController(IMediator mediator) : ControllerBase
 {

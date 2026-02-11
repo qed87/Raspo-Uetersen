@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using SmartBreadcrumbs.Extensions;
 using Stampcard.UI.Clients;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,11 @@ builder.Configuration
     .AddJsonFile("appsettings.json")
     .AddEnvironmentVariables()
     .AddCommandLine(args);
+builder.Services.AddBreadcrumbs(typeof(Program).Assembly, options =>
+{
+    options.DontLookForDefaultNode = true;
+    options.RazorPagesRootDirectory = "/Pages";
+});
 builder.Services.AddBackendClients(builder.Configuration);
 builder.Services.AddRazorPages();
 builder.Services.AddAuthentication(options =>

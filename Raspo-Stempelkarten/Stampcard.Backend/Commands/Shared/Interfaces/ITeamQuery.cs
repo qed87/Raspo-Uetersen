@@ -1,6 +1,6 @@
 using DispatchR.Abstractions.Send;
 
-namespace StampCard.Backend.Commands.Shared;
+namespace StampCard.Backend.Commands.Shared.Interfaces;
 
 /// <summary>
 /// Base interface querying team data.

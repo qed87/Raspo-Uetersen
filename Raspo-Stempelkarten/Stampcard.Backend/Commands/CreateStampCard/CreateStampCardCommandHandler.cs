@@ -1,7 +1,7 @@
 using FluentResults;
 using FluentValidation;
-using Microsoft.AspNetCore.Authorization;
 using StampCard.Backend.Commands.Shared;
+using StampCard.Backend.Commands.Shared.Interfaces;
 using StampCard.Backend.Model;
 
 namespace StampCard.Backend.Commands.CreateStampCard;
@@ -9,12 +9,9 @@ namespace StampCard.Backend.Commands.CreateStampCard;
 /// <inheritdoc />
 public class CreateStampCardCommandHandler(
     IServiceProvider serviceProvider,
-    IAuthorizationService authorizationHandler,
-    IHttpContextAccessor httpContextAccessor,
     IValidator<CreateStampCardCommand> validator,
     ILogger<CreateStampCardCommandHandler> logger) 
-    : OnlyTeamCoachHandlerBase<CreateStampCardCommand, Unit>(serviceProvider, authorizationHandler, 
-        httpContextAccessor, logger)
+    : CommandHandlerBase<CreateStampCardCommand, Unit>(serviceProvider, logger)
 {
     /// <inheritdoc />
     protected override async Task ApplyCommandToModelAsync(ICommandExecutionContext context)

@@ -1,9 +1,11 @@
 @page
+@using SmartBreadcrumbs.Nodes
 @model Index
 @tagHelperPrefix x:
 
 @{
     ViewData["Title"] = "Teamverwaltung";
+    ViewData["BreadcrumbNode"] = new RazorPageBreadcrumbNode("Index", "Startseite");
 }
 
 <h2>Teamverwaltung</h2>
@@ -31,18 +33,30 @@
                 <td>@(i + 1)</td>
                 <td>@team.Club - @team.Name</td>
                 <td>
-                    <x:a class="btn btn-dark" asp-route-target="Team" asp-route-id="@team.Id" asp-page-handler="item">
-                        <i class="bi bi-diagram-3"> Team bearbeiten</i>
-                    </x:a>
-                    <x:a class="btn btn-dark" asp-route-target="Players" asp-route-id="@team.Id" asp-page-handler="item">
-                        <i class="bi bi-people-fill"> Spieler verwalten</i>
-                    </x:a>
-                    <x:a class="btn btn-dark" asp-route-target="StampCards" asp-route-id="@team.Id" asp-page-handler="item">
-                        <i class="bi bi-postage"> Stempelkarten verwalten</i>
-                    </x:a>
-                    <x:a class="btn btn-dark" asp-route-id="@team.Id" asp-page-handler="delete" data-loading="true">
-                        <i class="bi bi-trash3-fill"> Team löschen</i>
-                    </x:a>
+                    @if(User.IsInRole("manager")) 
+                    {
+                        <x:a class ="btn btn-dark" asp-route-target="Team" asp-route-id="@team.Id" asp-page-handler="item">
+                            <i class="bi bi-diagram-3"> Team bearbeiten </i>
+                        </x:a>
+                    }
+                    @if (team.Coaches.Contains(User.Identity?.Name ?? string.Empty))
+                    {
+                        <x:a class="btn btn-dark" asp-route-target="Players" asp-route-id="@team.Id" asp-page-handler="item">
+                            <i class="bi bi-people-fill"> Spieler verwalten</i>
+                        </x:a>
+                    }
+                    @if (team.Coaches.Contains(User.Identity?.Name ?? string.Empty))
+                    {
+                        <x:a class="btn btn-dark" asp-route-target="StampCards" asp-route-id="@team.Id" asp-page-handler="item">
+                            <i class="bi bi-postage"> Stempelkarten verwalten</i>
+                        </x:a>
+                    }
+                    @if (User.IsInRole("manager"))
+                    {
+                        <x:a class="btn btn-dark" asp-route-id="@team.Id" asp-page-handler="delete" data-loading="true">
+                            <i class="bi bi-trash3-fill"> Team löschen</i>
+                        </x:a>
+                    }
                 </td>
             </tr>
         }

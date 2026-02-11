@@ -1,9 +1,26 @@
 @page "/Teams/{Team}/StampCard/{StampCardId}/Stamps"
+@using SmartBreadcrumbs.Nodes
 @model Stamps
 @tagHelperPrefix x:
 
 @{
     ViewData["Title"] = "Stempelkarten - " + Model.Team;
+    ViewData["BreadcrumbNode"] = new RazorPageBreadcrumbNode("Stamps", "Stempel")
+    {
+        Parent = new RazorPageBreadcrumbNode("StampCards", "Stempelkarten")
+        {
+            Parent = new RazorPageBreadcrumbNode("Index", "Startseite"),
+            RouteValues = new Dictionary<string, object>
+            {
+                { "Team", Model.Team }
+            }
+        },
+        RouteValues = new Dictionary<string, object>
+        {
+            { "Team", Model.Team },
+            { "StampCardId", Model.StampCardId }
+        }
+    };
 }
 
 <h2>Stempelkarten - @Model.Team/@Model.StampCardId</h2>

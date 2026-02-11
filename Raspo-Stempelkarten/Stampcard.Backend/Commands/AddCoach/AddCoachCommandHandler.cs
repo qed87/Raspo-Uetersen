@@ -2,6 +2,7 @@ using FluentResults;
 using FluentValidation;
 using JetBrains.Annotations;
 using StampCard.Backend.Commands.Shared;
+using StampCard.Backend.Commands.Shared.Interfaces;
 using StampCard.Backend.Model;
 
 namespace StampCard.Backend.Commands.AddCoach;

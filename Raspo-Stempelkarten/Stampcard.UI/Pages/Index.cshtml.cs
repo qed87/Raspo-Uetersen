@@ -23,7 +23,7 @@ public class Index(TeamHttpClient teamHttpClient, ILogger<Index> logger) : PageM
     private async Task<ResponseWrapperDto<List<TeamReadDto>>?> LoadItemsAsync()
     {
         var teamResponse = await teamHttpClient.ListTeamsAsync();
-        if (teamResponse is null || teamResponse.HasError) return teamResponse;
+        if (teamResponse.HasError) return teamResponse;
         foreach (var teamReadDto in teamResponse.Data)
         {
             Items.Add(teamReadDto);
@@ -39,7 +39,7 @@ public class Index(TeamHttpClient teamHttpClient, ILogger<Index> logger) : PageM
             var response = await teamHttpClient.CreateTeamAsync(Name);
             if (!response.HasError) return RedirectToPage();
             await LoadItemsAsync();
-            ModelState.AddModelError(string.Empty, response.Message);
+            ModelState.AddModelError(string.Empty, response.Message!);
             return Page();
         }
         catch (Exception exception)

@@ -18,7 +18,7 @@ public class StampCards(StampCardHttpClient stampCardHttpClient, PlayerHttpClien
     public string PlayerName { get; set; }
 
     [BindProperty]
-    public int AccountingYear { get; set; }
+    public int AccountingYear { get; set; } = DateTime.UtcNow.Year;
 
     public async Task<IActionResult> OnGetAsync()
     {

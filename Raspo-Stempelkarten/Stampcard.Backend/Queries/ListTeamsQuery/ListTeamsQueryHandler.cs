@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using DispatchR.Abstractions.Send;
 using StampCard.Backend.Services;
+using StampCard.Backend.Services.Interfaces;
 using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend.Queries.ListTeamsQuery;

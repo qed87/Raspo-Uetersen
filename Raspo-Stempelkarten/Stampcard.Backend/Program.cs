@@ -80,7 +80,7 @@ app.Use(async (context, next) =>
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
         await context.Response.WriteAsJsonAsync(ResponseWrapperDto.Fail(modelConcurrencyException.Message));
     }
-    catch (ModelLoadException modelLoadException)
+    catch (ModelLoadException)
     {
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
         context.Response.ContentType = "application/json";

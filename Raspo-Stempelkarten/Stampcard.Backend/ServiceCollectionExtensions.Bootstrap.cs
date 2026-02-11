@@ -30,6 +30,7 @@ using StampCard.Backend.Queries.ListPlayers;
 using StampCard.Backend.Queries.ListStampCards;
 using StampCard.Backend.Queries.ListTeamsQuery;
 using StampCard.Backend.Services;
+using StampCard.Backend.Services.Interfaces;
 using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend;

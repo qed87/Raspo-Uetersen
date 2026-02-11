@@ -1,6 +1,7 @@
 using System.Text.Json;
 using KurrentDB.Client;
 using StampCard.Backend.Queries.ListTeamsQuery;
+using StampCard.Backend.Services.Interfaces;
 using Stampcard.Contracts.Dtos;
 
 namespace StampCard.Backend.Services;

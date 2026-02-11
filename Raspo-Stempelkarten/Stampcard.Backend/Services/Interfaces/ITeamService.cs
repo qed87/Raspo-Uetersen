@@ -1,6 +1,6 @@
 using Stampcard.Contracts.Dtos;
 
-namespace StampCard.Backend.Services;
+namespace StampCard.Backend.Services.Interfaces;
 
 /// <summary>
 /// Team service for reading all available teams.

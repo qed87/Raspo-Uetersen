@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using StampCard.Backend.Events;
 using StampCard.Backend.Exceptions;
 using StampCard.Backend.Model;
+using StampCard.Backend.Services.Interfaces;
 
 namespace StampCard.Backend.Services;
 

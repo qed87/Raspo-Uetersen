@@ -5,8 +5,6 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using RestSharp;
-using RestSharp.Authenticators;
 using Stampcard.UI.Clients;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -64,6 +62,7 @@ builder.Services.AddAuthentication(options =>
         options.Scope.Add("openid");
         options.Scope.Add("email");
         options.Scope.Add("profile");
+        options.Scope.Add("offline_access");
     });
 builder.Services.AddOpenIdConnectAccessTokenManagement();
 
@@ -76,19 +75,19 @@ builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(requireAuthPolicy);
 
 var app = builder.Build();
-var proxyIp = app.Configuration.GetValue<string>("ProxyIp")!;
-app.Logger.Log(LogLevel.Information, "Loaded KnownProxies from configuration; IP: {ProxyIp}.", proxyIp);
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost, 
-    RequireHeaderSymmetry = false,
-    ForwardLimit = 2,
-    KnownProxies = { IPAddress.Parse(proxyIp) }
-});
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
-{
+{    
+    var proxyIp = app.Configuration.GetValue<string>("ProxyIp")!;
+    app.Logger.Log(LogLevel.Information, "Loaded KnownProxies from configuration; IP: {ProxyIp}.", proxyIp);
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost, 
+        RequireHeaderSymmetry = false,
+        ForwardLimit = 2,
+        KnownProxies = { IPAddress.Parse(proxyIp) }
+    });
     app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();

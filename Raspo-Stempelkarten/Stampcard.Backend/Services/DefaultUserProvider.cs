@@ -1,3 +1,5 @@
+using StampCard.Backend.Services.Interfaces;
+
 namespace StampCard.Backend.Services;
 
 /// <summary>

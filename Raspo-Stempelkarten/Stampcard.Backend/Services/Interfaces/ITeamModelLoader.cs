@@ -1,6 +1,6 @@
 using StampCard.Backend.Model;
 
-namespace StampCard.Backend.Services;
+namespace StampCard.Backend.Services.Interfaces;
 
 /// <summary>
 /// The team model loader.

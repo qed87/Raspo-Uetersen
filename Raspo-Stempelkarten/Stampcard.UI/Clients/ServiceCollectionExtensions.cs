@@ -43,7 +43,7 @@ public static class ServiceCollectionExtensions
         var restClientOptions = new RestClientOptions
         {
             BaseUrl = new Uri(backendUrl),
-            Authenticator = new JwtAuthenticator(tokenResult.Token.IdentityToken.GetValueOrDefault()),
+            Authenticator = new JwtAuthenticator(tokenResult.Token.AccessToken),
             RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true
         };
         restClient = new RestClient(restClientOptions);

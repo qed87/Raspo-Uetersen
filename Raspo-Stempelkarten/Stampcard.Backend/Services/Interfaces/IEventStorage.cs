@@ -1,6 +1,6 @@
 using KurrentDB.Client;
 
-namespace StampCard.Backend.Services;
+namespace StampCard.Backend.Services.Interfaces;
 
 /// <summary>
 /// Storage for events.

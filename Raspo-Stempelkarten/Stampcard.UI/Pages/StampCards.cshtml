@@ -45,9 +45,28 @@
                     <x:a class="btn btn-dark" asp-page="Stamps" asp-route-team="@Model.Team" asp-route-stampCardId="@itemId">
                         <i class="bi bi-credit-card-2-front"> Stempelkarte bearbeiten</i>
                     </x:a>
-                    <x:a class="btn btn-dark" asp-route-id="@itemId" asp-page-handler="delete" data-loading="true">
+                    <x:a class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#deleteModal">
                         <i class="bi bi-trash3-fill"> Stempelkarte löschen</i>
                     </x:a>
+                    <!-- Modal -->
+                    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="deleteModalLabel">Wirklich löschen?</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Möchten Sie die <strong>Stempelkarte: @Model.Items[i].PlayerName (@Model.Items[i].AccountingYear)</strong> endgültig löschen?<br>
+                                    Diese Aktion kann <strong>nicht</strong> rückgängig gemacht werden.
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                                    <x:a class="btn btn-danger" asp-route-id="@itemId" asp-page-handler="delete" data-loading="true">Ja, löschen</x:a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </td>
             </tr>
         }

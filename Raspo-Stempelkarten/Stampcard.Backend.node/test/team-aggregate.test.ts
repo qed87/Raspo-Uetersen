@@ -1,7 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import {
-    InconsistentStreamError,
     InvalidShareCodeError,
     PlayerAlreadyExistsError,
     PlayerNotFoundError,
@@ -12,17 +11,16 @@ import {
     TeamAlreadyExistsError,
     TeamNotFoundError
 } from "../src/stamp-card-errors.js";
-import { TeamAggregate } from "../src/stamp-card-model.js";
 import {
     admin,
     coach,
     createdTeam,
     emptyTeam,
+    expectErr,
     ISSUER,
     max,
     otherCoach,
     replayed,
-    STREAM_NAME,
     teamWithStampCard
 } from "./helpers/fixtures.js";
 
@@ -287,12 +285,15 @@ describe("replaying recorded events", () => {
             { status: "pending", revoked: true });
     });
 
-    test("an event referencing an unknown player marks the stream as inconsistent", () => {
-        const history = [{
+    test("an event referencing an unknown player cannot be replayed", () => {
+        const team = createdTeam();
+        const playerRemoved = {
             type: "PlayerRemoved" as const,
             data: { id: "00000000-0000-4000-8000-000000000000", issuer: ISSUER, issuedOn: new Date() }
-        }];
+        };
 
-        assert.throws(() => new TeamAggregate(STREAM_NAME, 0n, history), InconsistentStreamError);
+        const reason = expectErr(team.replay(playerRemoved));
+
+        assert.match(reason, /unknown player/);
     });
 });

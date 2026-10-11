@@ -1,5 +1,6 @@
 import type { KurrentDBClient } from "@kurrent/kurrentdb-client";
 import type EventEmitter from "node:events";
+import { Result } from "neverthrow";
 import type { AuthenticatedUser } from "./authenticated-user.js";
 import * as dtos from './stamp-card-dtos.js'
 import { TeamNotFoundError } from "./stamp-card-errors.js";
@@ -162,7 +163,7 @@ export class StampCardService {
      * Returns the stamp card an external user may see with the given share code.
      */
     async getSharedStampCard(reference: dtos.StampCardReference, code: string): Promise<StampCard> {
-        const team = await this.teams.load(this.clubTeamStreamName(reference.teamName));
+        const team = await this.loadTeam(this.clubTeamStreamName(reference.teamName));
         return team.findSharedStampCard(reference.stampCardId, code);
     }
 
@@ -175,8 +176,12 @@ export class StampCardService {
      * Evaluates the stamp cards of all teams. Authorizing the accounting role is up to the caller.
      */
     async listIncompleteStampCards(query: dtos.IncompleteStampCardQuery): Promise<IncompleteStampCard[]> {
-        const teams = await Promise.all((await this.listAllTeams()).map(team => this.teams.load(team.id)));
-        return teams.flatMap(team => team.listIncompleteStampCards(query.accountingYear, query.requiredStamps));
+        const loadedTeams = await Promise.all((await this.listAllTeams()).map(team => this.teams.load(team.id)));
+        const teams = Result.combineWithAllErrors(loadedTeams);
+        if (teams.isErr()) {
+            throw new AggregateError(teams.error, "Stamp cards could not be evaluated, some team streams are invalid.");
+        }
+        return teams.value.flatMap(team => team.listIncompleteStampCards(query.accountingYear, query.requiredStamps));
     }
 
     private async listAllTeams(): Promise<dtos.TeamReadDto[]> {
@@ -185,18 +190,18 @@ export class StampCardService {
         return projectionState.teams ?? [];
     }
 
-    private changeClubTeam<Result>(
+    private changeClubTeam<Output>(
         teamName: string,
         user: AuthenticatedUser,
-        change: (team: TeamAggregate) => Result): Promise<Result> {
+        change: (team: TeamAggregate) => Output): Promise<Output> {
         return this.changeTeam(this.clubTeamStreamName(teamName), user, change);
     }
 
-    private async queryClubTeam<Result>(
+    private async queryClubTeam<Output>(
         teamName: string,
         user: AuthenticatedUser,
-        query: (team: TeamAggregate) => Result): Promise<Result> {
-        const team = await this.teams.load(this.clubTeamStreamName(teamName));
+        query: (team: TeamAggregate) => Output): Promise<Output> {
+        const team = await this.loadTeam(this.clubTeamStreamName(teamName));
         ensureVisible(team, user);
         return query(team);
     }
@@ -208,20 +213,32 @@ export class StampCardService {
     /**
      * Teams the user does not coach are reported as not found, so that their existence is not revealed.
      */
-    private changeTeam<Result>(
+    private changeTeam<Output>(
         streamName: string,
         user: AuthenticatedUser,
-        change: (team: TeamAggregate) => Result): Promise<Result> {
+        change: (team: TeamAggregate) => Output): Promise<Output> {
         return this.applyChange(streamName, team => {
             ensureVisible(team, user);
             return change(team);
         });
     }
 
-    private async applyChange<Result>(streamName: string, change: (team: TeamAggregate) => Result): Promise<Result> {
-        const team = await this.teams.load(streamName);
-        const result = change(team);
-        await this.teams.save(team);
-        return result;
+    private async applyChange<Output>(streamName: string, change: (team: TeamAggregate) => Output): Promise<Output> {
+        const team = await this.loadTeam(streamName);
+        const output = change(team);
+        await this.saveTeam(team);
+        return output;
+    }
+
+    // The routes report failures through exceptions, so the repository results end here.
+    private async loadTeam(streamName: string): Promise<TeamAggregate> {
+        const loaded = await this.teams.load(streamName);
+        if (loaded.isErr()) throw loaded.error;
+        return loaded.value;
+    }
+
+    private async saveTeam(team: TeamAggregate): Promise<void> {
+        const saved = await this.teams.save(team);
+        if (saved.isErr()) throw saved.error;
     }
 }

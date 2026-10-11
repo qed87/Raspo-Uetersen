@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
+import { err, ok, type Result } from "neverthrow";
 import type { AuthenticatedUser } from "./authenticated-user.js";
 import type { CreateTeamDto, PlayerDto, StampCardDto, StampDto, SubmittedStampDto } from "./stamp-card-dtos.js";
 import type { TeamEvent } from "./stamp-card-events.js";
@@ -29,6 +30,10 @@ export type IncompleteStampCard = {
 
 const SHARE_CODE_BYTES = 24;
 
+function referenceExists(exists: boolean, event: TeamEvent & { data: { id: string } }): Result<void, string> {
+    return exists ? ok(undefined) : err(`${event.type} references unknown '${event.data.id}'.`);
+}
+
 function isSamePlayer(player: PlayerDto, other: PlayerDto): boolean {
     return player.firstName.toLowerCase() === other.firstName.toLowerCase()
         && player.lastName.toLowerCase() === other.lastName.toLowerCase()
@@ -36,7 +41,7 @@ function isSamePlayer(player: PlayerDto, other: PlayerDto): boolean {
 }
 
 /**
- * Current state of a team, rebuilt from its event stream.
+ * Current state of a team, rebuilt from its event stream by replaying the stored events.
  * Every change is validated, applied to the state and recorded as a pending event,
  * so that the repository can append exactly these events to the stream.
  */
@@ -48,15 +53,19 @@ export class TeamAggregate {
     private exists = false;
     private details: Omit<TeamDetails, "coaches"> = { id: "", club: "", name: "" };
 
-    constructor(
-        readonly streamName: string,
-        readonly revision: bigint | undefined,
-        history: readonly TeamEvent[]) {
-        history.forEach(event => this.apply(event));
+    constructor(readonly streamName: string, readonly revision: bigint | undefined) {
     }
 
     get changes(): readonly TeamEvent[] {
         return this.pendingEvents;
+    }
+
+    /**
+     * Applies an event loaded from the stream. Returns the reason if it does not fit the current state,
+     * e.g. because it references a player that does not exist.
+     */
+    replay(event: TeamEvent): Result<void, string> {
+        return this.apply(event);
     }
 
     isVisibleTo(user: AuthenticatedUser): boolean {
@@ -281,11 +290,12 @@ export class TeamAggregate {
     }
 
     private record(event: TeamEvent): void {
-        this.apply(event);
-        this.pendingEvents.push(event);
+        this.apply(event).match(
+            () => this.pendingEvents.push(event),
+            reason => { throw new InconsistentStreamError(this.streamName, reason); });
     }
 
-    private apply(event: TeamEvent): void {
+    private apply(event: TeamEvent): Result<void, string> {
         switch (event.type) {
             case "TeamAdded": {
                 const { id, club, name } = event.data;
@@ -294,98 +304,87 @@ export class TeamAggregate {
                 this.players.clear();
                 this.coaches.clear();
                 this.stampCards.clear();
-                break;
+                return ok(undefined);
             }
             case "TeamDeleted":
                 this.exists = false;
-                break;
+                return ok(undefined);
             case "CoachAdded":
                 this.coaches.add(event.data.email.toLowerCase());
-                break;
+                return ok(undefined);
             case "PlayerAdded": {
                 const { id, firstName, lastName, birthdate } = event.data;
                 this.players.set(id, { id, firstName, lastName, birthdate, active: true });
-                break;
+                return ok(undefined);
             }
             case "PlayerUpdated": {
                 const { firstName, lastName, birthdate } = event.data;
-                Object.assign(this.playerReferencedBy(event), { firstName, lastName, birthdate });
-                break;
+                return this.playerReferencedBy(event)
+                    .map(player => { Object.assign(player, { firstName, lastName, birthdate }); });
             }
             case "PlayerRemoved":
-                this.players.delete(this.playerReferencedBy(event).id);
-                break;
+                return this.playerReferencedBy(event).map(player => { this.players.delete(player.id); });
             case "PlayerEnabled":
-                this.playerReferencedBy(event).active = true;
-                break;
+                return this.playerReferencedBy(event).map(player => { player.active = true; });
             case "PlayerDisabled":
-                this.playerReferencedBy(event).active = false;
-                break;
+                return this.playerReferencedBy(event).map(player => { player.active = false; });
             default:
-                this.applyToStampCards(event);
+                return this.applyToStampCards(event);
         }
     }
 
-    private applyToStampCards(event: TeamEvent): void {
+    private applyToStampCards(event: TeamEvent): Result<void, string> {
         switch (event.type) {
             case "StampCardAdded": {
                 const { id, playerId, accountingYear } = event.data;
                 this.stampCards.set(id, new StampCard(id, playerId, accountingYear));
-                break;
+                return ok(undefined);
             }
             case "StampCardRemoved":
-                this.ensureReferenceExists(this.stampCards.delete(event.data.id), event);
-                break;
+                return referenceExists(this.stampCards.delete(event.data.id), event);
             case "StampAdded": {
                 const { id, reason, issuer, issuedOn } = event.data;
-                this.stampCardReferencedBy(event).putStamp({ id, reason, issuer, issuedOn, status: "accepted" });
-                break;
+                return this.stampCardReferencedBy(event)
+                    .map(card => card.putStamp({ id, reason, issuer, issuedOn, status: "accepted" }));
             }
             case "StampSubmitted": {
                 const { id, reason, issuer, issuedOn } = event.data;
-                this.stampCardReferencedBy(event).putStamp({ id, reason, issuer, issuedOn, status: "pending" });
-                break;
+                return this.stampCardReferencedBy(event)
+                    .map(card => card.putStamp({ id, reason, issuer, issuedOn, status: "pending" }));
             }
             case "StampApproved":
-                this.ensureReferenceExists(this.stampCardReferencedBy(event).approveStamp(event.data.id), event);
-                break;
+                return this.stampCardReferencedBy(event)
+                    .andThen(card => referenceExists(card.approveStamp(event.data.id), event));
             case "StampRemoved":
             case "StampRejected":
-                this.ensureReferenceExists(this.stampCardReferencedBy(event).deleteStamp(event.data.id), event);
-                break;
+                return this.stampCardReferencedBy(event)
+                    .andThen(card => referenceExists(card.deleteStamp(event.data.id), event));
             case "SharedCodeAdded": {
                 const { id, code } = event.data;
-                this.stampCardReferencedBy(event).putSharedCode({ id, code, revoked: false });
-                break;
+                return this.stampCardReferencedBy(event).map(card => card.putSharedCode({ id, code, revoked: false }));
             }
             case "SharedCodeRevoked":
-                this.ensureReferenceExists(this.stampCardReferencedBy(event).revokeSharedCode(event.data.id), event);
-                break;
+                return this.stampCardReferencedBy(event)
+                    .andThen(card => referenceExists(card.revokeSharedCode(event.data.id), event));
             case "SharedCodeRemoved":
-                this.ensureReferenceExists(this.stampCardReferencedBy(event).deleteSharedCode(event.data.id), event);
-                break;
+                return this.stampCardReferencedBy(event)
+                    .andThen(card => referenceExists(card.deleteSharedCode(event.data.id), event));
+            default:
+                return err(`${event.type} cannot be applied to a team.`);
         }
     }
 
-    private ensureReferenceExists(referenceExists: boolean, event: TeamEvent & { data: { id: string } }): void {
-        if (!referenceExists) {
-            throw new InconsistentStreamError(this.streamName, `${event.type} references unknown '${event.data.id}'.`);
-        }
-    }
-
-    private stampCardReferencedBy(event: TeamEvent & { data: { stampCardId: string } }): StampCard {
+    private stampCardReferencedBy(event: TeamEvent & { data: { stampCardId: string } }): Result<StampCard, string> {
         const stampCard = this.stampCards.get(event.data.stampCardId);
-        if (stampCard === undefined) {
-            throw new InconsistentStreamError(this.streamName, `${event.type} references unknown stamp card '${event.data.stampCardId}'.`);
-        }
-        return stampCard;
+        return stampCard === undefined
+            ? err(`${event.type} references unknown stamp card '${event.data.stampCardId}'.`)
+            : ok(stampCard);
     }
 
-    private playerReferencedBy(event: TeamEvent & { data: { id: string } }): Player {
+    private playerReferencedBy(event: TeamEvent & { data: { id: string } }): Result<Player, string> {
         const player = this.players.get(event.data.id);
-        if (player === undefined) {
-            throw new InconsistentStreamError(this.streamName, `${event.type} references unknown player '${event.data.id}'.`);
-        }
-        return player;
+        return player === undefined
+            ? err(`${event.type} references unknown player '${event.data.id}'.`)
+            : ok(player);
     }
 }

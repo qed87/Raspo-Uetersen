@@ -91,6 +91,20 @@ export class ConcurrentModificationError extends ConflictError {
     }
 }
 
+/**
+ * A stored event that could not be replayed, either because its data is invalid
+ * or because it does not fit the state built by the events before it.
+ */
+export type ReplayProblem = { revision: bigint, eventType: string, reason: string };
+
+export class StreamReplayError extends Error {
+    constructor(readonly streamName: string, readonly problems: readonly ReplayProblem[]) {
+        const details = problems.map(problem => `#${problem.revision} ${problem.eventType}: ${problem.reason}`);
+        super(`Stream '${streamName}' could not be replayed: ${details.join(" | ")}`);
+        this.name = "StreamReplayError";
+    }
+}
+
 export class InconsistentStreamError extends Error {
     constructor(streamName: string, reason: string) {
         super(`Stream '${streamName}' is inconsistent: ${reason}`);

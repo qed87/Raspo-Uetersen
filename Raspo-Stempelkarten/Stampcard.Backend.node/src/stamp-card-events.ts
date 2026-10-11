@@ -1,3 +1,4 @@
+import { err, ok, type Result } from "neverthrow";
 import z from "zod";
 
 const issuedSchema = z.object({
@@ -108,6 +109,9 @@ export function isTeamEventType(type: string): type is TeamEventType {
   return Object.hasOwn(teamEventSchemas, type);
 }
 
-export function parseTeamEvent(type: TeamEventType, data: unknown): TeamEvent {
-  return { type, data: teamEventSchemas[type].parse(data) } as TeamEvent;
+export function parseTeamEvent(type: TeamEventType, data: unknown): Result<TeamEvent, string> {
+  const parsed = teamEventSchemas[type].safeParse(data);
+  return parsed.success
+    ? ok({ type, data: parsed.data } as TeamEvent)
+    : err(`invalid data (${z.prettifyError(parsed.error).replaceAll("\n", " ")})`);
 }

@@ -1,3 +1,5 @@
+import assert from "node:assert/strict";
+import { Result } from "neverthrow";
 import type { AuthenticatedUser } from "../../src/authenticated-user.js";
 import { TeamAggregate } from "../../src/stamp-card-model.js";
 
@@ -11,7 +13,7 @@ export const admin: AuthenticatedUser = { email: "admin@raspo.de", isAdmin: true
 export const max = { firstName: "Max", lastName: "Muster", birthdate: "2017-03-04" };
 
 export function emptyTeam(): TeamAggregate {
-    return new TeamAggregate(STREAM_NAME, undefined, []);
+    return new TeamAggregate(STREAM_NAME, undefined);
 }
 
 export function createdTeam(): TeamAggregate {
@@ -34,5 +36,17 @@ export function teamWithStampCard() {
  * Rebuilds the team from the events it recorded, like loading it from the stream.
  */
 export function replayed(team: TeamAggregate): TeamAggregate {
-    return new TeamAggregate(team.streamName, BigInt(team.changes.length - 1), team.changes);
+    const copy = new TeamAggregate(team.streamName, BigInt(team.changes.length - 1));
+    expectOk(Result.combine(team.changes.map(event => copy.replay(event))));
+    return copy;
+}
+
+export function expectOk<T, E>(result: Result<T, E>): T {
+    assert.ok(result.isOk(), `expected a successful result, but got: ${result.isErr() ? String(result.error) : ""}`);
+    return result.value;
+}
+
+export function expectErr<T, E>(result: Result<T, E>): E {
+    assert.ok(result.isErr(), "expected a failed result");
+    return result.error;
 }

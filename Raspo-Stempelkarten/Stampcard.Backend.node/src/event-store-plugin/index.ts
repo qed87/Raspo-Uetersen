@@ -80,7 +80,7 @@ async function fp(fastify: FastifyInstance, options :any) {
         fastify.log.warn(err, "Custom projections already exist.");
     }    
 
-    const stampCardService = new stampcard.StampCardService(client, fastify.eventbus);
+    const stampCardService = new stampcard.StampCardService(client, fastify.eventbus, fastify.config.club.name);
     fastify.decorate("stampCardService", stampCardService);
 }
 

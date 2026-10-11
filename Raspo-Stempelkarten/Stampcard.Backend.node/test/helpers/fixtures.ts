@@ -1,0 +1,38 @@
+import type { AuthenticatedUser } from "../../src/authenticated-user.js";
+import { TeamAggregate } from "../../src/stamp-card-model.js";
+
+export const STREAM_NAME = "team-raspo-2017-1";
+export const ISSUER = "coach@raspo.de";
+
+export const coach: AuthenticatedUser = { email: "coach@raspo.de", isAdmin: false, isAccountant: false };
+export const otherCoach: AuthenticatedUser = { email: "other@raspo.de", isAdmin: false, isAccountant: false };
+export const admin: AuthenticatedUser = { email: "admin@raspo.de", isAdmin: true, isAccountant: false };
+
+export const max = { firstName: "Max", lastName: "Muster", birthdate: "2017-03-04" };
+
+export function emptyTeam(): TeamAggregate {
+    return new TeamAggregate(STREAM_NAME, undefined, []);
+}
+
+export function createdTeam(): TeamAggregate {
+    const team = emptyTeam();
+    team.create({ club: "raspo", name: "2017-1", coaches: [coach.email] }, ISSUER);
+    return team;
+}
+
+/**
+ * A team with the player Max and his stamp card for 2026.
+ */
+export function teamWithStampCard() {
+    const team = createdTeam();
+    const playerId = team.addPlayer(max, ISSUER);
+    const stampCardId = team.addStampCard({ playerId, accountingYear: 2026 }, ISSUER);
+    return { team, playerId, stampCardId };
+}
+
+/**
+ * Rebuilds the team from the events it recorded, like loading it from the stream.
+ */
+export function replayed(team: TeamAggregate): TeamAggregate {
+    return new TeamAggregate(team.streamName, BigInt(team.changes.length - 1), team.changes);
+}

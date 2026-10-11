@@ -1,80 +1,227 @@
-import { jsonEvent, type EventType, type KurrentDBClient, type ResolvedEvent } from "@kurrent/kurrentdb-client";
-import * as model from './stamp-card-model.js'
-import * as events from './stamp-card-events.js'
-import * as dtos from './stamp-card-dtos.js'
+import type { KurrentDBClient } from "@kurrent/kurrentdb-client";
 import type EventEmitter from "node:events";
-import { randomUUID } from "node:crypto";
-import onChange from "on-change";
+import type { AuthenticatedUser } from "./authenticated-user.js";
+import * as dtos from './stamp-card-dtos.js'
+import { TeamNotFoundError } from "./stamp-card-errors.js";
+import type { IncompleteStampCard, PendingStamp, Player, TeamAggregate, TeamDetails } from "./stamp-card-model.js";
+import { TeamRepository } from "./stamp-card-repository.js";
+import type { SharedCode, StampCard } from "./stamp-card.js";
 
-class StampCardLoader {
-    constructor(private readonly eventStoreDb: KurrentDBClient){        
-    }
+function teamStreamName(team: { club: string, name: string }): string {
+    return `team-${team.club}-${team.name}`;
+}
 
-    async loadModel(streamName: string): Promise<model.TeamAggregate> {
-        const storedEvents = await this.eventStoreDb.readStream(
-            streamName, 
-            { 
-                direction: 'forwards', 
-                fromRevision: 'start' 
-            });
-            for await (const storedEvent of storedEvents) {
-                const eventData = storedEvent;
-                if(isTeamAddedEvent(storedEvent)) {
+function isCoachedBy(team: dtos.TeamReadDto, user: AuthenticatedUser): boolean {
+    return team.coaches.some(email => email.toLowerCase() === user.email);
+}
 
-                }
-            }
+function matchesFilter(card: StampCard, filter: dtos.StampCardFilter): boolean {
+    return (filter.playerId === undefined || card.playerId === filter.playerId)
+        && (filter.accountingYear === undefined || card.accountingYear === filter.accountingYear);
+}
+
+function ensureVisible(team: TeamAggregate, user: AuthenticatedUser): void {
+    if (!team.isVisibleTo(user)) {
+        throw new TeamNotFoundError(team.streamName);
     }
 }
 
-function isTeamAddedEvent(resolvedEvent: ResolvedEvent<EventType>): resolvedEvent is ResolvedEvent<events.TeamAdded> {
-  return resolvedEvent.type === "TeamAdded";
-}
+export class StampCardService {
+    private readonly teams: TeamRepository;
+    private readonly clubName: string;
 
-export class StampCardService {    
-    private readonly stampCardLoader: StampCardLoader;
-
-    constructor(private readonly eventStoreDb: KurrentDBClient, 
-        private readonly eventBus: EventEmitter) {
-        this.stampCardLoader = new StampCardLoader(eventStoreDb);
+    constructor(private readonly eventStoreDb: KurrentDBClient,
+        private readonly eventBus: EventEmitter,
+        clubName: string) {
+        this.teams = new TeamRepository(eventStoreDb);
+        this.clubName = dtos.normalizeName(clubName);
     }
 
-    async createTeam(teamName: string): Promise<boolean> {
-        const eventData: events.TeamAdded = {
-            club: "Rasensport Uetersen 1926 e.V.",
-            name: teamName,
-            issuer: "dbo",
-            issuedOn: new Date()
-        };        
-
-        try{
-            await events.teamAddedSchema.parseAsync(eventData);        
-            const event = jsonEvent({
-                id: randomUUID(),
-                type: "TeamAdded",
-                data: eventData
-            });
-            await this.eventStoreDb.appendToStream(`team-${teamName}`, event, { streamState: NO_STREAM });
-            return true;
-        } catch {
-            return false;
-        }        
+    createTeam(team: dtos.CreateTeamDto, user: AuthenticatedUser): Promise<string> {
+        return this.changeTeam(teamStreamName(team), user, aggregate => aggregate.create(team, user.email));
     }
 
-    async addPlayer(teamName: string, firstName: string, lastName: string, birthdate: Date, birhtplace: string) {
-        const teamAggregate = await this.stampCardLoader.loadModel(teamName);
-        const watchedObject = onChange(teamAggregate, (path, value, prevValue) => {
+    deleteTeam(streamName: string, user: AuthenticatedUser): Promise<void> {
+        return this.changeTeam(streamName, user, team => team.delete(user.email));
+    }
 
+    addPlayer(teamName: string, player: dtos.PlayerDto, user: AuthenticatedUser): Promise<string> {
+        return this.changeClubTeam(teamName, user, team => team.addPlayer(player, user.email));
+    }
+
+    updatePlayer(reference: dtos.PlayerReference, player: dtos.PlayerDto, user: AuthenticatedUser): Promise<void> {
+        return this.changeClubTeam(reference.teamName, user,
+            team => team.updatePlayer(reference.playerId, player, user.email));
+    }
+
+    removePlayer(reference: dtos.PlayerReference, user: AuthenticatedUser): Promise<void> {
+        return this.changeClubTeam(reference.teamName, user, team => team.removePlayer(reference.playerId, user.email));
+    }
+
+    enablePlayer(reference: dtos.PlayerReference, user: AuthenticatedUser): Promise<void> {
+        return this.changeClubTeam(reference.teamName, user, team => team.enablePlayer(reference.playerId, user.email));
+    }
+
+    disablePlayer(reference: dtos.PlayerReference, user: AuthenticatedUser): Promise<void> {
+        return this.changeClubTeam(reference.teamName, user, team => team.disablePlayer(reference.playerId, user.email));
+    }
+
+    addStampCard(teamName: string, card: dtos.StampCardDto, user: AuthenticatedUser): Promise<string> {
+        return this.changeClubTeam(teamName, user, team => team.addStampCard(card, user.email));
+    }
+
+    removeStampCard(reference: dtos.StampCardReference, user: AuthenticatedUser): Promise<void> {
+        return this.changeClubTeam(reference.teamName, user,
+            team => team.removeStampCard(reference.stampCardId, user.email));
+    }
+
+    addStamp(reference: dtos.StampCardReference, stamp: dtos.StampDto, user: AuthenticatedUser): Promise<string> {
+        return this.changeClubTeam(reference.teamName, user,
+            team => team.addStamp(reference.stampCardId, stamp, user.email));
+    }
+
+    removeStamp(reference: dtos.StampReference, user: AuthenticatedUser): Promise<void> {
+        return this.changeClubTeam(reference.teamName, user,
+            team => team.removeStamp(reference.stampCardId, reference.stampId, user.email));
+    }
+
+    shareStampCard(reference: dtos.StampCardReference, user: AuthenticatedUser): Promise<SharedCode> {
+        return this.changeClubTeam(reference.teamName, user,
+            team => team.shareStampCard(reference.stampCardId, user.email));
+    }
+
+    revokeSharedCode(reference: dtos.SharedCodeReference, user: AuthenticatedUser): Promise<void> {
+        return this.changeClubTeam(reference.teamName, user,
+            team => team.revokeSharedCode(reference.stampCardId, reference.sharedCodeId, user.email));
+    }
+
+    removeSharedCode(reference: dtos.SharedCodeReference, user: AuthenticatedUser): Promise<void> {
+        return this.changeClubTeam(reference.teamName, user,
+            team => team.removeSharedCode(reference.stampCardId, reference.sharedCodeId, user.email));
+    }
+
+    approveStamp(reference: dtos.StampReference, user: AuthenticatedUser): Promise<void> {
+        return this.changeClubTeam(reference.teamName, user,
+            team => team.approveStamp(reference.stampCardId, reference.stampId, user.email));
+    }
+
+    approvePendingStamp(reference: dtos.PendingStampReference, user: AuthenticatedUser): Promise<void> {
+        return this.changeClubTeam(reference.teamName, user,
+            team => team.approvePendingStamp(reference.stampId, user.email));
+    }
+
+    approveStamps(teamName: string, approval: dtos.ApproveStampsDto, user: AuthenticatedUser): Promise<void> {
+        return this.changeClubTeam(teamName, user, team => team.approveStamps(approval.stampIds, user.email));
+    }
+
+    rejectStamp(reference: dtos.StampReference, user: AuthenticatedUser): Promise<void> {
+        return this.changeClubTeam(reference.teamName, user,
+            team => team.rejectStamp(reference.stampCardId, reference.stampId, user.email));
+    }
+
+    /**
+     * Submits a stamp of an external user. The share code authorizes the access instead of a user,
+     * the stamp only becomes active once a coach approves it.
+     */
+    submitStamp(reference: dtos.StampCardReference, code: string, stamp: dtos.SubmittedStampDto): Promise<string> {
+        return this.applyChange(this.clubTeamStreamName(reference.teamName),
+            team => team.submitStamp(reference.stampCardId, code, stamp));
+    }
+
+    getTeam(teamName: string, user: AuthenticatedUser): Promise<TeamDetails> {
+        return this.queryClubTeam(teamName, user, team => team.describe());
+    }
+
+    listPlayers(teamName: string, user: AuthenticatedUser): Promise<Player[]> {
+        return this.queryClubTeam(teamName, user, team => team.listPlayers());
+    }
+
+    getPlayer(reference: dtos.PlayerReference, user: AuthenticatedUser): Promise<Player> {
+        return this.queryClubTeam(reference.teamName, user, team => team.findPlayer(reference.playerId));
+    }
+
+    listStampCards(teamName: string, filter: dtos.StampCardFilter, user: AuthenticatedUser): Promise<StampCard[]> {
+        return this.queryClubTeam(teamName, user,
+            team => team.listStampCards().filter(card => matchesFilter(card, filter)));
+    }
+
+    getStampCard(reference: dtos.StampCardReference, user: AuthenticatedUser): Promise<StampCard> {
+        return this.queryClubTeam(reference.teamName, user, team => team.findStampCard(reference.stampCardId));
+    }
+
+    listSharedCodes(reference: dtos.StampCardReference, user: AuthenticatedUser): Promise<SharedCode[]> {
+        return this.queryClubTeam(reference.teamName, user,
+            team => team.findStampCard(reference.stampCardId).listSharedCodes());
+    }
+
+    listPendingStamps(teamName: string, user: AuthenticatedUser): Promise<PendingStamp[]> {
+        return this.queryClubTeam(teamName, user, team => team.listPendingStamps());
+    }
+
+    /**
+     * Returns the stamp card an external user may see with the given share code.
+     */
+    async getSharedStampCard(reference: dtos.StampCardReference, code: string): Promise<StampCard> {
+        const team = await this.teams.load(this.clubTeamStreamName(reference.teamName));
+        return team.findSharedStampCard(reference.stampCardId, code);
+    }
+
+    async listTeams(user: AuthenticatedUser): Promise<dtos.TeamReadDto[]> {
+        const teams = await this.listAllTeams();
+        return user.isAdmin ? teams : teams.filter(team => isCoachedBy(team, user));
+    }
+
+    /**
+     * Evaluates the stamp cards of all teams. Authorizing the accounting role is up to the caller.
+     */
+    async listIncompleteStampCards(query: dtos.IncompleteStampCardQuery): Promise<IncompleteStampCard[]> {
+        const teams = await Promise.all((await this.listAllTeams()).map(team => this.teams.load(team.id)));
+        return teams.flatMap(team => team.listIncompleteStampCards(query.accountingYear, query.requiredStamps));
+    }
+
+    private async listAllTeams(): Promise<dtos.TeamReadDto[]> {
+        const projectionState = await this.eventStoreDb
+            .getProjectionState<{ teams?: dtos.TeamReadDto[] }>("all-club-teams");
+        return projectionState.teams ?? [];
+    }
+
+    private changeClubTeam<Result>(
+        teamName: string,
+        user: AuthenticatedUser,
+        change: (team: TeamAggregate) => Result): Promise<Result> {
+        return this.changeTeam(this.clubTeamStreamName(teamName), user, change);
+    }
+
+    private async queryClubTeam<Result>(
+        teamName: string,
+        user: AuthenticatedUser,
+        query: (team: TeamAggregate) => Result): Promise<Result> {
+        const team = await this.teams.load(this.clubTeamStreamName(teamName));
+        ensureVisible(team, user);
+        return query(team);
+    }
+
+    private clubTeamStreamName(teamName: string): string {
+        return teamStreamName({ club: this.clubName, name: teamName });
+    }
+
+    /**
+     * Teams the user does not coach are reported as not found, so that their existence is not revealed.
+     */
+    private changeTeam<Result>(
+        streamName: string,
+        user: AuthenticatedUser,
+        change: (team: TeamAggregate) => Result): Promise<Result> {
+        return this.applyChange(streamName, team => {
+            ensureVisible(team, user);
+            return change(team);
         });
-        
-        watchedObject.addPlayer(firstName, lastName, birthdate, birhtplace);        
     }
 
-    async listTeams() : Promise<dtos.TeamReadDto[]> {
-        try{
-            const teamDto = await this.eventStoreDb.getProjectionState<{ Teams: dtos.TeamReadDto[] }>("all-club-teams");
-            return teamDto.Teams;
-        } catch {
-            return [];
-        }
+    private async applyChange<Result>(streamName: string, change: (team: TeamAggregate) => Result): Promise<Result> {
+        const team = await this.teams.load(streamName);
+        const result = change(team);
+        await this.teams.save(team);
+        return result;
     }
 }

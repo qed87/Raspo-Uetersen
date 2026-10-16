@@ -2,10 +2,12 @@ import fp from 'fastify-plugin';
 import { readFileSync } from 'node:fs';
 import * as z from "zod";
 
+const DEFAULT_CLUB_NAME = "rasensport-uetersen-1926";
+
 export const appConfig = z.object({
   club: z.object({
-    name: z.string().min(1),
-  }),
+    name: z.string().min(1).default(DEFAULT_CLUB_NAME),
+  }).default({ name: DEFAULT_CLUB_NAME }),
   eventstore: z.object({
     url: z.url(),
   }),

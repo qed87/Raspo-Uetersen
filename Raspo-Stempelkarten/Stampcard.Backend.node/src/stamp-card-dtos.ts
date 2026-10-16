@@ -19,7 +19,6 @@ export const normalizedNameSchema = z.string()
   .transform(normalizeName);
 
 export const createTeamDtoSchema = z.object({
-  club: normalizedNameSchema,
   name: normalizedNameSchema,
   coaches: z.array(z.email()).default([]).transform(coaches => [...new Set(coaches.map(email => email.toLowerCase()))])
 });

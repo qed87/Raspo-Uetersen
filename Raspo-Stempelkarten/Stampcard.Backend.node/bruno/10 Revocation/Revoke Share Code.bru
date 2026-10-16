@@ -1,0 +1,17 @@
+meta {
+  name: Revoke Share Code
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/teams/{{teamName}}/stampcard/{{stampCardId}}/share/{{sharedCodeId}}/revoke
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

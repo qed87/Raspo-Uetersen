@@ -1,0 +1,17 @@
+meta {
+  name: Reject Stamp
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/teams/{{teamName}}/stampcard/{{stampCardId}}/stamp/{{rejectedStampId}}/reject
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

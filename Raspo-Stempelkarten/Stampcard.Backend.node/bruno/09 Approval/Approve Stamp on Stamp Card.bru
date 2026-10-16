@@ -1,0 +1,17 @@
+meta {
+  name: Approve Stamp on Stamp Card
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/teams/{{teamName}}/stampcard/{{stampCardId}}/stamp/{{cardStampId}}/approve
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -1,0 +1,17 @@
+meta {
+  name: Request without token
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/teams
+  body: none
+  auth: none
+}
+
+tests {
+  test("responds with 401", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

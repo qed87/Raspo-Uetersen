@@ -38,12 +38,16 @@ export class StampCardService {
         this.clubName = dtos.normalizeName(clubName);
     }
 
+    /**
+     * Creates the team in the club of the configuration, its stream is named team-{club}-{team name}.
+     */
     createTeam(team: dtos.CreateTeamDto, user: AuthenticatedUser): Promise<string> {
-        return this.changeTeam(teamStreamName(team), user, aggregate => aggregate.create(team, user.email));
+        const newTeam = { ...team, club: this.clubName };
+        return this.changeClubTeam(team.name, user, aggregate => aggregate.create(newTeam, user.email));
     }
 
-    deleteTeam(streamName: string, user: AuthenticatedUser): Promise<void> {
-        return this.changeTeam(streamName, user, team => team.delete(user.email));
+    deleteTeam(teamName: string, user: AuthenticatedUser): Promise<void> {
+        return this.changeClubTeam(teamName, user, team => team.delete(user.email));
     }
 
     addPlayer(teamName: string, player: dtos.PlayerDto, user: AuthenticatedUser): Promise<string> {

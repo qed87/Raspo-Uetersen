@@ -65,9 +65,7 @@ export default async function teamRoutes(fastify: FastifyInstance) {
     {
       preHandler: requireAdmin,
       schema: {
-        params: z.object({
-          teamName: z.string().startsWith("team-")
-        }),
+        params: teamReferenceSchema,
         response: {
           200: apiResponseSchema(z.string()),
           ...errorResponseSchemas

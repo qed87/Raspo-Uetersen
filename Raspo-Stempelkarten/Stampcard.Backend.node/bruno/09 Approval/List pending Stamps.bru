@@ -1,0 +1,21 @@
+meta {
+  name: List pending Stamps
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/teams/{{teamName}}/stamp/pending
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("lists the four submitted stamps", function () {
+    expect(res.body.Data).to.have.lengthOf(4);
+  });
+}

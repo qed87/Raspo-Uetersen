@@ -1,0 +1,32 @@
+meta {
+  name: Submit Stamp to reject
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/shared/teams/{{teamName}}/stampcard/{{stampCardId}}/stamp
+  body: json
+  auth: none
+}
+
+headers {
+  X-Share-Code: {{shareCode}}
+}
+
+body:json {
+  {
+    "reason": "Unbekannt",
+    "issuerName": "Unbekannt"
+  }
+}
+
+script:post-response {
+  bru.setVar("rejectedStampId", res.body.Data);
+}
+
+tests {
+  test("responds with 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

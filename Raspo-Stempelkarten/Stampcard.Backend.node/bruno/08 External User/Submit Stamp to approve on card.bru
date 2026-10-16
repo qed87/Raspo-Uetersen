@@ -1,0 +1,32 @@
+meta {
+  name: Submit Stamp to approve on card
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/shared/teams/{{teamName}}/stampcard/{{stampCardId}}/stamp
+  body: json
+  auth: none
+}
+
+headers {
+  X-Share-Code: {{shareCode}}
+}
+
+body:json {
+  {
+    "reason": "Schwimmen",
+    "issuerName": "Oma Erna"
+  }
+}
+
+script:post-response {
+  bru.setVar("cardStampId", res.body.Data);
+}
+
+tests {
+  test("responds with 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

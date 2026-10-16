@@ -20,13 +20,13 @@ describe("name normalization", () => {
 
 describe("team input", () => {
     test("coach emails are lower-cased and de-duplicated", () => {
-        const team = createTeamDtoSchema.parse({ club: "Raspo", name: "2017-1", coaches: ["A@raspo.de", "a@raspo.de"] });
+        const team = createTeamDtoSchema.parse({ name: "2017-1", coaches: ["A@raspo.de", "a@raspo.de"] });
 
         assert.deepEqual(team.coaches, ["a@raspo.de"]);
     });
 
     test("a blank team name is rejected", () => {
-        assert.equal(createTeamDtoSchema.safeParse({ club: "Raspo", name: "   " }).success, false);
+        assert.equal(createTeamDtoSchema.safeParse({ name: "   " }).success, false);
     });
 });
 

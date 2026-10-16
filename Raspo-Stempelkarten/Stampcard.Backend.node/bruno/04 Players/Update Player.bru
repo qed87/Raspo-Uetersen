@@ -1,0 +1,25 @@
+meta {
+  name: Update Player
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/teams/{{teamName}}/player/{{playerId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "firstName": "Max",
+    "lastName": "Mustermann",
+    "birthdate": "2017-03-04"
+  }
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

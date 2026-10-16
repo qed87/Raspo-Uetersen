@@ -1,0 +1,28 @@
+meta {
+  name: Create Stamp Card
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/teams/{{teamName}}/stampcard
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "playerId": "{{playerId}}",
+    "accountingYear": {{accountingYear}}
+  }
+}
+
+script:post-response {
+  bru.setVar("stampCardId", res.body.Data);
+}
+
+tests {
+  test("responds with 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

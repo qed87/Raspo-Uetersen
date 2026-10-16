@@ -1,0 +1,25 @@
+meta {
+  name: Get shared Stamp Card
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/shared/teams/{{teamName}}/stampcard/{{stampCardId}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Share-Code: {{shareCode}}
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("hides the issuer", function () {
+    expect(res.body.Data.Stamps.every(s => s.Issuer === undefined)).to.equal(true);
+  });
+}

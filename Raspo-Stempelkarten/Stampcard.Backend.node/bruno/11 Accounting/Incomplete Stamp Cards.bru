@@ -1,0 +1,30 @@
+meta {
+  name: Incomplete Stamp Cards
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/accounting/stampcard/incomplete?accountingYear={{accountingYear}}&requiredStamps={{requiredStamps}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  accountingYear: {{accountingYear}}
+  requiredStamps: {{requiredStamps}}
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("lists the stamp card of the test team", function () {
+    expect(res.body.Data.map(c => c.StampCardId)).to.include(bru.getVar("stampCardId"));
+  });
+}
+
+docs {
+  Users with the Accounting role only. Lists stamp cards of all teams with fewer accepted stamps than requiredStamps.
+}

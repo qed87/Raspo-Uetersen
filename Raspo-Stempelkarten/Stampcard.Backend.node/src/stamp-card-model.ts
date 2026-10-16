@@ -17,6 +17,8 @@ import { StampCard, type SharedCode, type Stamp } from "./stamp-card.js";
 
 export type Player = PlayerDto & { id: string, active: boolean };
 
+export type NewTeam = CreateTeamDto & { club: string };
+
 export type TeamDetails = { id: string, club: string, name: string, coaches: string[] };
 
 export type PendingStamp = { stampCardId: string, playerId: string, stamp: Stamp };
@@ -136,7 +138,7 @@ export class TeamAggregate {
         return stampCard;
     }
 
-    create(team: CreateTeamDto, issuer: string): string {
+    create(team: NewTeam, issuer: string): string {
         if (this.exists) {
             throw new TeamAlreadyExistsError(team.club, team.name);
         }

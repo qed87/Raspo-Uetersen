@@ -1,0 +1,21 @@
+meta {
+  name: Get Player
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/teams/{{teamName}}/player/{{playerId}}
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("is active", function () {
+    expect(res.body.Data.Active).to.equal(true);
+  });
+}

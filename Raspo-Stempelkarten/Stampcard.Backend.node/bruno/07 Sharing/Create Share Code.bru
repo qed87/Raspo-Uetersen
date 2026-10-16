@@ -1,0 +1,22 @@
+meta {
+  name: Create Share Code
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/teams/{{teamName}}/stampcard/{{stampCardId}}/share
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  bru.setVar("sharedCodeId", res.body.Data.Id);
+  bru.setVar("shareCode", res.body.Data.Code);
+}
+
+tests {
+  test("responds with 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

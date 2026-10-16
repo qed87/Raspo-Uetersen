@@ -1,0 +1,21 @@
+meta {
+  name: Get Team
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/teams/{{teamName}}
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("returns the configured club", function () {
+    expect(res.body.Data.Club).to.be.a('string');
+  });
+}

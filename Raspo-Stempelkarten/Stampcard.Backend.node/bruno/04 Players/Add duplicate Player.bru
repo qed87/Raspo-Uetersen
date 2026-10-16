@@ -1,0 +1,25 @@
+meta {
+  name: Add duplicate Player
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/teams/{{teamName}}/player
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "firstName": "max",
+    "lastName": "MUSTER",
+    "birthdate": "2017-03-04"
+  }
+}
+
+tests {
+  test("responds with 409", function () {
+    expect(res.getStatus()).to.equal(409);
+  });
+}

@@ -6,14 +6,15 @@ import { StampCardService } from "../src/stamp-card-service.js";
 import { admin, coach, max, otherCoach } from "./helpers/fixtures.js";
 import { InMemoryEventStore } from "./helpers/in-memory-event-store.js";
 
+const CLUB_NAME = "rasensport-uetersen-1926";
 const TEAM_NAME = "2017-1";
-const TEAM_STREAM = "team-raspo-uetersen-2017-1";
+const TEAM_STREAM = "team-rasensport-uetersen-1926-2017-1";
 
 let store: InMemoryEventStore;
 let service: StampCardService;
 
 async function createTeamWithStampCard() {
-    await service.createTeam({ club: "raspo-uetersen", name: TEAM_NAME, coaches: [coach.email] }, admin);
+    await service.createTeam({ name: TEAM_NAME, coaches: [coach.email] }, admin);
     const playerId = await service.addPlayer(TEAM_NAME, max, coach);
     const stampCardId = await service.addStampCard(TEAM_NAME, { playerId, accountingYear: 2026 }, coach);
     return { teamName: TEAM_NAME, stampCardId };
@@ -21,14 +22,38 @@ async function createTeamWithStampCard() {
 
 beforeEach(() => {
     store = new InMemoryEventStore();
-    service = new StampCardService(store.asClient(), new EventEmitter(), "Raspo Uetersen");
+    service = new StampCardService(store.asClient(), new EventEmitter(), CLUB_NAME);
 });
 
 describe("StampCardService", () => {
-    test("the configured club name is normalized into the stream name", async () => {
-        await service.createTeam({ club: "raspo-uetersen", name: TEAM_NAME, coaches: [] }, admin);
+    test("a team is stored in the stream team-{club}-{team name}", async () => {
+        await service.createTeam({ name: TEAM_NAME, coaches: [] }, admin);
 
-        await assert.doesNotReject(service.getTeam(TEAM_NAME, admin));
+        assert.deepEqual([...store.streams.keys()], [TEAM_STREAM]);
+    });
+
+    test("a team belongs to the configured club", async () => {
+        await service.createTeam({ name: TEAM_NAME, coaches: [] }, admin);
+
+        const team = await service.getTeam(TEAM_NAME, admin);
+
+        assert.equal(team.club, CLUB_NAME);
+    });
+
+    test("the configured club name is normalized", async () => {
+        const otherService = new StampCardService(store.asClient(), new EventEmitter(), "Rasensport Uetersen 1926");
+
+        await otherService.createTeam({ name: TEAM_NAME, coaches: [] }, admin);
+
+        assert.deepEqual([...store.streams.keys()], [TEAM_STREAM]);
+    });
+
+    test("a team is deleted by its team name", async () => {
+        await service.createTeam({ name: TEAM_NAME, coaches: [] }, admin);
+
+        await service.deleteTeam(TEAM_NAME, admin);
+
+        assert.deepEqual(store.eventTypesOf(TEAM_STREAM), ["TeamAdded", "TeamDeleted"]);
     });
 
     test("teams of other coaches are reported as not found", async () => {
@@ -92,7 +117,7 @@ describe("StampCardService", () => {
 
     test("incomplete stamp cards are collected across all teams", async () => {
         await createTeamWithStampCard();
-        store.projectedTeams = [{ id: TEAM_STREAM, club: "raspo-uetersen", name: TEAM_NAME, coaches: [coach.email] }];
+        store.projectedTeams = [{ id: TEAM_STREAM, club: CLUB_NAME, name: TEAM_NAME, coaches: [coach.email] }];
 
         const incomplete = await service.listIncompleteStampCards({ accountingYear: 2026, requiredStamps: 1 });
 

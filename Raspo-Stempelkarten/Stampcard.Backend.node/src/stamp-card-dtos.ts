@@ -20,7 +20,8 @@ export const normalizedNameSchema = z.string()
 
 export const createTeamDtoSchema = z.object({
   name: normalizedNameSchema,
-  coaches: z.array(z.email()).default([]).transform(coaches => [...new Set(coaches.map(email => email.toLowerCase()))])
+  coaches: z.array(z.email()).default([])
+    .transform(coaches => [...new Set(coaches.map(email => email.toLowerCase()))])
 });
 
 export type CreateTeamDto = z.infer<typeof createTeamDtoSchema>;

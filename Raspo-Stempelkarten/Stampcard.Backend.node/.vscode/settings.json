@@ -1,0 +1,10 @@
+{
+    // Test explorer via the "Node.js Test Runner" extension (connor4312.nodejs-testing)
+    "nodejs-testing.include": ["./test"],
+    "nodejs-testing.extensions": [
+        {
+            "extensions": ["ts"],
+            "parameters": ["--import", "tsx"]
+        }
+    ]
+}

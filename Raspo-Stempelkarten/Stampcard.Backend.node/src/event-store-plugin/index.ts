@@ -2,7 +2,6 @@ import { KurrentDBClient } from '@kurrent/kurrentdb-client';
 import { type FastifyInstance } from 'fastify'
 import fastifyPlugin from 'fastify-plugin'
 import * as stampcard from '../stamp-card-service.js'
-import z from 'zod';
 import _ from 'lodash';
 
 declare module 'fastify' {

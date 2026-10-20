@@ -186,34 +186,46 @@ export class StampCardService {
         return stampId;
     }
 
-    getTeam(teamName: string, user: AuthenticatedUser): Promise<TeamDetails> {
-        return this.queryClubTeam(teamName, user, team => team.describe());
+    async getTeam(teamName: string, user: AuthenticatedUser): Promise<TeamDetails> {
+        const team = await this.loadTeam(this.buildStreamName(teamName));
+        ensureVisible(team, user);
+        return team.describe();
     }
 
-    listPlayers(teamName: string, user: AuthenticatedUser): Promise<Player[]> {
-        return this.queryClubTeam(teamName, user, team => team.listPlayers());
+    async listPlayers(teamName: string, user: AuthenticatedUser): Promise<Player[]> {
+        const team = await this.loadTeam(this.buildStreamName(teamName));
+        ensureVisible(team, user);
+        return team.listPlayers();
     }
 
-    getPlayer(reference: dtos.PlayerReference, user: AuthenticatedUser): Promise<Player> {
-        return this.queryClubTeam(reference.teamName, user, team => team.findPlayer(reference.playerId));
+    async getPlayer(reference: dtos.PlayerReference, user: AuthenticatedUser): Promise<Player> {
+        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        ensureVisible(team, user);
+        return team.findPlayer(reference.playerId);
     }
 
-    listStampCards(teamName: string, filter: dtos.StampCardFilter, user: AuthenticatedUser): Promise<StampCard[]> {
-        return this.queryClubTeam(teamName, user,
-            team => team.listStampCards().filter(card => matchesFilter(card, filter)));
+    async listStampCards(teamName: string, filter: dtos.StampCardFilter, user: AuthenticatedUser): Promise<StampCard[]> {
+        const team = await this.loadTeam(this.buildStreamName(teamName));
+        ensureVisible(team, user);
+        return team.listStampCards().filter(card => matchesFilter(card, filter));
     }
 
-    getStampCard(reference: dtos.StampCardReference, user: AuthenticatedUser): Promise<StampCard> {
-        return this.queryClubTeam(reference.teamName, user, team => team.findStampCard(reference.stampCardId));
+    async getStampCard(reference: dtos.StampCardReference, user: AuthenticatedUser): Promise<StampCard> {
+        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        ensureVisible(team, user);
+        return team.findStampCard(reference.stampCardId);
     }
 
-    listSharedCodes(reference: dtos.StampCardReference, user: AuthenticatedUser): Promise<SharedCode[]> {
-        return this.queryClubTeam(reference.teamName, user,
-            team => team.findStampCard(reference.stampCardId).listSharedCodes());
+    async listSharedCodes(reference: dtos.StampCardReference, user: AuthenticatedUser): Promise<SharedCode[]> {
+        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        ensureVisible(team, user);
+        return team.findStampCard(reference.stampCardId).listSharedCodes();
     }
 
-    listPendingStamps(teamName: string, user: AuthenticatedUser): Promise<PendingStamp[]> {
-        return this.queryClubTeam(teamName, user, team => team.listPendingStamps());
+    async listPendingStamps(teamName: string, user: AuthenticatedUser): Promise<PendingStamp[]> {
+        const team = await this.loadTeam(this.buildStreamName(teamName));
+        ensureVisible(team, user);
+        return team.listPendingStamps();
     }
 
     /**
@@ -245,15 +257,6 @@ export class StampCardService {
         const projectionState = await this.eventStoreDb
             .getProjectionState<{ teams?: dtos.TeamReadDto[] }>("all-club-teams");
         return projectionState.teams ?? [];
-    }
-
-    private async queryClubTeam<Output>(
-        teamName: string,
-        user: AuthenticatedUser,
-        query: (team: TeamAggregate) => Output): Promise<Output> {
-        const team = await this.loadTeam(this.buildStreamName(teamName));
-        ensureVisible(team, user);
-        return query(team);
     }
 
     private buildStreamName(teamName: string): string {

@@ -12,17 +12,12 @@ export const teamReadDtoSchema = z.object({
 
 export type TeamReadDto = z.infer<typeof teamReadDtoSchema>;
 
-export function normalizeName(value: string): string {
-  return value.trim().toLowerCase().replace(/\s+/g, "-");
-}
-
-export const normalizedNameSchema = z.string()
+export const teamNameSchema = z.string()
   .trim()
-  .min(1)
-  .transform(normalizeName);
+  .min(1);
 
 export const createTeamDtoSchema = z.object({
-  name: normalizedNameSchema,
+  name: teamNameSchema,
   coaches: z.array(z.email()).default([])
     .transform(coaches => [...new Set(coaches.map(email => email.toLowerCase()))])
 });
@@ -36,7 +31,7 @@ export type CreateTeamDto = z.infer<typeof createTeamDtoSchema>;
 const concurrencyTokenSchema = z.int().nonnegative();
 
 export const updateTeamDtoSchema = z.object({
-  name: normalizedNameSchema,
+  name: teamNameSchema,
   concurrencyToken: concurrencyTokenSchema
 });
 

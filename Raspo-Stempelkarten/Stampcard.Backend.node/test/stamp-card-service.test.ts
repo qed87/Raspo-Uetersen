@@ -47,12 +47,12 @@ describe("StampCardService", () => {
         assert.equal(team.club, CLUB_NAME);
     });
 
-    test("the configured club name is normalized", async () => {
+    test("the configured club name is kept as configured", async () => {
         const otherService = new StampCardService(store.asClient(), "Rasensport Uetersen 1926");
 
         const { data: teamId } = await otherService.createTeam({ name: TEAM_NAME, coaches: [] }, admin);
 
-        assert.equal((await otherService.getTeam(teamId, admin)).data.club, CLUB_NAME);
+        assert.equal((await otherService.getTeam(teamId, admin)).data.club, "Rasensport Uetersen 1926");
     });
 
     test("a team name that is taken in the club is rejected", async () => {

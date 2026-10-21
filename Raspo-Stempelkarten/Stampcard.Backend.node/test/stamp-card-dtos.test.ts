@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import {
     approveStampsDtoSchema,
     createTeamDtoSchema,
-    normalizeName,
     playerDtoSchema,
     stampCardDtoSchema
 } from "../src/stamp-card-dtos.js";
@@ -12,17 +11,17 @@ function nextYear(): string {
     return `${new Date().getFullYear() + 1}-01-01`;
 }
 
-describe("name normalization", () => {
-    test("trims, lower-cases and replaces whitespace by hyphens", () => {
-        assert.equal(normalizeName("  Raspo   Uetersen\t2017 "), "raspo-uetersen-2017");
-    });
-});
-
 describe("team input", () => {
     test("coach emails are lower-cased and de-duplicated", () => {
         const team = createTeamDtoSchema.parse({ name: "2017-1", coaches: ["A@raspo.de", "a@raspo.de"] });
 
         assert.deepEqual(team.coaches, ["a@raspo.de"]);
+    });
+
+    test("the team name is kept as entered, only surrounding whitespace is trimmed", () => {
+        const team = createTeamDtoSchema.parse({ name: "  Alte Herren " });
+
+        assert.equal(team.name, "Alte Herren");
     });
 
     test("a blank team name is rejected", () => {

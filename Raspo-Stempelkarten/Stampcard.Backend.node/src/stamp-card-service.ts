@@ -64,7 +64,7 @@ export class StampCardService {
 
     constructor(private readonly eventStoreDb: KurrentDBClient, clubName: string) {
         this.teams = new TeamRepository(eventStoreDb);
-        this.clubName = dtos.normalizeName(clubName);
+        this.clubName = clubName;
     }
 
     /**

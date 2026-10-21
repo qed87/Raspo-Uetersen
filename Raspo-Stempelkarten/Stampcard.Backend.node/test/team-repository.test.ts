@@ -2,7 +2,7 @@ import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { ConcurrentModificationError } from "../src/stamp-card-errors.js";
 import { TeamRepository } from "../src/stamp-card-repository.js";
-import { coach, expectErr, expectOk, ISSUER, max, STREAM_NAME } from "./helpers/fixtures.js";
+import { coach, expectErr, expectOk, ISSUER, max, STREAM_NAME, TEAM_ID } from "./helpers/fixtures.js";
 import { InMemoryEventStore } from "./helpers/in-memory-event-store.js";
 
 const team2017 = { club: "raspo", name: "2017-1", coaches: [coach.email] };
@@ -24,7 +24,7 @@ describe("loading a team", () => {
     test("a saved team is rebuilt from its events", async () => {
         const repository = new TeamRepository(new InMemoryEventStore().asClient());
         const team = expectOk(await repository.load(STREAM_NAME));
-        team.create(team2017, ISSUER);
+        team.create(TEAM_ID, team2017, ISSUER);
         const playerId = team.addPlayer(max, ISSUER);
         expectOk(await repository.save(team));
 
@@ -74,7 +74,7 @@ describe("saving a team", () => {
         const store = new InMemoryEventStore();
         const repository = new TeamRepository(store.asClient());
         const team = expectOk(await repository.load(STREAM_NAME));
-        team.create(team2017, ISSUER);
+        team.create(TEAM_ID, team2017, ISSUER);
 
         expectOk(await repository.save(team));
 
@@ -85,8 +85,8 @@ describe("saving a team", () => {
         const repository = new TeamRepository(new InMemoryEventStore().asClient());
         const first = expectOk(await repository.load(STREAM_NAME));
         const second = expectOk(await repository.load(STREAM_NAME));
-        first.create(team2017, ISSUER);
-        second.create(team2017, ISSUER);
+        first.create(TEAM_ID, team2017, ISSUER);
+        second.create(TEAM_ID, team2017, ISSUER);
         expectOk(await repository.save(first));
 
         const error = expectErr(await repository.save(second));

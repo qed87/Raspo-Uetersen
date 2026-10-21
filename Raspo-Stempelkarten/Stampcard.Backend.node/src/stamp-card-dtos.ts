@@ -65,7 +65,7 @@ export const stampCardDtoSchema = z.object({
 export type StampCardDto = z.infer<typeof stampCardDtoSchema>;
 
 export const teamReferenceSchema = z.object({
-  teamName: normalizedNameSchema
+  teamId: z.uuid()
 });
 
 export const playerReferenceSchema = teamReferenceSchema.extend({

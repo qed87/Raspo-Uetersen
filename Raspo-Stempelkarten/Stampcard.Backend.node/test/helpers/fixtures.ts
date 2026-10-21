@@ -3,7 +3,8 @@ import { Result } from "neverthrow";
 import type { AuthenticatedUser } from "../../src/authenticated-user.js";
 import { TeamAggregate } from "../../src/stamp-card-model.js";
 
-export const STREAM_NAME = "team-raspo-2017-1";
+export const TEAM_ID = "44444444-4444-4444-8444-444444444444";
+export const STREAM_NAME = `team-${TEAM_ID}`;
 export const ISSUER = "coach@raspo.de";
 
 export const coach: AuthenticatedUser = { email: "coach@raspo.de", isAdmin: false, isAccountant: false };
@@ -18,7 +19,7 @@ export function emptyTeam(): TeamAggregate {
 
 export function createdTeam(): TeamAggregate {
     const team = emptyTeam();
-    team.create({ club: "raspo", name: "2017-1", coaches: [coach.email] }, ISSUER);
+    team.create(TEAM_ID, { club: "raspo", name: "2017-1", coaches: [coach.email] }, ISSUER);
     return team;
 }
 

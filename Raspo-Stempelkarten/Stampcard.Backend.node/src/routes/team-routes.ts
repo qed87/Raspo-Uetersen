@@ -44,7 +44,7 @@ export default async function teamRoutes(fastify: FastifyInstance) {
   );
 
   routes.get(
-    "/api/teams/:teamName",
+    "/api/teams/:teamId",
     {
       schema: {
         params: teamReferenceSchema,
@@ -55,13 +55,13 @@ export default async function teamRoutes(fastify: FastifyInstance) {
       }
     },
     async function (request, reply) {
-      const team = await service.getTeam(request.params.teamName, request.user);
+      const team = await service.getTeam(request.params.teamId, request.user);
       return reply.send(successResponse(toTeamView(team)));
     }
   );
 
   routes.delete(
-    "/api/teams/:teamName",
+    "/api/teams/:teamId",
     {
       preHandler: requireAdmin,
       schema: {
@@ -73,9 +73,9 @@ export default async function teamRoutes(fastify: FastifyInstance) {
       }
     },
     async function (request, reply) {
-      const { teamName } = request.params;
-      await service.deleteTeam(teamName, request.user);
-      return reply.send(successResponse(teamName));
+      const { teamId } = request.params;
+      await service.deleteTeam(teamId, request.user);
+      return reply.send(successResponse(teamId));
     }
   );
 

@@ -138,15 +138,16 @@ export class TeamAggregate {
         return stampCard;
     }
 
-    create(team: NewTeam, issuer: string): string {
+    /**
+     * The id is chosen by the caller, because the stream is named after it.
+     */
+    create(id: string, team: NewTeam, issuer: string): void {
         if (this.exists) {
             throw new TeamAlreadyExistsError(team.club, team.name);
         }
-        const id = randomUUID();
         const issuedOn = new Date();
         this.record({ type: "TeamAdded", data: { id, club: team.club, name: team.name, issuer, issuedOn } });
         team.coaches.forEach(email => this.record({ type: "CoachAdded", data: { email, issuer, issuedOn } }));
-        return id;
     }
 
     delete(issuer: string): void {

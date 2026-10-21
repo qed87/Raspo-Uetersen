@@ -27,7 +27,7 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
   const service = fastify.stampCardService;
 
   routes.get(
-    "/api/teams/:teamName/stampcard",
+    "/api/teams/:teamId/stampcard",
     {
       schema: {
         params: teamReferenceSchema,
@@ -39,13 +39,13 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       }
     },
     async function (request, reply) {
-      const cards = await service.listStampCards(request.params.teamName, request.query, request.user);
+      const cards = await service.listStampCards(request.params.teamId, request.query, request.user);
       return reply.send(successResponse(cards.map(toStampCardView)));
     }
   );
 
   routes.get(
-    "/api/teams/:teamName/stampcard/:stampCardId",
+    "/api/teams/:teamId/stampcard/:stampCardId",
     {
       schema: {
         params: stampCardReferenceSchema,
@@ -62,7 +62,7 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
   );
 
   routes.post(
-    "/api/teams/:teamName/stampcard",
+    "/api/teams/:teamId/stampcard",
     {
       schema: {
         params: teamReferenceSchema,
@@ -74,13 +74,13 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       }
     },
     async function (request, reply) {
-      const stampCardId = await service.addStampCard(request.params.teamName, request.body, request.user);
+      const stampCardId = await service.addStampCard(request.params.teamId, request.body, request.user);
       return reply.code(201).send(successResponse(stampCardId));
     }
   );
 
   routes.delete(
-    "/api/teams/:teamName/stampcard/:stampCardId",
+    "/api/teams/:teamId/stampcard/:stampCardId",
     {
       schema: {
         params: stampCardReferenceSchema,
@@ -97,7 +97,7 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
   );
 
   routes.post(
-    "/api/teams/:teamName/stampcard/:stampCardId/stamp",
+    "/api/teams/:teamId/stampcard/:stampCardId/stamp",
     {
       schema: {
         params: stampCardReferenceSchema,
@@ -115,7 +115,7 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
   );
 
   routes.delete(
-    "/api/teams/:teamName/stampcard/:stampCardId/stamp/:stampId",
+    "/api/teams/:teamId/stampcard/:stampCardId/stamp/:stampId",
     {
       schema: {
         params: stampReferenceSchema,
@@ -132,7 +132,7 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
   );
 
   routes.get(
-    "/api/teams/:teamName/stamp/pending",
+    "/api/teams/:teamId/stamp/pending",
     {
       schema: {
         params: teamReferenceSchema,
@@ -143,13 +143,13 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       }
     },
     async function (request, reply) {
-      const pendingStamps = await service.listPendingStamps(request.params.teamName, request.user);
+      const pendingStamps = await service.listPendingStamps(request.params.teamId, request.user);
       return reply.send(successResponse(pendingStamps.map(toPendingStampView)));
     }
   );
 
   routes.post(
-    "/api/teams/:teamName/stamp/pending/approve",
+    "/api/teams/:teamId/stamp/pending/approve",
     {
       schema: {
         params: teamReferenceSchema,
@@ -161,13 +161,13 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       }
     },
     async function (request, reply) {
-      await service.approveStamps(request.params.teamName, request.body, request.user);
+      await service.approveStamps(request.params.teamId, request.body, request.user);
       return reply.send(successResponse(request.body.stampIds));
     }
   );
 
   routes.post(
-    "/api/teams/:teamName/stamp/pending/:stampId/approve",
+    "/api/teams/:teamId/stamp/pending/:stampId/approve",
     {
       schema: {
         params: pendingStampReferenceSchema,
@@ -184,7 +184,7 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
   );
 
   routes.post(
-    "/api/teams/:teamName/stampcard/:stampCardId/stamp/:stampId/approve",
+    "/api/teams/:teamId/stampcard/:stampCardId/stamp/:stampId/approve",
     {
       schema: {
         params: stampReferenceSchema,
@@ -201,7 +201,7 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
   );
 
   routes.post(
-    "/api/teams/:teamName/stampcard/:stampCardId/stamp/:stampId/reject",
+    "/api/teams/:teamId/stampcard/:stampCardId/stamp/:stampId/reject",
     {
       schema: {
         params: stampReferenceSchema,
@@ -218,7 +218,7 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
   );
 
   routes.get(
-    "/api/teams/:teamName/stampcard/:stampCardId/share",
+    "/api/teams/:teamId/stampcard/:stampCardId/share",
     {
       schema: {
         params: stampCardReferenceSchema,
@@ -235,7 +235,7 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
   );
 
   routes.post(
-    "/api/teams/:teamName/stampcard/:stampCardId/share",
+    "/api/teams/:teamId/stampcard/:stampCardId/share",
     {
       schema: {
         params: stampCardReferenceSchema,
@@ -252,7 +252,7 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
   );
 
   routes.post(
-    "/api/teams/:teamName/stampcard/:stampCardId/share/:sharedCodeId/revoke",
+    "/api/teams/:teamId/stampcard/:stampCardId/share/:sharedCodeId/revoke",
     {
       schema: {
         params: sharedCodeReferenceSchema,
@@ -269,7 +269,7 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
   );
 
   routes.delete(
-    "/api/teams/:teamName/stampcard/:stampCardId/share/:sharedCodeId",
+    "/api/teams/:teamId/stampcard/:stampCardId/share/:sharedCodeId",
     {
       schema: {
         params: sharedCodeReferenceSchema,

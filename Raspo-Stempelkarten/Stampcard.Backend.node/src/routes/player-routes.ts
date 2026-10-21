@@ -10,7 +10,7 @@ export default async function playerRoutes(fastify: FastifyInstance) {
   const service = fastify.stampCardService;
 
   routes.get(
-    "/api/teams/:teamName/player",
+    "/api/teams/:teamId/player",
     {
       schema: {
         params: teamReferenceSchema,
@@ -21,13 +21,13 @@ export default async function playerRoutes(fastify: FastifyInstance) {
       }
     },
     async function (request, reply) {
-      const players = await service.listPlayers(request.params.teamName, request.user);
+      const players = await service.listPlayers(request.params.teamId, request.user);
       return reply.send(successResponse(players.map(toPlayerView)));
     }
   );
 
   routes.get(
-    "/api/teams/:teamName/player/:playerId",
+    "/api/teams/:teamId/player/:playerId",
     {
       schema: {
         params: playerReferenceSchema,
@@ -44,7 +44,7 @@ export default async function playerRoutes(fastify: FastifyInstance) {
   );
 
   routes.post(
-    "/api/teams/:teamName/player",
+    "/api/teams/:teamId/player",
     {
       schema: {
         params: teamReferenceSchema,
@@ -56,13 +56,13 @@ export default async function playerRoutes(fastify: FastifyInstance) {
       }
     },
     async function (request, reply) {
-      const playerId = await service.addPlayer(request.params.teamName, request.body, request.user);
+      const playerId = await service.addPlayer(request.params.teamId, request.body, request.user);
       return reply.code(201).send(successResponse(playerId));
     }
   );
 
   routes.put(
-    "/api/teams/:teamName/player/:playerId",
+    "/api/teams/:teamId/player/:playerId",
     {
       schema: {
         params: playerReferenceSchema,
@@ -80,7 +80,7 @@ export default async function playerRoutes(fastify: FastifyInstance) {
   );
 
   routes.delete(
-    "/api/teams/:teamName/player/:playerId",
+    "/api/teams/:teamId/player/:playerId",
     {
       schema: {
         params: playerReferenceSchema,
@@ -97,7 +97,7 @@ export default async function playerRoutes(fastify: FastifyInstance) {
   );
 
   routes.post(
-    "/api/teams/:teamName/player/:playerId/enable",
+    "/api/teams/:teamId/player/:playerId/enable",
     {
       schema: {
         params: playerReferenceSchema,
@@ -114,7 +114,7 @@ export default async function playerRoutes(fastify: FastifyInstance) {
   );
 
   routes.post(
-    "/api/teams/:teamName/player/:playerId/disable",
+    "/api/teams/:teamId/player/:playerId/disable",
     {
       schema: {
         params: playerReferenceSchema,

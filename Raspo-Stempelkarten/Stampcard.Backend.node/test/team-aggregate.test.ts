@@ -21,6 +21,7 @@ import {
     max,
     otherCoach,
     replayed,
+    TEAM_ID,
     teamWithStampCard
 } from "./helpers/fixtures.js";
 
@@ -42,7 +43,7 @@ describe("team lifecycle", () => {
     test("creating an existing team is rejected", () => {
         const team = createdTeam();
 
-        assert.throws(() => team.create({ club: "raspo", name: "2017-1", coaches: [] }, ISSUER), TeamAlreadyExistsError);
+        assert.throws(() => team.create(TEAM_ID, { club: "raspo", name: "2017-1", coaches: [] }, ISSUER), TeamAlreadyExistsError);
     });
 
     test("a deleted team can be created again without its former players", () => {
@@ -50,7 +51,7 @@ describe("team lifecycle", () => {
         team.addPlayer(max, ISSUER);
         team.delete(ISSUER);
 
-        team.create({ club: "raspo", name: "2017-1", coaches: [] }, ISSUER);
+        team.create(TEAM_ID, { club: "raspo", name: "2017-1", coaches: [] }, ISSUER);
 
         assert.deepEqual(team.listPlayers(), []);
     });

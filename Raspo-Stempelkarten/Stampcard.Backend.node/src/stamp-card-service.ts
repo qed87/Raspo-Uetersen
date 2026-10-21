@@ -1,14 +1,18 @@
 import type { KurrentDBClient } from "@kurrent/kurrentdb-client";
+import { randomUUID } from "node:crypto";
 import { Result } from "neverthrow";
 import type { AuthenticatedUser } from "./authenticated-user.js";
 import * as dtos from './stamp-card-dtos.js'
-import { TeamNotFoundError } from "./stamp-card-errors.js";
+import { TeamAlreadyExistsError, TeamNotFoundError } from "./stamp-card-errors.js";
 import type { IncompleteStampCard, PendingStamp, Player, TeamAggregate, TeamDetails } from "./stamp-card-model.js";
 import { TeamRepository } from "./stamp-card-repository.js";
 import type { SharedCode, StampCard } from "./stamp-card.js";
 
-function teamStreamName(team: { club: string, name: string }): string {
-    return `team-${team.club}-${team.name}`;
+/**
+ * The stream is named after the team id only, so that renaming a team does not block its old name.
+ */
+function teamStreamName(teamId: string): string {
+    return `team-${teamId}`;
 }
 
 function isCoachedBy(team: dtos.TeamReadDto, user: AuthenticatedUser): boolean {
@@ -39,25 +43,32 @@ export class StampCardService {
     }
 
     /**
-     * Creates the team in the club of the configuration, its stream is named team-{club}-{team name}.
+     * Creates the team in the club of the configuration, its stream is named team-{team id}.
+     * The name must be unique within the club, it is checked against the projection of all teams.
      */
     async createTeam(newTeam: dtos.CreateTeamDto, user: AuthenticatedUser): Promise<string> {
-        const team = await this.loadTeam(this.buildStreamName(newTeam.name));
+        const nameIsTaken = (await this.listAllTeams())
+            .some(existing => existing.club === this.clubName && existing.name === newTeam.name);
+        if (nameIsTaken) {
+            throw new TeamAlreadyExistsError(this.clubName, newTeam.name);
+        }
+        const teamId = randomUUID();
+        const team = await this.loadTeam(teamId);
         ensureVisible(team, user);
-        const teamId = team.create({ ...newTeam, club: this.clubName }, user.email);
+        team.create(teamId, { ...newTeam, club: this.clubName }, user.email);
         await this.saveTeam(team);
         return teamId;
     }
 
-    async deleteTeam(teamName: string, user: AuthenticatedUser): Promise<void> {
-        const team = await this.loadTeam(this.buildStreamName(teamName));
+    async deleteTeam(teamId: string, user: AuthenticatedUser): Promise<void> {
+        const team = await this.loadTeam(teamId);
         ensureVisible(team, user);
         team.delete(user.email);
         await this.saveTeam(team);
     }
 
-    async addPlayer(teamName: string, player: dtos.PlayerDto, user: AuthenticatedUser): Promise<string> {
-        const team = await this.loadTeam(this.buildStreamName(teamName));
+    async addPlayer(teamId: string, player: dtos.PlayerDto, user: AuthenticatedUser): Promise<string> {
+        const team = await this.loadTeam(teamId);
         ensureVisible(team, user);
         const playerId = team.addPlayer(player, user.email);
         await this.saveTeam(team);
@@ -65,35 +76,35 @@ export class StampCardService {
     }
 
     async updatePlayer(reference: dtos.PlayerReference, player: dtos.PlayerDto, user: AuthenticatedUser): Promise<void> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         team.updatePlayer(reference.playerId, player, user.email);
         await this.saveTeam(team);
     }
 
     async removePlayer(reference: dtos.PlayerReference, user: AuthenticatedUser): Promise<void> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         team.removePlayer(reference.playerId, user.email);
         await this.saveTeam(team);
     }
 
     async enablePlayer(reference: dtos.PlayerReference, user: AuthenticatedUser): Promise<void> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         team.enablePlayer(reference.playerId, user.email);
         await this.saveTeam(team);
     }
 
     async disablePlayer(reference: dtos.PlayerReference, user: AuthenticatedUser): Promise<void> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         team.disablePlayer(reference.playerId, user.email);
         await this.saveTeam(team);
     }
 
-    async addStampCard(teamName: string, card: dtos.StampCardDto, user: AuthenticatedUser): Promise<string> {
-        const team = await this.loadTeam(this.buildStreamName(teamName));
+    async addStampCard(teamId: string, card: dtos.StampCardDto, user: AuthenticatedUser): Promise<string> {
+        const team = await this.loadTeam(teamId);
         ensureVisible(team, user);
         const stampCardId = team.addStampCard(card, user.email);
         await this.saveTeam(team);
@@ -101,14 +112,14 @@ export class StampCardService {
     }
 
     async removeStampCard(reference: dtos.StampCardReference, user: AuthenticatedUser): Promise<void> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         team.removeStampCard(reference.stampCardId, user.email);
         await this.saveTeam(team);
     }
 
     async addStamp(reference: dtos.StampCardReference, stamp: dtos.StampDto, user: AuthenticatedUser): Promise<string> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         const stampId = team.addStamp(reference.stampCardId, stamp, user.email);
         await this.saveTeam(team);
@@ -116,14 +127,14 @@ export class StampCardService {
     }
 
     async removeStamp(reference: dtos.StampReference, user: AuthenticatedUser): Promise<void> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         team.removeStamp(reference.stampCardId, reference.stampId, user.email);
         await this.saveTeam(team);
     }
 
     async shareStampCard(reference: dtos.StampCardReference, user: AuthenticatedUser): Promise<SharedCode> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         const sharedCode = team.shareStampCard(reference.stampCardId, user.email);
         await this.saveTeam(team);
@@ -131,42 +142,42 @@ export class StampCardService {
     }
 
     async revokeSharedCode(reference: dtos.SharedCodeReference, user: AuthenticatedUser): Promise<void> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         team.revokeSharedCode(reference.stampCardId, reference.sharedCodeId, user.email);
         await this.saveTeam(team);
     }
 
     async removeSharedCode(reference: dtos.SharedCodeReference, user: AuthenticatedUser): Promise<void> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         team.removeSharedCode(reference.stampCardId, reference.sharedCodeId, user.email);
         await this.saveTeam(team);
     }
 
     async approveStamp(reference: dtos.StampReference, user: AuthenticatedUser): Promise<void> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         team.approveStamp(reference.stampCardId, reference.stampId, user.email);
         await this.saveTeam(team);
     }
 
     async approvePendingStamp(reference: dtos.PendingStampReference, user: AuthenticatedUser): Promise<void> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         team.approvePendingStamp(reference.stampId, user.email);
         await this.saveTeam(team);
     }
 
-    async approveStamps(teamName: string, approval: dtos.ApproveStampsDto, user: AuthenticatedUser): Promise<void> {
-        const team = await this.loadTeam(this.buildStreamName(teamName));
+    async approveStamps(teamId: string, approval: dtos.ApproveStampsDto, user: AuthenticatedUser): Promise<void> {
+        const team = await this.loadTeam(teamId);
         ensureVisible(team, user);
         team.approveStamps(approval.stampIds, user.email);
         await this.saveTeam(team);
     }
 
     async rejectStamp(reference: dtos.StampReference, user: AuthenticatedUser): Promise<void> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         team.rejectStamp(reference.stampCardId, reference.stampId, user.email);
         await this.saveTeam(team);
@@ -177,50 +188,50 @@ export class StampCardService {
      * the stamp only becomes active once a coach approves it.
      */
     async submitStamp(reference: dtos.StampCardReference, code: string, stamp: dtos.SubmittedStampDto): Promise<string> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         const stampId = team.submitStamp(reference.stampCardId, code, stamp);
         await this.saveTeam(team);
         return stampId;
     }
 
-    async getTeam(teamName: string, user: AuthenticatedUser): Promise<TeamDetails> {
-        const team = await this.loadTeam(this.buildStreamName(teamName));
+    async getTeam(teamId: string, user: AuthenticatedUser): Promise<TeamDetails> {
+        const team = await this.loadTeam(teamId);
         ensureVisible(team, user);
         return team.describe();
     }
 
-    async listPlayers(teamName: string, user: AuthenticatedUser): Promise<Player[]> {
-        const team = await this.loadTeam(this.buildStreamName(teamName));
+    async listPlayers(teamId: string, user: AuthenticatedUser): Promise<Player[]> {
+        const team = await this.loadTeam(teamId);
         ensureVisible(team, user);
         return team.listPlayers();
     }
 
     async getPlayer(reference: dtos.PlayerReference, user: AuthenticatedUser): Promise<Player> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         return team.findPlayer(reference.playerId);
     }
 
-    async listStampCards(teamName: string, filter: dtos.StampCardFilter, user: AuthenticatedUser): Promise<StampCard[]> {
-        const team = await this.loadTeam(this.buildStreamName(teamName));
+    async listStampCards(teamId: string, filter: dtos.StampCardFilter, user: AuthenticatedUser): Promise<StampCard[]> {
+        const team = await this.loadTeam(teamId);
         ensureVisible(team, user);
         return team.listStampCards().filter(card => matchesFilter(card, filter));
     }
 
     async getStampCard(reference: dtos.StampCardReference, user: AuthenticatedUser): Promise<StampCard> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         return team.findStampCard(reference.stampCardId);
     }
 
     async listSharedCodes(reference: dtos.StampCardReference, user: AuthenticatedUser): Promise<SharedCode[]> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
         return team.findStampCard(reference.stampCardId).listSharedCodes();
     }
 
-    async listPendingStamps(teamName: string, user: AuthenticatedUser): Promise<PendingStamp[]> {
-        const team = await this.loadTeam(this.buildStreamName(teamName));
+    async listPendingStamps(teamId: string, user: AuthenticatedUser): Promise<PendingStamp[]> {
+        const team = await this.loadTeam(teamId);
         ensureVisible(team, user);
         return team.listPendingStamps();
     }
@@ -229,7 +240,7 @@ export class StampCardService {
      * Returns the stamp card an external user may see with the given share code.
      */
     async getSharedStampCard(reference: dtos.StampCardReference, code: string): Promise<StampCard> {
-        const team = await this.loadTeam(this.buildStreamName(reference.teamName));
+        const team = await this.loadTeam(reference.teamId);
         return team.findSharedStampCard(reference.stampCardId, code);
     }
 
@@ -256,13 +267,9 @@ export class StampCardService {
         return projectionState.teams ?? [];
     }
 
-    private buildStreamName(teamName: string): string {
-        return teamStreamName({ club: this.clubName, name: teamName });
-    }
-
     // The routes report failures through exceptions, so the repository results end here.
-    private async loadTeam(streamName: string): Promise<TeamAggregate> {
-        const loaded = await this.teams.load(streamName);
+    private async loadTeam(teamId: string): Promise<TeamAggregate> {
+        const loaded = await this.teams.load(teamStreamName(teamId));
         if (loaded.isErr()) throw loaded.error;
         return loaded.value;
     }

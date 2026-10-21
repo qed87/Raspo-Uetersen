@@ -24,7 +24,7 @@ export default async function sharedRoutes(fastify: FastifyInstance) {
   const service = fastify.stampCardService;
 
   routes.get(
-    "/api/shared/teams/:teamName/stampcard/:stampCardId",
+    "/api/shared/teams/:teamId/stampcard/:stampCardId",
     {
       config: publicRouteConfig,
       schema: {
@@ -43,7 +43,7 @@ export default async function sharedRoutes(fastify: FastifyInstance) {
   );
 
   routes.post(
-    "/api/shared/teams/:teamName/stampcard/:stampCardId/stamp",
+    "/api/shared/teams/:teamId/stampcard/:stampCardId/stamp",
     {
       config: publicRouteConfig,
       schema: {

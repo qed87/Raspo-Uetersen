@@ -17,6 +17,8 @@ declare module 'fastify' {
 async function fp(fastify: FastifyInstance, options :any) {
     const connectionStr = fastify.config.eventstore.url;
     const client = KurrentDBClient.connectionString(connectionStr);
+    // Every event of a team stream raises its revision, so all events are handled by $any:
+    // the concurrency token is the sequence number of the last event, the team data comes from the team events.
     const allClubTeamsQuery = `
                 fromCategory('team')
                 .when({
@@ -25,48 +27,38 @@ async function fp(fastify: FastifyInstance, options :any) {
                             teams: []
                         }
                     },
-                    TeamAdded: function (state, event) {
-                        if (event.eventType !== "TeamAdded") return state;
-                        if (!event.data) return state;
-                        log("Event: " + JSON.stringify(event.data));
-                        state.teams.push({ "club": event.data.club, "name": event.data.name, "id": event.data.id, "streamId": event.streamId, "coaches": [] });
-                        return state;
-                    },
-                    TeamUpdated: function (state, event) {
-                        if (event.eventType !== "TeamUpdated") return state;
-                        if (!event.data) return state;
-                        log("Event: " + JSON.stringify(event.data));
-                        const index = state.teams.findIndex((team)  => event.streamId === team.streamId);
-                        if (index == -1) return state;
-                        state.teams[index].name = event.data.name;
-                        return state;
-                    },
-                    TeamDeleted: function (state, event) {
-                        if (event.eventType !== "TeamDeleted") return state;
-                        if (!event.data) return state;
-                        log("Event: " + JSON.stringify(event.data));
+                    $any: function (state, event) {
+                        if (event.eventType === "TeamAdded") {
+                            if (!event.data) return state;
+                            log("Event: " + JSON.stringify(event.data));
+                            state.teams.push({ "club": event.data.club, "name": event.data.name, "id": event.data.id, "streamId": event.streamId, "coaches": [], "concurrencyToken": event.sequenceNumber });
+                            return state;
+                        }
+
                         const index = state.teams.findIndex((team) => event.streamId === team.streamId);
                         if (index == -1) return state;
-                        state.teams.splice(index, 1);
-                        return state;
-                    },
-                    CoachAdded: function (state, event) {
-                        if (event.eventType !== "CoachAdded") return state;
+                        state.teams[index].concurrencyToken = event.sequenceNumber;
                         if (!event.data) return state;
-                        log("Event: " + JSON.stringify(event.data));
-                        const index = state.teams.findIndex((team) => event.streamId === team.streamId);
-                        if (index == -1) return state;
-                        state.teams[index].coaches.push(event.data.email);
-                        return state;
-                    },
-                    CoachRemoved: function (state, event) {
-                        if (event.eventType !== "CoachRemoved") return state;
-                        if (!event.data) return state;
-                        log("Event: " + JSON.stringify(event.data));
-                        const index = state.teams.findIndex((team) => event.streamId === team.streamId);
-                        if (index == -1) return state;
-                        var removeCoachIndex = state.teams[index].coaches.indexOf(event.data.email);
-                        state.teams[index].coaches.splice(removeCoachIndex, 1);
+
+                        switch (event.eventType) {
+                            case "TeamUpdated":
+                                log("Event: " + JSON.stringify(event.data));
+                                state.teams[index].name = event.data.name;
+                                break;
+                            case "TeamDeleted":
+                                log("Event: " + JSON.stringify(event.data));
+                                state.teams.splice(index, 1);
+                                break;
+                            case "CoachAdded":
+                                log("Event: " + JSON.stringify(event.data));
+                                state.teams[index].coaches.push(event.data.email);
+                                break;
+                            case "CoachRemoved":
+                                log("Event: " + JSON.stringify(event.data));
+                                var removeCoachIndex = state.teams[index].coaches.indexOf(event.data.email);
+                                state.teams[index].coaches.splice(removeCoachIndex, 1);
+                                break;
+                        }
                         return state;
                     }
                 })

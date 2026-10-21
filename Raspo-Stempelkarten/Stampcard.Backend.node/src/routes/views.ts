@@ -13,11 +13,11 @@ export function toTeamView(team: TeamDetails) {
   return { Id: team.id, Club: team.club, Name: team.name, Coaches: team.coaches };
 }
 
-export const teamDetailsViewSchema = teamViewSchema.extend({
+export const teamListViewSchema = teamViewSchema.extend({
   ConcurrencyToken: z.int()
 });
 
-export function toTeamDetailsView(team: TeamDetails & { concurrencyToken: number }) {
+export function toTeamListView(team: TeamDetails & { concurrencyToken: number }) {
   return { ...toTeamView(team), ConcurrencyToken: team.concurrencyToken };
 }
 
@@ -101,6 +101,7 @@ export function toSharedCodeView(sharedCode: SharedCode) {
 export const incompleteStampCardViewSchema = z.object({
   TeamId: z.string(),
   TeamName: z.string(),
+  ConcurrencyToken: z.int(),
   StampCardId: z.uuid(),
   AccountingYear: z.int(),
   PlayerId: z.uuid(),
@@ -109,10 +110,11 @@ export const incompleteStampCardViewSchema = z.object({
   AcceptedStamps: z.int()
 });
 
-export function toIncompleteStampCardView(incomplete: IncompleteStampCard) {
+export function toIncompleteStampCardView(incomplete: IncompleteStampCard & { concurrencyToken: number }) {
   return {
     TeamId: incomplete.team.id,
     TeamName: incomplete.team.name,
+    ConcurrencyToken: incomplete.concurrencyToken,
     StampCardId: incomplete.stampCard.id,
     AccountingYear: incomplete.stampCard.accountingYear,
     PlayerId: incomplete.stampCard.playerId,

@@ -5,7 +5,9 @@ export const teamReadDtoSchema = z.object({
   streamId: z.string(),
   club: z.string(),
   name: z.string(),
-  coaches: z.array(z.string())
+  coaches: z.array(z.string()),
+  // Sequence number of the last event of the team stream, taken in the same projection step as the team data
+  concurrencyToken: z.int()
 });
 
 export type TeamReadDto = z.infer<typeof teamReadDtoSchema>;
@@ -28,11 +30,14 @@ export const createTeamDtoSchema = z.object({
 export type CreateTeamDto = z.infer<typeof createTeamDtoSchema>;
 
 /**
- * The concurrency token is the revision of the team stream the client has read.
+ * Updates pass the concurrency token of the team the client has read,
+ * so that they do not overwrite changes made in the meantime.
  */
+const concurrencyTokenSchema = z.int().nonnegative();
+
 export const updateTeamDtoSchema = z.object({
   name: normalizedNameSchema,
-  concurrencyToken: z.int().nonnegative()
+  concurrencyToken: concurrencyTokenSchema
 });
 
 export type UpdateTeamDto = z.infer<typeof updateTeamDtoSchema>;
@@ -58,6 +63,12 @@ export const playerDtoSchema = z.object({
 });
 
 export type PlayerDto = z.infer<typeof playerDtoSchema>;
+
+export const updatePlayerDtoSchema = playerDtoSchema.extend({
+  concurrencyToken: concurrencyTokenSchema
+});
+
+export type UpdatePlayerDto = z.infer<typeof updatePlayerDtoSchema>;
 
 const MAX_ACCOUNTING_YEARS_IN_PAST = 25;
 

@@ -18,4 +18,8 @@ tests {
   test("contains the team", function () {
     expect(res.body.Data.map(team => team.Name)).to.include(bru.getEnvVar("teamName"));
   });
+
+  test("every team carries its concurrency token", function () {
+    res.body.Data.forEach(team => expect(team.ConcurrencyToken).to.be.a('number'));
+  });
 }

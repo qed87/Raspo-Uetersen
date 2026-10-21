@@ -1,8 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { playerDtoSchema, playerReferenceSchema, teamReferenceSchema } from '../stamp-card-dtos.js';
-import { apiResponseSchema, errorResponseSchemas, successResponse } from './api-response.js';
+import { playerDtoSchema, playerReferenceSchema, teamReferenceSchema, updatePlayerDtoSchema } from '../stamp-card-dtos.js';
+import { errorResponseSchemas, versionedResponse, versionedResponseSchema } from './api-response.js';
 import { playerViewSchema, toPlayerView } from './views.js';
 
 export default async function playerRoutes(fastify: FastifyInstance) {
@@ -15,14 +15,14 @@ export default async function playerRoutes(fastify: FastifyInstance) {
       schema: {
         params: teamReferenceSchema,
         response: {
-          200: apiResponseSchema(z.array(playerViewSchema)),
+          200: versionedResponseSchema(z.array(playerViewSchema)),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
       const players = await service.listPlayers(request.params.teamId, request.user);
-      return reply.send(successResponse(players.map(toPlayerView)));
+      return reply.send(versionedResponse(players, data => data.map(toPlayerView)));
     }
   );
 
@@ -32,14 +32,14 @@ export default async function playerRoutes(fastify: FastifyInstance) {
       schema: {
         params: playerReferenceSchema,
         response: {
-          200: apiResponseSchema(playerViewSchema),
+          200: versionedResponseSchema(playerViewSchema),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
       const player = await service.getPlayer(request.params, request.user);
-      return reply.send(successResponse(toPlayerView(player)));
+      return reply.send(versionedResponse(player, toPlayerView));
     }
   );
 
@@ -50,14 +50,14 @@ export default async function playerRoutes(fastify: FastifyInstance) {
         params: teamReferenceSchema,
         body: playerDtoSchema,
         response: {
-          201: apiResponseSchema(z.uuid()),
+          201: versionedResponseSchema(z.uuid()),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
       const playerId = await service.addPlayer(request.params.teamId, request.body, request.user);
-      return reply.code(201).send(successResponse(playerId));
+      return reply.code(201).send(versionedResponse(playerId));
     }
   );
 
@@ -66,16 +66,16 @@ export default async function playerRoutes(fastify: FastifyInstance) {
     {
       schema: {
         params: playerReferenceSchema,
-        body: playerDtoSchema,
+        body: updatePlayerDtoSchema,
         response: {
-          200: apiResponseSchema(z.uuid()),
+          200: versionedResponseSchema(z.uuid()),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
-      await service.updatePlayer(request.params, request.body, request.user);
-      return reply.send(successResponse(request.params.playerId));
+      const changed = await service.updatePlayer(request.params, request.body, request.user);
+      return reply.send(versionedResponse(changed));
     }
   );
 
@@ -85,14 +85,14 @@ export default async function playerRoutes(fastify: FastifyInstance) {
       schema: {
         params: playerReferenceSchema,
         response: {
-          200: apiResponseSchema(z.uuid()),
+          200: versionedResponseSchema(z.uuid()),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
-      await service.removePlayer(request.params, request.user);
-      return reply.send(successResponse(request.params.playerId));
+      const changed = await service.removePlayer(request.params, request.user);
+      return reply.send(versionedResponse(changed));
     }
   );
 
@@ -102,14 +102,14 @@ export default async function playerRoutes(fastify: FastifyInstance) {
       schema: {
         params: playerReferenceSchema,
         response: {
-          200: apiResponseSchema(z.uuid()),
+          200: versionedResponseSchema(z.uuid()),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
-      await service.enablePlayer(request.params, request.user);
-      return reply.send(successResponse(request.params.playerId));
+      const changed = await service.enablePlayer(request.params, request.user);
+      return reply.send(versionedResponse(changed));
     }
   );
 
@@ -119,14 +119,14 @@ export default async function playerRoutes(fastify: FastifyInstance) {
       schema: {
         params: playerReferenceSchema,
         response: {
-          200: apiResponseSchema(z.uuid()),
+          200: versionedResponseSchema(z.uuid()),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
-      await service.disablePlayer(request.params, request.user);
-      return reply.send(successResponse(request.params.playerId));
+      const changed = await service.disablePlayer(request.params, request.user);
+      return reply.send(versionedResponse(changed));
     }
   );
 }

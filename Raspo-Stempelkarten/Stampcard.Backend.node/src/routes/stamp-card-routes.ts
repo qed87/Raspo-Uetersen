@@ -12,7 +12,7 @@ import {
   stampReferenceSchema,
   teamReferenceSchema
 } from '../stamp-card-dtos.js';
-import { apiResponseSchema, errorResponseSchemas, successResponse } from './api-response.js';
+import { errorResponseSchemas, versionedResponse, versionedResponseSchema } from './api-response.js';
 import {
   pendingStampViewSchema,
   sharedCodeViewSchema,
@@ -33,14 +33,14 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
         params: teamReferenceSchema,
         querystring: stampCardFilterSchema,
         response: {
-          200: apiResponseSchema(z.array(stampCardViewSchema)),
+          200: versionedResponseSchema(z.array(stampCardViewSchema)),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
       const cards = await service.listStampCards(request.params.teamId, request.query, request.user);
-      return reply.send(successResponse(cards.map(toStampCardView)));
+      return reply.send(versionedResponse(cards, data => data.map(toStampCardView)));
     }
   );
 
@@ -50,14 +50,14 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       schema: {
         params: stampCardReferenceSchema,
         response: {
-          200: apiResponseSchema(stampCardViewSchema),
+          200: versionedResponseSchema(stampCardViewSchema),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
       const card = await service.getStampCard(request.params, request.user);
-      return reply.send(successResponse(toStampCardView(card)));
+      return reply.send(versionedResponse(card, toStampCardView));
     }
   );
 
@@ -68,14 +68,14 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
         params: teamReferenceSchema,
         body: stampCardDtoSchema,
         response: {
-          201: apiResponseSchema(z.uuid()),
+          201: versionedResponseSchema(z.uuid()),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
       const stampCardId = await service.addStampCard(request.params.teamId, request.body, request.user);
-      return reply.code(201).send(successResponse(stampCardId));
+      return reply.code(201).send(versionedResponse(stampCardId));
     }
   );
 
@@ -85,14 +85,14 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       schema: {
         params: stampCardReferenceSchema,
         response: {
-          200: apiResponseSchema(z.uuid()),
+          200: versionedResponseSchema(z.uuid()),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
-      await service.removeStampCard(request.params, request.user);
-      return reply.send(successResponse(request.params.stampCardId));
+      const changed = await service.removeStampCard(request.params, request.user);
+      return reply.send(versionedResponse(changed));
     }
   );
 
@@ -103,14 +103,14 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
         params: stampCardReferenceSchema,
         body: stampDtoSchema,
         response: {
-          201: apiResponseSchema(z.uuid()),
+          201: versionedResponseSchema(z.uuid()),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
       const stampId = await service.addStamp(request.params, request.body, request.user);
-      return reply.code(201).send(successResponse(stampId));
+      return reply.code(201).send(versionedResponse(stampId));
     }
   );
 
@@ -120,14 +120,14 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       schema: {
         params: stampReferenceSchema,
         response: {
-          200: apiResponseSchema(z.uuid()),
+          200: versionedResponseSchema(z.uuid()),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
-      await service.removeStamp(request.params, request.user);
-      return reply.send(successResponse(request.params.stampId));
+      const changed = await service.removeStamp(request.params, request.user);
+      return reply.send(versionedResponse(changed));
     }
   );
 
@@ -137,14 +137,14 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       schema: {
         params: teamReferenceSchema,
         response: {
-          200: apiResponseSchema(z.array(pendingStampViewSchema)),
+          200: versionedResponseSchema(z.array(pendingStampViewSchema)),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
       const pendingStamps = await service.listPendingStamps(request.params.teamId, request.user);
-      return reply.send(successResponse(pendingStamps.map(toPendingStampView)));
+      return reply.send(versionedResponse(pendingStamps, data => data.map(toPendingStampView)));
     }
   );
 
@@ -155,14 +155,14 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
         params: teamReferenceSchema,
         body: approveStampsDtoSchema,
         response: {
-          200: apiResponseSchema(z.array(z.uuid())),
+          200: versionedResponseSchema(z.array(z.uuid())),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
-      await service.approveStamps(request.params.teamId, request.body, request.user);
-      return reply.send(successResponse(request.body.stampIds));
+      const changed = await service.approveStamps(request.params.teamId, request.body, request.user);
+      return reply.send(versionedResponse(changed));
     }
   );
 
@@ -172,14 +172,14 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       schema: {
         params: pendingStampReferenceSchema,
         response: {
-          200: apiResponseSchema(z.uuid()),
+          200: versionedResponseSchema(z.uuid()),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
-      await service.approvePendingStamp(request.params, request.user);
-      return reply.send(successResponse(request.params.stampId));
+      const changed = await service.approvePendingStamp(request.params, request.user);
+      return reply.send(versionedResponse(changed));
     }
   );
 
@@ -189,14 +189,14 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       schema: {
         params: stampReferenceSchema,
         response: {
-          200: apiResponseSchema(z.uuid()),
+          200: versionedResponseSchema(z.uuid()),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
-      await service.approveStamp(request.params, request.user);
-      return reply.send(successResponse(request.params.stampId));
+      const changed = await service.approveStamp(request.params, request.user);
+      return reply.send(versionedResponse(changed));
     }
   );
 
@@ -206,14 +206,14 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       schema: {
         params: stampReferenceSchema,
         response: {
-          200: apiResponseSchema(z.uuid()),
+          200: versionedResponseSchema(z.uuid()),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
-      await service.rejectStamp(request.params, request.user);
-      return reply.send(successResponse(request.params.stampId));
+      const changed = await service.rejectStamp(request.params, request.user);
+      return reply.send(versionedResponse(changed));
     }
   );
 
@@ -223,14 +223,14 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       schema: {
         params: stampCardReferenceSchema,
         response: {
-          200: apiResponseSchema(z.array(sharedCodeViewSchema)),
+          200: versionedResponseSchema(z.array(sharedCodeViewSchema)),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
       const sharedCodes = await service.listSharedCodes(request.params, request.user);
-      return reply.send(successResponse(sharedCodes.map(toSharedCodeView)));
+      return reply.send(versionedResponse(sharedCodes, data => data.map(toSharedCodeView)));
     }
   );
 
@@ -240,14 +240,14 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       schema: {
         params: stampCardReferenceSchema,
         response: {
-          201: apiResponseSchema(sharedCodeViewSchema),
+          201: versionedResponseSchema(sharedCodeViewSchema),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
       const sharedCode = await service.shareStampCard(request.params, request.user);
-      return reply.code(201).send(successResponse(toSharedCodeView(sharedCode)));
+      return reply.code(201).send(versionedResponse(sharedCode, toSharedCodeView));
     }
   );
 
@@ -257,14 +257,14 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       schema: {
         params: sharedCodeReferenceSchema,
         response: {
-          200: apiResponseSchema(z.uuid()),
+          200: versionedResponseSchema(z.uuid()),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
-      await service.revokeSharedCode(request.params, request.user);
-      return reply.send(successResponse(request.params.sharedCodeId));
+      const changed = await service.revokeSharedCode(request.params, request.user);
+      return reply.send(versionedResponse(changed));
     }
   );
 
@@ -274,14 +274,14 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       schema: {
         params: sharedCodeReferenceSchema,
         response: {
-          200: apiResponseSchema(z.uuid()),
+          200: versionedResponseSchema(z.uuid()),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
-      await service.removeSharedCode(request.params, request.user);
-      return reply.send(successResponse(request.params.sharedCodeId));
+      const changed = await service.removeSharedCode(request.params, request.user);
+      return reply.send(versionedResponse(changed));
     }
   );
 }

@@ -6,6 +6,13 @@ auth:bearer {
   token: {{accessToken}}
 }
 
+script:post-response {
+  // Responses of a single team carry its concurrency token, updates have to pass the latest one back.
+  if (res.body && typeof res.body.ConcurrencyToken === "number") {
+    bru.setVar("concurrencyToken", res.body.ConcurrencyToken);
+  }
+}
+
 docs {
   # StampCard API (Node backend)
 
@@ -17,6 +24,8 @@ docs {
   2. `coachEmail` must be the email claim of the coach user, otherwise the coach cannot see the test team.
   3. Run the collection with the runner: the folders are numbered and build on each other.
      The `Login as ...` requests store the token in `accessToken`, ids are passed on as runtime variables.
+  4. Every response of a team carries its `ConcurrencyToken`, the collection stores the latest one in `concurrencyToken`.
+     Updates (`PUT` of a team or player) have to pass it, otherwise they are rejected with 409.
 
   The test team `{{teamName}}` is deleted again in `12 Cleanup`.
 }

@@ -10,10 +10,6 @@ get {
   auth: inherit
 }
 
-script:post-response {
-  bru.setVar("concurrencyToken", res.body.Data.ConcurrencyToken);
-}
-
 tests {
   test("responds with 200", function () {
     expect(res.getStatus()).to.equal(200);
@@ -24,6 +20,6 @@ tests {
   });
 
   test("returns the concurrency token", function () {
-    expect(res.body.Data.ConcurrencyToken).to.be.a('number');
+    expect(res.body.ConcurrencyToken).to.be.a('number');
   });
 }

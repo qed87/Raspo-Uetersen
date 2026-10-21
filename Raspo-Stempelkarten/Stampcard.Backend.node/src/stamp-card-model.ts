@@ -63,6 +63,14 @@ export class TeamAggregate {
     }
 
     /**
+     * Revision of the stream once the recorded changes are saved.
+     */
+    get nextRevision(): bigint | undefined {
+        if (this.pendingEvents.length === 0) return this.revision;
+        return (this.revision ?? -1n) + BigInt(this.pendingEvents.length);
+    }
+
+    /**
      * Applies an event loaded from the stream. Returns the reason if it does not fit the current state,
      * e.g. because it references a player that does not exist.
      */
@@ -148,6 +156,13 @@ export class TeamAggregate {
         const issuedOn = new Date();
         this.record({ type: "TeamAdded", data: { id, club: team.club, name: team.name, issuer, issuedOn } });
         team.coaches.forEach(email => this.record({ type: "CoachAdded", data: { email, issuer, issuedOn } }));
+    }
+
+    rename(name: string, issuer: string): void {
+        this.ensureExists();
+        if (this.details.name !== name) {
+            this.record({ type: "TeamUpdated", data: { name, issuer, issuedOn: new Date() } });
+        }
     }
 
     delete(issuer: string): void {
@@ -309,6 +324,9 @@ export class TeamAggregate {
                 this.stampCards.clear();
                 return ok(undefined);
             }
+            case "TeamUpdated":
+                this.details.name = event.data.name;
+                return ok(undefined);
             case "TeamDeleted":
                 this.exists = false;
                 return ok(undefined);

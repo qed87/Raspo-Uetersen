@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { Result } from "neverthrow";
 import type { AuthenticatedUser } from "./authenticated-user.js";
 import * as dtos from './stamp-card-dtos.js'
-import { TeamAlreadyExistsError, TeamNotFoundError } from "./stamp-card-errors.js";
+import { ConcurrentModificationError, TeamAlreadyExistsError, TeamNotFoundError } from "./stamp-card-errors.js";
 import type { IncompleteStampCard, PendingStamp, Player, TeamAggregate, TeamDetails } from "./stamp-card-model.js";
 import { TeamRepository } from "./stamp-card-repository.js";
 import type { SharedCode, StampCard } from "./stamp-card.js";
@@ -44,20 +44,32 @@ export class StampCardService {
 
     /**
      * Creates the team in the club of the configuration, its stream is named team-{team id}.
-     * The name must be unique within the club, it is checked against the projection of all teams.
+     * The name must be unique within the club.
      */
     async createTeam(newTeam: dtos.CreateTeamDto, user: AuthenticatedUser): Promise<string> {
-        const nameIsTaken = (await this.listAllTeams())
-            .some(existing => existing.club === this.clubName && existing.name === newTeam.name);
-        if (nameIsTaken) {
-            throw new TeamAlreadyExistsError(this.clubName, newTeam.name);
-        }
+        await this.ensureNameIsAvailable(newTeam.name);
         const teamId = randomUUID();
         const team = await this.loadTeam(teamId);
         ensureVisible(team, user);
         team.create(teamId, { ...newTeam, club: this.clubName }, user.email);
         await this.saveTeam(team);
         return teamId;
+    }
+
+    /**
+     * Renames the team. The concurrency token must match the current revision of the team stream,
+     * otherwise the team was changed since the client read it. Returns the new concurrency token.
+     */
+    async updateTeam(teamId: string, update: dtos.UpdateTeamDto, user: AuthenticatedUser): Promise<number> {
+        await this.ensureNameIsAvailable(update.name, teamId);
+        const team = await this.loadTeam(teamId);
+        ensureVisible(team, user);
+        if (team.revision !== BigInt(update.concurrencyToken)) {
+            throw new ConcurrentModificationError(team.streamName);
+        }
+        team.rename(update.name, user.email);
+        await this.saveTeam(team);
+        return Number(team.nextRevision);
     }
 
     async deleteTeam(teamId: string, user: AuthenticatedUser): Promise<void> {
@@ -194,10 +206,13 @@ export class StampCardService {
         return stampId;
     }
 
-    async getTeam(teamId: string, user: AuthenticatedUser): Promise<TeamDetails> {
+    /**
+     * The concurrency token is needed to update the team.
+     */
+    async getTeam(teamId: string, user: AuthenticatedUser): Promise<TeamDetails & { concurrencyToken: number }> {
         const team = await this.loadTeam(teamId);
         ensureVisible(team, user);
-        return team.describe();
+        return { ...team.describe(), concurrencyToken: Number(team.revision) };
     }
 
     async listPlayers(teamId: string, user: AuthenticatedUser): Promise<Player[]> {
@@ -259,6 +274,17 @@ export class StampCardService {
             throw new AggregateError(teams.error, "Stamp cards could not be evaluated, some team streams are invalid.");
         }
         return teams.value.flatMap(team => team.listIncompleteStampCards(query.accountingYear, query.requiredStamps));
+    }
+
+    /**
+     * Team names are unique within the club, they are checked against the projection of all teams.
+     */
+    private async ensureNameIsAvailable(name: string, ignoredTeamId?: string): Promise<void> {
+        const nameIsTaken = (await this.listAllTeams())
+            .some(existing => existing.id !== ignoredTeamId && existing.club === this.clubName && existing.name === name);
+        if (nameIsTaken) {
+            throw new TeamAlreadyExistsError(this.clubName, name);
+        }
     }
 
     private async listAllTeams(): Promise<dtos.TeamReadDto[]> {

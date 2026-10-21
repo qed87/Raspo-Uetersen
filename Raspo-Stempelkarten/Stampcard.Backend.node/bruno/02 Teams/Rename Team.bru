@@ -1,0 +1,36 @@
+meta {
+  name: Rename Team
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/teams/{{teamId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "{{teamName}}-renamed",
+    "concurrencyToken": {{concurrencyToken}}
+  }
+}
+
+script:post-response {
+  bru.setVar("renamedConcurrencyToken", res.body.Data);
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("returns a new concurrency token", function () {
+    expect(res.body.Data).to.be.greaterThan(bru.getVar("concurrencyToken"));
+  });
+}
+
+docs {
+  Admins only. The stream stays team-{teamId}, so the old name can be used again.
+}

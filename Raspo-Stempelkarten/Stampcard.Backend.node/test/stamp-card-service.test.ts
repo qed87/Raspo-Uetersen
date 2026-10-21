@@ -1,6 +1,6 @@
 import { beforeEach, describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { TeamAlreadyExistsError, TeamNotFoundError } from "../src/stamp-card-errors.js";
+import { ConcurrentModificationError, TeamAlreadyExistsError, TeamNotFoundError } from "../src/stamp-card-errors.js";
 import { StampCardService } from "../src/stamp-card-service.js";
 import { admin, coach, max, otherCoach } from "./helpers/fixtures.js";
 import { InMemoryEventStore } from "./helpers/in-memory-event-store.js";
@@ -64,6 +64,46 @@ describe("StampCardService", () => {
         await service.createTeam({ name: TEAM_NAME, coaches: [] }, admin);
 
         assert.equal(store.streams.size, 1);
+    });
+
+    test("a renamed team keeps its stream and returns the new concurrency token", async () => {
+        const teamId = await service.createTeam({ name: TEAM_NAME, coaches: [] }, admin);
+        const { concurrencyToken } = await service.getTeam(teamId, admin);
+
+        const newToken = await service.updateTeam(teamId, { name: "2017-2", concurrencyToken }, admin);
+
+        const renamed = await service.getTeam(teamId, admin);
+        assert.equal(renamed.name, "2017-2");
+        assert.equal(renamed.concurrencyToken, newToken);
+        assert.deepEqual([...store.streams.keys()], [teamStream(teamId)]);
+    });
+
+    test("updating a team with an outdated concurrency token is rejected", async () => {
+        const teamId = await service.createTeam({ name: TEAM_NAME, coaches: [] }, admin);
+        const { concurrencyToken } = await service.getTeam(teamId, admin);
+        await service.updateTeam(teamId, { name: "2017-2", concurrencyToken }, admin);
+
+        await assert.rejects(service.updateTeam(teamId, { name: "2017-3", concurrencyToken }, admin),
+            ConcurrentModificationError);
+    });
+
+    test("renaming a team to a name taken by another team of the club is rejected", async () => {
+        const teamId = await service.createTeam({ name: TEAM_NAME, coaches: [] }, admin);
+        const { concurrencyToken } = await service.getTeam(teamId, admin);
+        store.projectedTeams = [{ id: "id-a", streamId: "team-id-a", club: CLUB_NAME, name: "2017-2", coaches: [] }];
+
+        await assert.rejects(service.updateTeam(teamId, { name: "2017-2", concurrencyToken }, admin),
+            TeamAlreadyExistsError);
+    });
+
+    test("a team keeps its own name when the update does not rename it", async () => {
+        const teamId = await service.createTeam({ name: TEAM_NAME, coaches: [] }, admin);
+        const { concurrencyToken } = await service.getTeam(teamId, admin);
+        store.projectedTeams = [{ id: teamId, streamId: teamStream(teamId), club: CLUB_NAME, name: TEAM_NAME, coaches: [] }];
+
+        const newToken = await service.updateTeam(teamId, { name: TEAM_NAME, concurrencyToken }, admin);
+
+        assert.equal(newToken, concurrencyToken);
     });
 
     test("a team is deleted by its team id", async () => {

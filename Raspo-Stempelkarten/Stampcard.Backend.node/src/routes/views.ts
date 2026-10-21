@@ -13,6 +13,14 @@ export function toTeamView(team: TeamDetails) {
   return { Id: team.id, Club: team.club, Name: team.name, Coaches: team.coaches };
 }
 
+export const teamDetailsViewSchema = teamViewSchema.extend({
+  ConcurrencyToken: z.int()
+});
+
+export function toTeamDetailsView(team: TeamDetails & { concurrencyToken: number }) {
+  return { ...toTeamView(team), ConcurrencyToken: team.concurrencyToken };
+}
+
 export const playerViewSchema = z.object({
   Id: z.uuid(),
   FirstName: z.string(),

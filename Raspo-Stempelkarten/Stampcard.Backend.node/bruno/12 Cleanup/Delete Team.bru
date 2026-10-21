@@ -15,7 +15,7 @@ tests {
     expect(res.getStatus()).to.equal(200);
   });
 
-  test("returns the team name", function () {
+  test("returns the team id", function () {
     expect(res.body.Data).to.equal(bru.getVar("teamId"));
   });
 }

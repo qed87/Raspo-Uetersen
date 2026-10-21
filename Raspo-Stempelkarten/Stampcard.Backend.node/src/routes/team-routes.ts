@@ -2,9 +2,9 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { requireAdmin } from '../auth-plugin/index.js';
-import { createTeamDtoSchema, teamReferenceSchema } from '../stamp-card-dtos.js';
+import { createTeamDtoSchema, teamReferenceSchema, updateTeamDtoSchema } from '../stamp-card-dtos.js';
 import { apiResponseSchema, errorResponseSchemas, successResponse } from './api-response.js';
-import { teamViewSchema, toTeamView } from './views.js';
+import { teamDetailsViewSchema, teamViewSchema, toTeamDetailsView, toTeamView } from './views.js';
 
 export default async function teamRoutes(fastify: FastifyInstance) {
   const routes = fastify.withTypeProvider<ZodTypeProvider>();
@@ -49,14 +49,14 @@ export default async function teamRoutes(fastify: FastifyInstance) {
       schema: {
         params: teamReferenceSchema,
         response: {
-          200: apiResponseSchema(teamViewSchema),
+          200: apiResponseSchema(teamDetailsViewSchema),
           ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
       const team = await service.getTeam(request.params.teamId, request.user);
-      return reply.send(successResponse(toTeamView(team)));
+      return reply.send(successResponse(toTeamDetailsView(team)));
     }
   );
 
@@ -82,25 +82,19 @@ export default async function teamRoutes(fastify: FastifyInstance) {
   routes.put(
     "/api/teams/:teamId",
     {
+      preHandler: requireAdmin,
       schema: {
-        body: z.object({
-          name: z.string(),
-          concurrencyToken: z.uint64()
-        }),
-        params: z.object({
-          teamId: z.uuidv4()
-        }),
+        params: teamReferenceSchema,
+        body: updateTeamDtoSchema,
         response: {
-          200: z.object({
-            Message: z.string(),
-            HasError: z.boolean(),
-            Data: z.uint64()
-          })
+          200: apiResponseSchema(z.int()),
+          ...errorResponseSchemas
         }
       }
     },
     async function (request, reply) {
-      const { teamId: string } = request.params;
+      const concurrencyToken = await service.updateTeam(request.params.teamId, request.body, request.user);
+      return reply.send(successResponse(concurrencyToken));
     }
   );
 }

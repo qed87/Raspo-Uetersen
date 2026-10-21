@@ -27,6 +27,16 @@ export const createTeamDtoSchema = z.object({
 
 export type CreateTeamDto = z.infer<typeof createTeamDtoSchema>;
 
+/**
+ * The concurrency token is the revision of the team stream the client has read.
+ */
+export const updateTeamDtoSchema = z.object({
+  name: normalizedNameSchema,
+  concurrencyToken: z.int().nonnegative()
+});
+
+export type UpdateTeamDto = z.infer<typeof updateTeamDtoSchema>;
+
 const MAX_PLAYER_AGE_IN_YEARS = 120;
 
 function isNotInFuture(date: string): boolean {

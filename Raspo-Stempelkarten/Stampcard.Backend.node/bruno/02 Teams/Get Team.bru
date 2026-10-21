@@ -10,6 +10,10 @@ get {
   auth: inherit
 }
 
+script:post-response {
+  bru.setVar("concurrencyToken", res.body.Data.ConcurrencyToken);
+}
+
 tests {
   test("responds with 200", function () {
     expect(res.getStatus()).to.equal(200);
@@ -17,5 +21,9 @@ tests {
 
   test("returns the configured club", function () {
     expect(res.body.Data.Club).to.be.a('string');
+  });
+
+  test("returns the concurrency token", function () {
+    expect(res.body.Data.ConcurrencyToken).to.be.a('number');
   });
 }

@@ -12,6 +12,10 @@ export const teamAddedSchema = issuedSchema.extend({
   name: z.string()
 });
 
+export const teamUpdatedSchema = issuedSchema.extend({
+  name: z.string()
+});
+
 export const coachAddedSchema = issuedSchema.extend({
   email: z.email()
 });
@@ -80,6 +84,7 @@ export const sharedCodeRevokedSchema = sharedCodeRemovedSchema;
 
 const teamEventSchemas = {
   TeamAdded: teamAddedSchema,
+  TeamUpdated: teamUpdatedSchema,
   CoachAdded: coachAddedSchema,
   TeamDeleted: teamDeletedSchema,
   PlayerAdded: playerAddedSchema,

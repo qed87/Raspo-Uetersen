@@ -56,6 +56,27 @@ describe("team lifecycle", () => {
         assert.deepEqual(team.listPlayers(), []);
     });
 
+    test("renaming a team changes its name after replaying", () => {
+        const team = createdTeam();
+
+        team.rename("2017-2", ISSUER);
+
+        assert.equal(replayed(team).describe().name, "2017-2");
+    });
+
+    test("renaming a team to its current name records nothing", () => {
+        const team = createdTeam();
+        const eventCount = team.changes.length;
+
+        team.rename("2017-1", ISSUER);
+
+        assert.equal(team.changes.length, eventCount);
+    });
+
+    test("renaming a team that does not exist is rejected", () => {
+        assert.throws(() => emptyTeam().rename("2017-2", ISSUER), TeamNotFoundError);
+    });
+
     test("changing a team that does not exist is rejected", () => {
         const team = emptyTeam();
 

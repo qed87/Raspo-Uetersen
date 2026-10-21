@@ -3,6 +3,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { requireAdmin } from '../auth-plugin/index.js';
 import { createTeamDtoSchema, teamReferenceSchema, updateTeamDtoSchema } from '../stamp-card-dtos.js';
+import { teamIdSchema } from '../stamp-card-events.js';
 import {
   apiResponseSchema,
   errorResponseSchemas,
@@ -39,7 +40,7 @@ export default async function teamRoutes(fastify: FastifyInstance) {
       schema: {
         body: createTeamDtoSchema,
         response: {
-          201: versionedResponseSchema(z.uuid()),
+          201: versionedResponseSchema(teamIdSchema),
           ...errorResponseSchemas
         }
       }
@@ -75,7 +76,7 @@ export default async function teamRoutes(fastify: FastifyInstance) {
         params: teamReferenceSchema,
         body: updateTeamDtoSchema,
         response: {
-          200: versionedResponseSchema(z.uuid()),
+          200: versionedResponseSchema(teamIdSchema),
           ...errorResponseSchemas
         }
       }
@@ -93,7 +94,7 @@ export default async function teamRoutes(fastify: FastifyInstance) {
       schema: {
         params: teamReferenceSchema,
         response: {
-          200: versionedResponseSchema(z.uuid()),
+          200: versionedResponseSchema(teamIdSchema),
           ...errorResponseSchemas
         }
       }

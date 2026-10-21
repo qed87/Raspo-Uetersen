@@ -3,7 +3,7 @@
  *
  * The legacy streams are named team-{guid without dashes} and contain PascalCase events,
  * e.g. { "Club": "raspo1926", "Name": "2017", "Issuer": ..., "IssuedOn": ... }.
- * Every legacy stream is written to team-{guid with dashes} in the target database, the guid becomes the team id.
+ * Every legacy stream is written under the same name to the target database, the guid becomes the team id.
  * Before anything is written, each migrated stream is replayed by the TeamAggregate, so that it is known to load.
  *
  * Usage (dry run, nothing is written):
@@ -139,7 +139,7 @@ async function readLegacyStreams(client: KurrentDBClient): Promise<Map<string, S
 }
 
 function migrateStream(legacyStreamName: string, storedEvents: StoredLegacyEvent[]): MigratedStream {
-    const teamId = toUuid(LEGACY_STREAM_PATTERN.exec(legacyStreamName)![1]!);
+    const teamId = LEGACY_STREAM_PATTERN.exec(legacyStreamName)![1]!;
     const activePlayers = new Map<string, boolean>();
     let teamName = "";
     const events = storedEvents.flatMap(storedEvent => {
@@ -282,10 +282,6 @@ async function write(client: KurrentDBClient, stream: MigratedStream): Promise<v
         if (!(error instanceof WrongExpectedVersionError)) throw error;
         console.log(`Skipped ${stream.streamName}, it already exists in the target.`);
     }
-}
-
-function toUuid(hex: string): string {
-    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 function fail(message: string): never {

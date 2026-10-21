@@ -6,8 +6,13 @@ const issuedSchema = z.object({
   issuedOn: z.coerce.date()
 });
 
+/**
+ * Team ids are UUIDs written without hyphens, the format of the former .NET backend.
+ */
+export const teamIdSchema = z.string().regex(/^[0-9a-f]{32}$/, "Invalid team id");
+
 export const teamAddedSchema = issuedSchema.extend({
-  id: z.uuid(),
+  id: teamIdSchema,
   club: z.string(),
   name: z.string()
 });

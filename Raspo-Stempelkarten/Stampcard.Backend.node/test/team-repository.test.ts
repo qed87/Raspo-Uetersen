@@ -9,7 +9,7 @@ const team2017 = { club: "raspo", name: "2017-1", coaches: [coach.email] };
 const issued = { issuer: ISSUER, issuedOn: "2026-10-01T10:00:00.000Z" };
 const teamAdded = {
     type: "TeamAdded",
-    data: { id: "11111111-1111-4111-8111-111111111111", club: "raspo", name: "2017-1", ...issued }
+    data: { id: "11111111111141118111111111111111", club: "raspo", name: "2017-1", ...issued }
 };
 
 describe("loading a team", () => {

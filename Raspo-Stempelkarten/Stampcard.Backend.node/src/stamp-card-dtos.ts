@@ -1,4 +1,5 @@
 import z from "zod";
+import { teamIdSchema } from "./stamp-card-events.js";
 
 export const teamReadDtoSchema = z.object({
   id: z.string(),
@@ -81,7 +82,7 @@ export const stampCardDtoSchema = z.object({
 export type StampCardDto = z.infer<typeof stampCardDtoSchema>;
 
 export const teamReferenceSchema = z.object({
-  teamId: z.uuid()
+  teamId: teamIdSchema
 });
 
 export const playerReferenceSchema = teamReferenceSchema.extend({

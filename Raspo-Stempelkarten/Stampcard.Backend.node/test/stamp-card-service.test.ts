@@ -35,7 +35,7 @@ describe("StampCardService", () => {
     test("a team is stored in the stream team-{team id}", async () => {
         const teamId = await createTeam();
 
-        assert.match(teamId, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+        assert.match(teamId, /^[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}$/);
         assert.deepEqual([...store.streams.keys()], [teamStream(teamId)]);
     });
 

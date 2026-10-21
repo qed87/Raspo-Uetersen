@@ -73,7 +73,7 @@ export class StampCardService {
      */
     async createTeam(newTeam: dtos.CreateTeamDto, user: AuthenticatedUser): Promise<Versioned<string>> {
         await this.ensureNameIsAvailable(newTeam.name);
-        const teamId = randomUUID();
+        const teamId = randomUUID().replaceAll("-", "");
         const team = await this.loadTeam(teamId);
         ensureVisible(team, user);
         team.create(teamId, { ...newTeam, club: this.clubName }, user.email);

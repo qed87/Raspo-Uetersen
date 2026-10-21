@@ -34,7 +34,7 @@ const BEARER_PREFIX = "Bearer ";
 const claimsSchema = z.object({
   email: z.email(),
   realm_access: z.object({ roles: z.array(z.string()) }).optional(),
-  roles: z.array(z.string()).optional()
+  role: z.array(z.string()).optional()
 });
 
 function bearerTokenOf(request: FastifyRequest): string {
@@ -52,7 +52,7 @@ function toAuthenticatedUser(payload: JWTPayload, roleNames: RoleNames): Authent
   if (!claims.success) {
     throw new AuthenticationError("token does not contain a valid email claim.");
   }
-  const roles = [...claims.data.realm_access?.roles ?? [], ...claims.data.roles ?? []];
+  const roles = [...claims.data.realm_access?.roles ?? [], ...claims.data.role ?? []];
   return {
     email: claims.data.email.toLowerCase(),
     isAdmin: roles.includes(roleNames.adminRole),

@@ -2,6 +2,7 @@ import z from "zod";
 
 export const teamReadDtoSchema = z.object({
   id: z.string(),
+  streamId: z.string(),
   club: z.string(),
   name: z.string(),
   coaches: z.array(z.string())

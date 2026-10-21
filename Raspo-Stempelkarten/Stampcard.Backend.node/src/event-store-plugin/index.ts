@@ -17,10 +17,7 @@ declare module 'fastify' {
 async function fp(fastify: FastifyInstance, options :any) {
     const connectionStr = fastify.config.eventstore.url;
     const client = KurrentDBClient.connectionString(connectionStr);
-    try{
-        await client.createProjection(
-            "all-club-teams", 
-            `
+    const allClubTeamsQuery = `
                 fromCategory('team')
                 .when({
                     $init: function () {
@@ -32,14 +29,14 @@ async function fp(fastify: FastifyInstance, options :any) {
                         if (event.eventType !== "TeamAdded") return state;
                         if (!event.data) return state;
                         log("Event: " + JSON.stringify(event.data));
-                        state.teams.push({ "club": event.data.club, "name": event.data.name, "id": event.streamId, "coaches": [] });
+                        state.teams.push({ "club": event.data.club, "name": event.data.name, "id": event.data.id, "streamId": event.streamId, "coaches": [] });
                         return state;
                     },
                     TeamUpdated: function (state, event) {
                         if (event.eventType !== "TeamUpdated") return state;
                         if (!event.data) return state;
                         log("Event: " + JSON.stringify(event.data));
-                        const index = state.teams.findIndex((team)  => event.streamId === team.id);
+                        const index = state.teams.findIndex((team)  => event.streamId === team.streamId);
                         if (index == -1) return state;
                         state.teams[index].name = event.data.name;
                         return state;
@@ -48,7 +45,7 @@ async function fp(fastify: FastifyInstance, options :any) {
                         if (event.eventType !== "TeamDeleted") return state;
                         if (!event.data) return state;
                         log("Event: " + JSON.stringify(event.data));
-                        const index = state.teams.findIndex((team) => event.streamId === team.id);
+                        const index = state.teams.findIndex((team) => event.streamId === team.streamId);
                         if (index == -1) return state;
                         state.teams.splice(index, 1);
                         return state;
@@ -57,7 +54,7 @@ async function fp(fastify: FastifyInstance, options :any) {
                         if (event.eventType !== "CoachAdded") return state;
                         if (!event.data) return state;
                         log("Event: " + JSON.stringify(event.data));
-                        const index = state.teams.findIndex((team) => event.streamId === team.id);
+                        const index = state.teams.findIndex((team) => event.streamId === team.streamId);
                         if (index == -1) return state;
                         state.teams[index].coaches.push(event.data.email);
                         return state;
@@ -66,7 +63,7 @@ async function fp(fastify: FastifyInstance, options :any) {
                         if (event.eventType !== "CoachRemoved") return state;
                         if (!event.data) return state;
                         log("Event: " + JSON.stringify(event.data));
-                        const index = state.teams.findIndex((team) => event.streamId === team.id);
+                        const index = state.teams.findIndex((team) => event.streamId === team.streamId);
                         if (index == -1) return state;
                         var removeCoachIndex = state.teams[index].coaches.indexOf(event.data.email);
                         state.teams[index].coaches.splice(removeCoachIndex, 1);
@@ -74,15 +71,20 @@ async function fp(fastify: FastifyInstance, options :any) {
                     }
                 })
                 .outputState();
-        `);
+        `;
+    try {
+        await client.createProjection("all-club-teams", allClubTeamsQuery);
     } catch(err) {
-        fastify.log.warn(err, "Custom projections already exist.");
-    }    
+        // An existing projection keeps its old query, the reset rebuilds its state with the current one.
+        fastify.log.info("Projection all-club-teams already exists, updating and resetting it.");
+        await client.updateProjection("all-club-teams", allClubTeamsQuery);
+        await client.resetProjection("all-club-teams");
+    }
 
-    const stampCardService = new stampcard.StampCardService(client, fastify.eventbus, fastify.config.club.name);
+    const stampCardService = new stampcard.StampCardService(client, fastify.config.club.name);
     fastify.decorate("stampCardService", stampCardService);
 }
 
 // Wrapping a plugin function with fastify-plugin exposes the decorators
 // and hooks, declared inside the plugin to the parent scope.
-export default fastifyPlugin(fp, "event-store")
+export default fastifyPlugin(fp, { name: "event-store", dependencies: ["config-loader"] })

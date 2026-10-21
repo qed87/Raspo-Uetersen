@@ -1,6 +1,5 @@
 import { beforeEach, describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { EventEmitter } from "node:events";
 import { TeamNotFoundError } from "../src/stamp-card-errors.js";
 import { StampCardService } from "../src/stamp-card-service.js";
 import { admin, coach, max, otherCoach } from "./helpers/fixtures.js";
@@ -22,7 +21,7 @@ async function createTeamWithStampCard() {
 
 beforeEach(() => {
     store = new InMemoryEventStore();
-    service = new StampCardService(store.asClient(), new EventEmitter(), CLUB_NAME);
+    service = new StampCardService(store.asClient(), CLUB_NAME);
 });
 
 describe("StampCardService", () => {
@@ -41,7 +40,7 @@ describe("StampCardService", () => {
     });
 
     test("the configured club name is normalized", async () => {
-        const otherService = new StampCardService(store.asClient(), new EventEmitter(), "Rasensport Uetersen 1926");
+        const otherService = new StampCardService(store.asClient(), "Rasensport Uetersen 1926");
 
         await otherService.createTeam({ name: TEAM_NAME, coaches: [] }, admin);
 
@@ -95,8 +94,8 @@ describe("StampCardService", () => {
 
     test("coaches only see the teams they coach", async () => {
         store.projectedTeams = [
-            { id: "team-a", club: "raspo", name: "a", coaches: ["Coach@Raspo.de"] },
-            { id: "team-b", club: "raspo", name: "b", coaches: [otherCoach.email] }
+            { id: "id-a", streamId: "team-raspo-a", club: "raspo", name: "a", coaches: ["Coach@Raspo.de"] },
+            { id: "id-b", streamId: "team-raspo-b", club: "raspo", name: "b", coaches: [otherCoach.email] }
         ];
 
         const teams = await service.listTeams(coach);
@@ -106,8 +105,8 @@ describe("StampCardService", () => {
 
     test("admins see all teams", async () => {
         store.projectedTeams = [
-            { id: "team-a", club: "raspo", name: "a", coaches: [coach.email] },
-            { id: "team-b", club: "raspo", name: "b", coaches: [otherCoach.email] }
+            { id: "id-a", streamId: "team-raspo-a", club: "raspo", name: "a", coaches: [coach.email] },
+            { id: "id-b", streamId: "team-raspo-b", club: "raspo", name: "b", coaches: [otherCoach.email] }
         ];
 
         const teams = await service.listTeams(admin);
@@ -117,7 +116,7 @@ describe("StampCardService", () => {
 
     test("incomplete stamp cards are collected across all teams", async () => {
         await createTeamWithStampCard();
-        store.projectedTeams = [{ id: TEAM_STREAM, club: CLUB_NAME, name: TEAM_NAME, coaches: [coach.email] }];
+        store.projectedTeams = [{ id: "team-id", streamId: TEAM_STREAM, club: CLUB_NAME, name: TEAM_NAME, coaches: [coach.email] }];
 
         const incomplete = await service.listIncompleteStampCards({ accountingYear: 2026, requiredStamps: 1 });
 

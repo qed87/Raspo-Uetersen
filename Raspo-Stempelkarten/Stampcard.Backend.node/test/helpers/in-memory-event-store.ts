@@ -4,6 +4,7 @@ import {
     WrongExpectedVersionError,
     type KurrentDBClient
 } from "@kurrent/kurrentdb-client";
+import type { TeamReadDto } from "../../src/stamp-card-dtos.js";
 
 type StoredEvent = { type: string, data: unknown };
 
@@ -18,7 +19,7 @@ function errorOfType<T extends Error>(errorClass: { prototype: T }): T {
  */
 export class InMemoryEventStore {
     readonly streams = new Map<string, StoredEvent[]>();
-    projectedTeams: { id: string, club: string, name: string, coaches: string[] }[] = [];
+    projectedTeams: TeamReadDto[] = [];
 
     asClient(): KurrentDBClient {
         return this as unknown as KurrentDBClient;

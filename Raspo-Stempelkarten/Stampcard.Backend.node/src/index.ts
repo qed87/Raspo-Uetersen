@@ -1,6 +1,5 @@
 import Fastify from 'fastify'
 import rateLimit from '@fastify/rate-limit'
-import common from './common-plugin/index.js'
 import configs from './config-loader-plugin/index.js'
 import eventStore from './event-store-plugin/index.js'
 import auth, { AuthenticationError, ForbiddenError } from './auth-plugin/index.js'
@@ -38,7 +37,6 @@ fastify.setErrorHandler(function (error, request, reply) {
 });
 
 // register Plugins
-fastify.register(common);
 fastify.register(configs, { path: 'res' });
 fastify.register(auth);
 fastify.register(eventStore);

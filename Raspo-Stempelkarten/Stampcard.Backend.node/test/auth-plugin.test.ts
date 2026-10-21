@@ -43,7 +43,7 @@ before(async () => {
     const jwksUri = await startIdentityProvider();
     app = Fastify();
     app.register(fastifyPlugin(async instance => {
-        instance.decorate("config", { jwt: { issuer: ISSUER, audience: AUDIENCE, jwksUri, adminRole: "manager", accountingRole: "Accounting" } } as never);
+        instance.decorate("config", { jwt: { issuer: ISSUER, audience: AUDIENCE, jwksUri, adminRole: "manager", accountingRole: "accounting" } } as never);
     }, { name: "config-loader" }));
     app.register(auth);
     app.setErrorHandler((error, request, reply) => {
@@ -70,7 +70,7 @@ describe("authentication", () => {
     });
 
     test("realm roles mark admins and accountants", async () => {
-        const token = await sign({ email: "a@raspo.de", realm_access: { roles: ["manager", "Accounting"] } });
+        const token = await sign({ email: "a@raspo.de", realm_access: { roles: ["manager", "accounting"] } });
 
         const response = await get("/me", token);
 
@@ -104,7 +104,7 @@ describe("authorization", () => {
     });
 
     test("admins may use admin routes", async () => {
-        const token = await sign({ email: "a@raspo.de", roles: ["manager"] });
+        const token = await sign({ email: "a@raspo.de", role: ["manager"] });
 
         assert.equal((await get("/admin", token)).statusCode, 200);
     });
@@ -116,7 +116,7 @@ describe("authorization", () => {
     });
 
     test("accountants may use accounting routes", async () => {
-        const token = await sign({ email: "b@raspo.de", realm_access: { roles: ["Accounting"] } });
+        const token = await sign({ email: "b@raspo.de", realm_access: { roles: ["accounting"] } });
 
         assert.equal((await get("/accounting", token)).statusCode, 200);
     });

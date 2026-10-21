@@ -1,5 +1,4 @@
 import type { KurrentDBClient } from "@kurrent/kurrentdb-client";
-import type EventEmitter from "node:events";
 import { Result } from "neverthrow";
 import type { AuthenticatedUser } from "./authenticated-user.js";
 import * as dtos from './stamp-card-dtos.js'
@@ -34,9 +33,7 @@ export class StampCardService {
     private readonly teams: TeamRepository;
     private readonly clubName: string;
 
-    constructor(private readonly eventStoreDb: KurrentDBClient,
-        private readonly eventBus: EventEmitter,
-        clubName: string) {
+    constructor(private readonly eventStoreDb: KurrentDBClient, clubName: string) {
         this.teams = new TeamRepository(eventStoreDb);
         this.clubName = dtos.normalizeName(clubName);
     }
@@ -245,7 +242,7 @@ export class StampCardService {
      * Evaluates the stamp cards of all teams. Authorizing the accounting role is up to the caller.
      */
     async listIncompleteStampCards(query: dtos.IncompleteStampCardQuery): Promise<IncompleteStampCard[]> {
-        const loadedTeams = await Promise.all((await this.listAllTeams()).map(team => this.teams.load(team.id)));
+        const loadedTeams = await Promise.all((await this.listAllTeams()).map(team => this.teams.load(team.streamId)));
         const teams = Result.combineWithAllErrors(loadedTeams);
         if (teams.isErr()) {
             throw new AggregateError(teams.error, "Stamp cards could not be evaluated, some team streams are invalid.");

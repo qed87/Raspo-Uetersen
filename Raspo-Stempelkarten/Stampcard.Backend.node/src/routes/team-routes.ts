@@ -2,7 +2,13 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { requireAdmin } from '../auth-plugin/index.js';
-import { createTeamDtoSchema, teamReferenceSchema, updateTeamDtoSchema } from '../stamp-card-dtos.js';
+import {
+  coachDtoSchema,
+  coachReferenceSchema,
+  createTeamDtoSchema,
+  teamReferenceSchema,
+  updateTeamDtoSchema
+} from '../stamp-card-dtos.js';
 import { teamIdSchema } from '../stamp-card-events.js';
 import {
   apiResponseSchema,
@@ -102,6 +108,43 @@ export default async function teamRoutes(fastify: FastifyInstance) {
     async function (request, reply) {
       const teamId = await service.deleteTeam(request.params.teamId, request.user);
       return reply.send(versionedResponse(teamId));
+    }
+  );
+
+  routes.post(
+    "/api/teams/:teamId/coach",
+    {
+      preHandler: requireAdmin,
+      schema: {
+        params: teamReferenceSchema,
+        body: coachDtoSchema,
+        response: {
+          201: versionedResponseSchema(z.string()),
+          ...errorResponseSchemas
+        }
+      }
+    },
+    async function (request, reply) {
+      const email = await service.addCoach(request.params.teamId, request.body, request.user);
+      return reply.code(201).send(versionedResponse(email));
+    }
+  );
+
+  routes.delete(
+    "/api/teams/:teamId/coach/:email",
+    {
+      preHandler: requireAdmin,
+      schema: {
+        params: coachReferenceSchema,
+        response: {
+          200: versionedResponseSchema(z.string()),
+          ...errorResponseSchemas
+        }
+      }
+    },
+    async function (request, reply) {
+      const email = await service.removeCoach(request.params, request.user);
+      return reply.send(versionedResponse(email));
     }
   );
 }

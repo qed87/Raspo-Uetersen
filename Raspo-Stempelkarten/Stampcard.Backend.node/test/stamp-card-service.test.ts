@@ -78,6 +78,18 @@ describe("StampCardService", () => {
         assert.deepEqual(store.eventTypesOf(teamStream(teamId)), ["TeamAdded", "TeamDeleted"]);
     });
 
+    test("an added coach can work with the team, a removed one no longer", async () => {
+        const { teamId } = await createTeamWithStampCard();
+
+        const added = await service.addCoach(teamId, { email: otherCoach.email }, admin);
+        assert.equal(added.data, otherCoach.email);
+        assert.equal((await service.listPlayers(teamId, otherCoach)).concurrencyToken, added.concurrencyToken);
+
+        await service.removeCoach({ teamId, email: otherCoach.email }, admin);
+        await assert.rejects(service.listPlayers(teamId, otherCoach), TeamNotFoundError);
+        assert.deepEqual(store.eventTypesOf(teamStream(teamId)).slice(-2), ["CoachAdded", "CoachRemoved"]);
+    });
+
     test("teams of other coaches are reported as not found", async () => {
         const { teamId } = await createTeamWithStampCard();
 

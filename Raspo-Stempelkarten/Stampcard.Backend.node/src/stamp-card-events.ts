@@ -25,6 +25,8 @@ export const coachAddedSchema = issuedSchema.extend({
   email: z.email()
 });
 
+export const coachRemovedSchema = coachAddedSchema;
+
 export const teamDeletedSchema = issuedSchema;
 
 export const playerAddedSchema = issuedSchema.extend({
@@ -91,6 +93,7 @@ const teamEventSchemas = {
   TeamAdded: teamAddedSchema,
   TeamUpdated: teamUpdatedSchema,
   CoachAdded: coachAddedSchema,
+  CoachRemoved: coachRemovedSchema,
   TeamDeleted: teamDeletedSchema,
   PlayerAdded: playerAddedSchema,
   PlayerUpdated: playerUpdatedSchema,

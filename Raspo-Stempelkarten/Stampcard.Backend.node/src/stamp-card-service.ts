@@ -99,6 +99,22 @@ export class StampCardService {
         return { data: teamId, concurrencyToken: concurrencyTokenOf(team.nextRevision) };
     }
 
+    async addCoach(teamId: string, coach: dtos.CoachDto, user: AuthenticatedUser): Promise<Versioned<string>> {
+        const team = await this.loadTeam(teamId);
+        ensureVisible(team, user);
+        team.addCoach(coach.email, user.email);
+        await this.saveTeam(team);
+        return { data: coach.email, concurrencyToken: concurrencyTokenOf(team.nextRevision) };
+    }
+
+    async removeCoach(reference: dtos.CoachReference, user: AuthenticatedUser): Promise<Versioned<string>> {
+        const team = await this.loadTeam(reference.teamId);
+        ensureVisible(team, user);
+        team.removeCoach(reference.email, user.email);
+        await this.saveTeam(team);
+        return { data: reference.email, concurrencyToken: concurrencyTokenOf(team.nextRevision) };
+    }
+
     async addPlayer(teamId: string, player: dtos.PlayerDto, user: AuthenticatedUser): Promise<Versioned<string>> {
         const team = await this.loadTeam(teamId);
         ensureVisible(team, user);

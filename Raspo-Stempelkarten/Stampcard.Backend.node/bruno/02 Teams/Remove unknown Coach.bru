@@ -1,0 +1,17 @@
+meta {
+  name: Remove unknown Coach
+  type: http
+  seq: 10
+}
+
+delete {
+  url: {{baseUrl}}/api/teams/{{teamId}}/coach/assistant@raspo1926.info
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("responds with 404", function () {
+    expect(res.getStatus()).to.equal(404);
+  });
+}

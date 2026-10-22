@@ -1,0 +1,21 @@
+meta {
+  name: Remove Coach
+  type: http
+  seq: 9
+}
+
+delete {
+  url: {{baseUrl}}/api/teams/{{teamId}}/coach/assistant@raspo1926.info
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  Admins only. The removed coach no longer sees the team.
+}

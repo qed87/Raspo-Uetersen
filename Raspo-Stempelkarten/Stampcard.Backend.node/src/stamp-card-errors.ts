@@ -21,6 +21,13 @@ export class TeamNotFoundError extends NotFoundError {
     }
 }
 
+export class CoachNotFoundError extends NotFoundError {
+    constructor(email: string) {
+        super(`Coach '${email}' does not exist.`);
+        this.name = "CoachNotFoundError";
+    }
+}
+
 export class PlayerNotFoundError extends NotFoundError {
     constructor(playerId: string) {
         super(`Player '${playerId}' does not exist.`);

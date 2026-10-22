@@ -17,10 +17,13 @@ export const teamNameSchema = z.string()
   .trim()
   .min(1);
 
+// Coaches are matched by the lower-cased email of their login
+const coachEmailSchema = z.email().transform(email => email.toLowerCase());
+
 export const createTeamDtoSchema = z.object({
   name: teamNameSchema,
-  coaches: z.array(z.email()).default([])
-    .transform(coaches => [...new Set(coaches.map(email => email.toLowerCase()))])
+  coaches: z.array(coachEmailSchema).default([])
+    .transform(coaches => [...new Set(coaches)])
 });
 
 export type CreateTeamDto = z.infer<typeof createTeamDtoSchema>;
@@ -84,6 +87,18 @@ export type StampCardDto = z.infer<typeof stampCardDtoSchema>;
 export const teamReferenceSchema = z.object({
   teamId: teamIdSchema
 });
+
+export const coachDtoSchema = z.object({
+  email: coachEmailSchema
+});
+
+export type CoachDto = z.infer<typeof coachDtoSchema>;
+
+export const coachReferenceSchema = teamReferenceSchema.extend({
+  email: coachEmailSchema
+});
+
+export type CoachReference = z.infer<typeof coachReferenceSchema>;
 
 export const playerReferenceSchema = teamReferenceSchema.extend({
   playerId: z.uuid()

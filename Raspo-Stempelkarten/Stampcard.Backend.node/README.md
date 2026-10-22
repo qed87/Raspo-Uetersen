@@ -187,7 +187,7 @@ Every request needs an `Authorization: Bearer <JWT>` header, except the routes u
 
 Teams a user may not see are answered with **404**, so that their existence is not revealed.
 
-Coaches are assigned via `coaches` when a team is created. There is no endpoint yet for adding or removing coaches afterwards.
+Coaches are assigned via `coaches` when a team is created and can be added or removed by admins afterwards. Coach emails are compared lower-cased.
 
 ## Optimistic concurrency
 
@@ -221,6 +221,8 @@ All responses (except Fastify's default errors) look like this:
 | GET | `/api/teams/:teamId` | team visible | – | `{ Id, Club, Name, Coaches }` |
 | PUT | `/api/teams/:teamId` | admin | `{ name, concurrencyToken }` | team id |
 | DELETE | `/api/teams/:teamId` | admin | – | team id |
+| POST | `/api/teams/:teamId/coach` | admin | `{ email }` | lower-cased email (201); adding an existing coach changes nothing |
+| DELETE | `/api/teams/:teamId/coach/:email` | admin | – | lower-cased email; 404 if the email does not coach the team |
 
 The team name must be unique within the club (otherwise 409). A deleted team releases its name again.
 
@@ -304,13 +306,11 @@ All events carry `issuer` (email of the user or name of the external user) and `
 
 | Area | Events |
 | --- | --- |
-| Team | `TeamAdded`, `TeamUpdated`, `TeamDeleted`, `CoachAdded` |
+| Team | `TeamAdded`, `TeamUpdated`, `TeamDeleted`, `CoachAdded`, `CoachRemoved` |
 | Player | `PlayerAdded`, `PlayerUpdated`, `PlayerRemoved`, `PlayerEnabled`, `PlayerDisabled` |
 | Stamp card | `StampCardAdded`, `StampCardRemoved` |
 | Stamp | `StampAdded` (accepted immediately), `StampSubmitted` (pending, with `sharedCodeId`), `StampApproved`, `StampRejected`, `StampRemoved` |
 | Share code | `SharedCodeAdded`, `SharedCodeRevoked`, `SharedCodeRemoved` |
-
-`CoachRemoved` is only handled by the projection (it comes from migrated streams); the aggregate skips it like any unknown event type.
 
 **Adding a new event type:** add its schema to `stamp-card-events.ts` and register it in `teamEventSchemas`, handle it in `apply` of the `TeamAggregate` and – if the team list is affected – extend the query of the projection in the event-store-plugin. Stored events are immutable; if a schema changes, old events must remain valid.
 

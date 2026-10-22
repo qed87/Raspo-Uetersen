@@ -2,6 +2,7 @@ import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import {
     approveStampsDtoSchema,
+    coachReferenceSchema,
     createTeamDtoSchema,
     playerDtoSchema,
     stampCardDtoSchema
@@ -26,6 +27,12 @@ describe("team input", () => {
 
     test("a blank team name is rejected", () => {
         assert.equal(createTeamDtoSchema.safeParse({ name: "   " }).success, false);
+    });
+
+    test("the email of a coach to remove is lower-cased", () => {
+        const reference = coachReferenceSchema.parse({ teamId: "44444444444444448444444444444444", email: "A@raspo.de" });
+
+        assert.equal(reference.email, "a@raspo.de");
     });
 });
 

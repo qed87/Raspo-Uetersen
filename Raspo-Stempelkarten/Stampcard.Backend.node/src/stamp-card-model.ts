@@ -4,6 +4,7 @@ import type { AuthenticatedUser } from "./authenticated-user.js";
 import type { CreateTeamDto, PlayerDto, StampCardDto, StampDto, SubmittedStampDto } from "./stamp-card-dtos.js";
 import type { TeamEvent } from "./stamp-card-events.js";
 import {
+    CoachNotFoundError,
     InconsistentStreamError,
     PlayerAlreadyExistsError,
     PlayerNotFoundError,
@@ -170,6 +171,24 @@ export class TeamAggregate {
         this.record({ type: "TeamDeleted", data: { issuer, issuedOn: new Date() } });
     }
 
+    /**
+     * Adding a coach of the team again records nothing.
+     */
+    addCoach(email: string, issuer: string): void {
+        this.ensureExists();
+        if (!this.coaches.has(email)) {
+            this.record({ type: "CoachAdded", data: { email, issuer, issuedOn: new Date() } });
+        }
+    }
+
+    removeCoach(email: string, issuer: string): void {
+        this.ensureExists();
+        if (!this.coaches.has(email)) {
+            throw new CoachNotFoundError(email);
+        }
+        this.record({ type: "CoachRemoved", data: { email, issuer, issuedOn: new Date() } });
+    }
+
     addPlayer(player: PlayerDto, issuer: string): string {
         this.ensureExists();
         this.ensureUniquePlayer(player);
@@ -333,6 +352,10 @@ export class TeamAggregate {
             case "CoachAdded":
                 this.coaches.add(event.data.email.toLowerCase());
                 return ok(undefined);
+            case "CoachRemoved":
+                return this.coaches.delete(event.data.email.toLowerCase())
+                    ? ok(undefined)
+                    : err(`${event.type} references unknown coach '${event.data.email}'.`);
             case "PlayerAdded": {
                 const { id, firstName, lastName, birthdate } = event.data;
                 this.players.set(id, { id, firstName, lastName, birthdate, active: true });

@@ -74,8 +74,7 @@ type LegacyEvent = {
 type StoredLegacyEvent = { id: string, revision: bigint, type: string, data: unknown, created: Date };
 
 /**
- * A migrated event, `data` is written as is. Events this backend does not replay (CoachRemoved)
- * are kept for the all-club-teams projection.
+ * A migrated event, `data` is written as is.
  */
 type MigratedEvent = { id: string, type: string, data: Record<string, unknown>, source: StoredLegacyEvent };
 

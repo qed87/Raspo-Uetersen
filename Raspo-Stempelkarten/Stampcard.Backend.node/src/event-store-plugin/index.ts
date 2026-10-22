@@ -56,7 +56,7 @@ async function fp(fastify: FastifyInstance, options :any) {
                             case "CoachRemoved":
                                 log("Event: " + JSON.stringify(event.data));
                                 var removeCoachIndex = state.teams[index].coaches.indexOf(event.data.email);
-                                state.teams[index].coaches.splice(removeCoachIndex, 1);
+                                if (removeCoachIndex != -1) state.teams[index].coaches.splice(removeCoachIndex, 1);
                                 break;
                         }
                         return state;

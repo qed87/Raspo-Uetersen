@@ -1,0 +1,31 @@
+meta {
+  name: Add Coach
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/teams/{{teamId}}/coach
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "Assistant@Raspo1926.info"
+  }
+}
+
+tests {
+  test("responds with 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("returns the lower-cased email", function () {
+    expect(res.body.Data).to.equal("assistant@raspo1926.info");
+  });
+}
+
+docs {
+  Admins only. Adding a coach of the team again changes nothing.
+}

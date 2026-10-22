@@ -1,6 +1,7 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import {
+    CoachNotFoundError,
     InvalidShareCodeError,
     PlayerAlreadyExistsError,
     PlayerNotFoundError,
@@ -95,6 +96,50 @@ describe("team visibility", () => {
 
     test("an admin can see every team", () => {
         assert.equal(createdTeam().isVisibleTo(admin), true);
+    });
+});
+
+describe("coaches", () => {
+    test("an added coach can see the team after replaying", () => {
+        const team = createdTeam();
+
+        team.addCoach(otherCoach.email, ISSUER);
+
+        assert.equal(replayed(team).isVisibleTo(otherCoach), true);
+    });
+
+    test("adding a coach of the team again records nothing", () => {
+        const team = createdTeam();
+        const eventCount = team.changes.length;
+
+        team.addCoach(coach.email, ISSUER);
+
+        assert.equal(team.changes.length, eventCount);
+    });
+
+    test("a removed coach can no longer see the team after replaying", () => {
+        const team = createdTeam();
+
+        team.removeCoach(coach.email, ISSUER);
+
+        assert.deepEqual(replayed(team).describe().coaches, []);
+        assert.equal(replayed(team).isVisibleTo(coach), false);
+    });
+
+    test("removing a coach who does not coach the team is rejected", () => {
+        assert.throws(() => createdTeam().removeCoach(otherCoach.email, ISSUER), CoachNotFoundError);
+    });
+
+    test("coaches of a team that does not exist cannot be changed", () => {
+        assert.throws(() => emptyTeam().addCoach(coach.email, ISSUER), TeamNotFoundError);
+        assert.throws(() => emptyTeam().removeCoach(coach.email, ISSUER), TeamNotFoundError);
+    });
+
+    test("replaying the removal of an unknown coach reports the problem", () => {
+        const reason = expectErr(createdTeam().replay(
+            { type: "CoachRemoved", data: { email: otherCoach.email, issuer: ISSUER, issuedOn: new Date() } }));
+
+        assert.match(reason, /unknown coach/);
     });
 });
 

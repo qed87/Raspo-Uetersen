@@ -29,7 +29,6 @@
             <th scope="col">Vorname</th>
             <th scope="col">Nachname</th>
             <th scope="col">Geburtsdatum</th>
-            <th scope="col">Geburtsort</th>
             <th scope="col">Aktiviert</th>
             <th scope="col"></th>
         </tr>
@@ -50,9 +49,6 @@
                     </td>
                     <td>
                         @Model.Items[i].Birthdate
-                    </td>
-                    <td>
-                        @Model.Items[i].Birthplace
                     </td>
                     <td>
                         <x:input asp-for="Items[i].Active" class="form-check-input" type="checkbox" disabled="true" />
@@ -109,10 +105,6 @@
         <div class="col-auto">
             <x:label asp-for="NewPlayer.Birthdate" class="form-label">Geburtsjahr</x:label>
             <x:input asp-for="NewPlayer.Birthdate" class="form-control"/>
-        </div>
-        <div class="col-auto">
-            <x:label asp-for="NewPlayer.Birthplace" class="form-label">Geburtsort</x:label>
-            <x:input asp-for="NewPlayer.Birthplace" class="form-control"/>
         </div>
     </div>
     <button type="submit" class="btn-primary btn">Anlegen</button>

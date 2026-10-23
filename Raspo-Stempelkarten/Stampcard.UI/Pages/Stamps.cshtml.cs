@@ -36,21 +36,22 @@ public class Stamps(StampCardHttpClient stampCardHttpClient) : PageModel
 
     private async Task LoadItemsAsync()
     {
-        var response = await stampCardHttpClient.ListStampsAsync(Team, StampCardId);
+        var response = await stampCardHttpClient.GetAsync(Team, StampCardId);
         if (response.HasError)
         {
             ModelState.AddModelError(string.Empty, response.Message!);
             return;
         }
 
-        foreach (var stampReadDto in response.Data)
+        foreach (var stampReadDto in response.Data.Stamps)
         {
             Items.Add(new Stamp
             {
                 Id = stampReadDto.Id,
                 Issuer =  stampReadDto.Issuer,
                 IssuedOn = stampReadDto.IssuedOn,
-                Reason = stampReadDto.Reason
+                Reason = stampReadDto.Reason,
+                Pending = stampReadDto.Status == "pending"
             });
         }
     }
@@ -89,4 +90,8 @@ public class Stamp
     
     public DateTimeOffset IssuedOn { get; set; }
     
+    /// <summary>
+    /// Stamps submitted by external users are pending until a coach approves them.
+    /// </summary>
+    public bool Pending { get; set; }
 }

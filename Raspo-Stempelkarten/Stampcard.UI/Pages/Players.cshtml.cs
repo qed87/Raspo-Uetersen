@@ -39,7 +39,6 @@ public class Players(PlayerHttpClient playerHttpClient) : PageModel
                 FirstName = dto.FirstName, 
                 LastName = dto.LastName, 
                 Birthdate = dto.Birthdate, 
-                Birthplace = dto.Birthplace,
                 Active = dto.Active
             }).ToList();
             return;
@@ -50,7 +49,7 @@ public class Players(PlayerHttpClient playerHttpClient) : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        var response = await playerHttpClient.CreateAsync(Team, NewPlayer.FirstName, NewPlayer.LastName, NewPlayer.Birthdate, NewPlayer.Birthplace);
+        var response = await playerHttpClient.CreateAsync(Team, NewPlayer.FirstName, NewPlayer.LastName, NewPlayer.Birthdate);
         if (!response.HasError) return RedirectToPage();
         
         ModelState.AddModelError(string.Empty, response.Message!);
@@ -74,20 +73,23 @@ public class Player
     public Guid? Id { get; set; }
         
     [Required(ErrorMessage = "Vorname darf nicht leer sein!")]
+    [MinLength(2, ErrorMessage = "Vorname muss mindestens 2 Zeichen lang sein!")]
     public string FirstName { get; set; }
         
     [Required(ErrorMessage = "Nachname darf nicht leer sein!")]
+    [MinLength(2, ErrorMessage = "Nachname muss mindestens 2 Zeichen lang sein!")]
     public string LastName { get; set; }
         
     [Required(ErrorMessage = "Geburstdatum darf nicht leer sein!")]
     [DataType(DataType.Date, ErrorMessage = "Ungültiges Datum!")]
     public DateOnly Birthdate { get; set; }
         
-    [Required(ErrorMessage = "Geburtsort darf nicht leer sein!")]
-    [MinLength(2, ErrorMessage = "Geburtsort muss mehr länger als 1 Zeichen sein!")]
-    public string Birthplace { get; set; }
-    
     public bool Active { get; set; }
+
+    /// <summary>
+    /// The active state when the player was loaded, so that it is only changed if the user changed it.
+    /// </summary>
+    public bool WasActive { get; set; }
     
-    public ulong ConcurrencyToken { get; set; }
+    public long ConcurrencyToken { get; set; }
 }

@@ -1,25 +1,13 @@
-using Stampcard.Contracts.Dtos;
-
 namespace Stampcard.UI.Clients;
 
-public class ResponseWrapperDto<T>
+public class ResponseWrapperDto<T> : ResponseWrapperDto
 {
     /// <summary>
     /// The response data.
     /// </summary>
     public T Data { get; set; }
 
-    /// <summary>
-    /// Indicates whether the response has an error.
-    /// </summary>
-    public bool HasError { get; set; } = false;
-    
-    /// <summary>
-    /// The error message.
-    /// </summary>
-    public string? Message { get; set; }
-
-    public static ResponseWrapperDto<T> Fail(string error)
+    public new static ResponseWrapperDto<T> Fail(string error)
     {
         return new ResponseWrapperDto<T>()
         {
@@ -35,9 +23,23 @@ public class ResponseWrapperDto
     /// Indicates whether the response has an error.
     /// </summary>
     public bool HasError { get; set; } = false;
-    
+
     /// <summary>
     /// The error message.
     /// </summary>
     public string? Message { get; set; }
+
+    /// <summary>
+    /// The revision of the team stream, only set for responses that refer to exactly one team.
+    /// </summary>
+    public long? ConcurrencyToken { get; set; }
+
+    public static ResponseWrapperDto Fail(string error)
+    {
+        return new ResponseWrapperDto()
+        {
+            HasError = true,
+            Message = error
+        };
+    }
 }

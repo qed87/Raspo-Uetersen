@@ -62,7 +62,7 @@ public class StampCards(StampCardHttpClient stampCardHttpClient, PlayerHttpClien
             {
                 Id = stampCardReadDto.Id,
                 PlayerId = stampCardReadDto.PlayerId,
-                PlayerName = playersDict[stampCardReadDto.PlayerId],
+                PlayerName = playersDict.GetValueOrDefault(stampCardReadDto.PlayerId, "(Spieler gelöscht)"),
                 AccountingYear = stampCardReadDto.AccountingYear
             });
         }
@@ -70,20 +70,40 @@ public class StampCards(StampCardHttpClient stampCardHttpClient, PlayerHttpClien
 
     public async Task<IActionResult> OnPostManualAsync(Guid playerName,  int accountingYear)
     {
-        var response = await stampCardHttpClient.CreateManualAsync(Team, playerName, accountingYear);
+        var response = await stampCardHttpClient.CreateAsync(Team, playerName, accountingYear);
         if (!response.HasError) return RedirectToPage();
         ModelState.AddModelError(string.Empty, response.Message!);
         await LoadItemsAsync();
         return Page();
     }
     
+    /// <summary>
+    /// Creates stamp cards of the accounting year for all active players that do not have one yet.
+    /// </summary>
     public async Task<IActionResult> OnPostAutoAsync(int accountingYear)
     {
-        var response = await stampCardHttpClient.CreateAutoAsync(Team, accountingYear);
+        var response = await CreateMissingStampCardsAsync(accountingYear);
         if (!response.HasError) return RedirectToPage();
         ModelState.AddModelError(string.Empty, response.Message!);
         await LoadItemsAsync();
         return Page();
+    }
+
+    private async Task<ResponseWrapperDto> CreateMissingStampCardsAsync(int accountingYear)
+    {
+        var playerResponse = await playerHttpClient.ListAsync(Team);
+        if (playerResponse.HasError) return playerResponse;
+        var stampCardResponse = await stampCardHttpClient.ListAsync(Team, accountingYear);
+        if (stampCardResponse.HasError) return stampCardResponse;
+
+        var playersWithStampCard = stampCardResponse.Data.Select(card => card.PlayerId).ToHashSet();
+        foreach (var player in playerResponse.Data.Where(player => player.Active && !playersWithStampCard.Contains(player.Id)))
+        {
+            var response = await stampCardHttpClient.CreateAsync(Team, player.Id, accountingYear);
+            if (response.HasError) return response;
+        }
+
+        return new ResponseWrapperDto();
     }
     
     public async Task<IActionResult> OnGetDeleteAsync(Guid id)

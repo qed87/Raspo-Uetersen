@@ -32,6 +32,7 @@
         <th scope="col">Grund</th>
         <th scope="col">Stempel erstellt von</th>
         <th scope="col">Stempel erhalten am</th>
+        <th scope="col">Status</th>
         <th scope="col"></th>
     </tr>
     </thead>
@@ -51,6 +52,9 @@
                 </td>
                 <td>
                     @Model.Items[i].IssuedOn
+                </td>
+                <td>
+                    @(Model.Items[i].Pending ? "Wartet auf Freigabe" : "Bestätigt")
                 </td>
                 <td>
                     <x:a class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#deleteModal">
@@ -81,7 +85,7 @@
     }
     else
     {
-        <td colspan="5">Keine Daten</td>
+        <td colspan="6">Keine Daten</td>
     }
     </tbody>
 </table>

@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Stampcard.Contracts.Dtos;
 using Stampcard.UI.Clients;
 
 namespace Stampcard.UI.Pages;
@@ -12,14 +11,14 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
     [Required]
     public string Id { get; set; }
     
-    public TeamDetailedReadDto Item { get; set; }
-    
+    public TeamReadDto Item { get; set; }
+
     [BindProperty]
     [MinLength(2, ErrorMessage = "Team Name darf nicht leer sein!")]
     public string NewName { get; set; }
-    
+
     [BindProperty]
-    public ulong SetConcurrencyToken { get; set; }
+    public long SetConcurrencyToken { get; set; }
     
     public List<string> Coaches { get; set; } = [];
     
@@ -44,10 +43,18 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
     private async Task LoadItemsAsync()
     {
         var response = await teamHttpClient.GetTeamAsync(Id);
+        if (response.HasError)
+        {
+            ModelState.AddModelError(string.Empty, response.Message!);
+            return;
+        }
+
         Item = response.Data;
         NewName = Item.Name;
-        SetConcurrencyToken = Item.ConcurrencyToken;
-        Coaches.AddRange(response.Data.Coaches ?? []);
+        SetConcurrencyToken = response.ConcurrencyToken!.Value;
+        // render the reloaded token instead of the posted one, otherwise an outdated token would be sent again
+        ModelState.Remove(nameof(SetConcurrencyToken));
+        Coaches.AddRange(Item.Coaches);
     }
     
     public async Task<IActionResult> OnPostTeamAsync()

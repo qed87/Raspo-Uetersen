@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Stampcard.Contracts.Dtos;
 using Stampcard.UI.Clients;
 
 namespace Stampcard.UI.Pages;

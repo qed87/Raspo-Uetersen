@@ -178,6 +178,41 @@ describe("players", () => {
 
         assert.throws(() => team.findPlayer(playerId), PlayerNotFoundError);
     });
+
+    test("removing a player removes its stamp cards and their shared codes", () => {
+        const { team, playerId, stampCardId, sharedCode } = sharedTeam();
+
+        team.removePlayer(playerId, ISSUER);
+
+        assert.deepEqual(team.listStampCards(), []);
+        assert.throws(() => team.findSharedStampCard(stampCardId, sharedCode.code));
+    });
+
+    test("removing a player keeps the stamp cards of other players", () => {
+        const { team, playerId } = teamWithStampCard();
+        const otherPlayerId = team.addPlayer({ ...max, firstName: "Moritz" }, ISSUER);
+        const otherStampCardId = team.addStampCard({ playerId: otherPlayerId, accountingYear: 2026 }, ISSUER);
+
+        team.removePlayer(playerId, ISSUER);
+
+        assert.deepEqual(team.listStampCards().map(card => card.id), [otherStampCardId]);
+    });
+
+    test("removing a player records its stamp card removals before the player removal", () => {
+        const { team, playerId } = teamWithStampCard();
+        const eventCount = team.changes.length;
+
+        team.removePlayer(playerId, ISSUER);
+
+        assert.deepEqual(team.changes.slice(eventCount).map(event => event.type), ["StampCardRemoved", "PlayerRemoved"]);
+    });
+
+    test("removed stamp cards of a removed player are not restored when replaying", () => {
+        const { team, playerId } = teamWithStampCard();
+        team.removePlayer(playerId, ISSUER);
+
+        assert.deepEqual(replayed(team).listStampCards(), []);
+    });
 });
 
 describe("stamp cards and stamps", () => {
@@ -329,9 +364,10 @@ describe("incomplete stamp cards", () => {
         assert.deepEqual(team.listIncompleteStampCards(2025, 1), []);
     });
 
-    test("stamp cards of removed players are listed without player", () => {
+    test("stamp cards of players removed by older streams are listed without player", () => {
         const { team, playerId } = teamWithStampCard();
-        team.removePlayer(playerId, ISSUER);
+        // older streams removed the player without its stamp cards
+        team.replay({ type: "PlayerRemoved", data: { id: playerId, issuer: ISSUER, issuedOn: new Date() } });
 
         const [incomplete] = team.listIncompleteStampCards(2026, 1);
 

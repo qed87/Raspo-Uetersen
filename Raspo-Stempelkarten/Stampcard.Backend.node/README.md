@@ -238,7 +238,7 @@ The team name must be unique within the club (otherwise 409). A deleted team rel
 | POST | `/api/teams/:teamId/player/:playerId/enable` | – | player id |
 | POST | `/api/teams/:teamId/player/:playerId/disable` | – | player id |
 
-First and last name have at least 2 characters, `birthdate` is an ISO date (`YYYY-MM-DD`), not in the future and at most 120 years ago. The same first and last name (case-insensitive) with the same birthdate counts as a duplicate (409). New players are active.
+First and last name have at least 2 characters, `birthdate` is an ISO date (`YYYY-MM-DD`), not in the future and at most 120 years ago. The same first and last name (case-insensitive) with the same birthdate counts as a duplicate (409). New players are active. Removing a player removes its stamp cards along with their stamps and share codes; to keep them, disable the player instead.
 
 ### Stamp cards and stamps
 

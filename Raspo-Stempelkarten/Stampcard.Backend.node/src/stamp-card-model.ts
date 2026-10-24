@@ -105,7 +105,7 @@ export class TeamAggregate {
 
     /**
      * Stamp cards of the accounting year with fewer accepted stamps than required.
-     * Cards of removed players are included, their player is unknown.
+     * Cards of players removed before their cards were removed along with them are included, their player is unknown.
      */
     listIncompleteStampCards(accountingYear: number, requiredStamps: number): IncompleteStampCard[] {
         if (!this.exists) return [];
@@ -203,9 +203,17 @@ export class TeamAggregate {
         this.record({ type: "PlayerUpdated", data: { id: playerId, ...player, issuer, issuedOn: new Date() } });
     }
 
+    /**
+     * Removes the stamp cards of the player along with it, including their stamps and shared codes,
+     * so that no shared link keeps exposing the card of a removed player.
+     */
     removePlayer(playerId: string, issuer: string): void {
         this.findPlayer(playerId);
-        this.record({ type: "PlayerRemoved", data: { id: playerId, issuer, issuedOn: new Date() } });
+        const issuedOn = new Date();
+        this.listStampCards()
+            .filter(card => card.playerId === playerId)
+            .forEach(card => this.record({ type: "StampCardRemoved", data: { id: card.id, issuer, issuedOn } }));
+        this.record({ type: "PlayerRemoved", data: { id: playerId, issuer, issuedOn } });
     }
 
     enablePlayer(playerId: string, issuer: string): void {

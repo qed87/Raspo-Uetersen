@@ -29,22 +29,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET 9
-        uses: actions/setup-dotnet@v4
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
         with:
-          dotnet-version: '9.0.x'
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: ./Raspo-Stempelkarten/Stampcard.Backend/package-lock.json
 
-      - name: Restore dependencies (Backend)
+      - name: Install dependencies (Backend)
         working-directory: ./Raspo-Stempelkarten/Stampcard.Backend
-        run: dotnet restore
+        run: npm ci
 
-      - name: Build Backend
+      - name: Typecheck Backend
         working-directory: ./Raspo-Stempelkarten/Stampcard.Backend
-        run: dotnet build --configuration Release --no-restore
+        run: npm run typecheck
 
       - name: Run Backend Tests
         working-directory: ./Raspo-Stempelkarten/Stampcard.Backend
-        run: dotnet test --no-build --verbosity normal --logger "console;verbosity=detailed"
+        run: npm test
+
+      - name: Build Backend
+        working-directory: ./Raspo-Stempelkarten/Stampcard.Backend
+        run: npm run build
 
   # ────────────────────────────────────────────────
   #  Job 2 – Build & Test UI / Frontend

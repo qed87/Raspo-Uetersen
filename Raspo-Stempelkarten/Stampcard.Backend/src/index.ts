@@ -51,8 +51,10 @@ fastify.register(stampCardRoutes);
 fastify.register(sharedRoutes);
 fastify.register(accountingRoutes);
 
-// Run the server!
-fastify.listen({ port: 3000 }, function (err, address) {
+// Run the server! PORT and HOST are set in the Docker image (8080, 0.0.0.0)
+const port = Number(process.env.PORT ?? 3000);
+const host = process.env.HOST ?? 'localhost';
+fastify.listen({ port, host }, function (err, address) {
   if (err) {
     fastify.log.error(err)
     process.exit(1)

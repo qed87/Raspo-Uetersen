@@ -51,7 +51,7 @@ npm install
 npm run dev
 ```
 
-The server listens on port `3000`. The working directory must be the project directory, because the configuration is loaded from `res/` relative to it.
+The server listens on `localhost:3000`; set `PORT` and `HOST` to change that (the Docker image uses `0.0.0.0:8080`). The working directory must be the project directory, because the configuration is loaded from `res/` relative to it.
 
 ### npm scripts
 

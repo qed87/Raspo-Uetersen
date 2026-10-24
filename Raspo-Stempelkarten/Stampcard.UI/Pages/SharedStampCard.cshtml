@@ -8,10 +8,19 @@
 
 <h2>Stempelkarte@(Model.Item is null ? "" : " " + Model.Item.AccountingYear)</h2>
 
-<x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
-</x:div>
+@if (Model.Submitted)
+{
+    <div class="alert alert-success" role="status">
+        Vielen Dank! Ihr Stempel wurde eingereicht und wartet auf die Freigabe durch einen Coach.
+    </div>
+}
 
-@if (Model.Item is not null)
+@if (Model.Item is null)
+{
+    <x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
+    </x:div>
+}
+else
 {
     <table class="table table-striped">
         <thead>
@@ -44,4 +53,27 @@
         }
         </tbody>
     </table>
+
+    <h3 class="mt-4">Stempel einreichen</h3>
+    <p class="text-muted">
+        Eingereichte Stempel erscheinen sofort mit dem Status „Wartet auf Freigabe“ und zählen erst,
+        wenn ein Coach sie bestätigt hat.
+    </p>
+    <x:form asp-page="" asp-route-code="@Model.Code" method="post">
+        <x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
+        </x:div>
+        <div class="row g-3 mb-3">
+            <div class="col-auto">
+                <x:label asp-for="NewStamp.Reason" class="form-label">Grund</x:label>
+                <x:input asp-for="NewStamp.Reason" class="form-control" placeholder="z. B. Lauftraining"/>
+                <x:span asp-validation-for="NewStamp.Reason" class="text-danger"></x:span>
+            </div>
+            <div class="col-auto">
+                <x:label asp-for="NewStamp.IssuerName" class="form-label">Ihr Name</x:label>
+                <x:input asp-for="NewStamp.IssuerName" class="form-control"/>
+                <x:span asp-validation-for="NewStamp.IssuerName" class="text-danger"></x:span>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Stempel einreichen</button>
+    </x:form>
 }

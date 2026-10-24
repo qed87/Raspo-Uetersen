@@ -5,7 +5,7 @@ using Stampcard.UI.Clients;
 
 namespace Stampcard.UI.Pages;
 
-public class Players(PlayerHttpClient playerHttpClient, StampCardHttpClient stampCardHttpClient) : PageModel
+public class Players(PlayerHttpClient playerHttpClient, StampCardHttpClient stampCardHttpClient, TeamHttpClient teamHttpClient) : PageModel
 {
     [BindProperty(SupportsGet = true)]
     public string Team { get; set; }
@@ -14,22 +14,25 @@ public class Players(PlayerHttpClient playerHttpClient, StampCardHttpClient stam
     public Player NewPlayer { get; set; }
 
     public List<Player> Items { get; set; } = [];
+
+    public string TeamName { get; set; } = "";
     
     public async Task<IActionResult> OnGetAsync()
     {
-        try
-        {
-            await LoadItemsAsync();
-            return Page();
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return RedirectToPage("/Index");
-        }
+        await LoadItemsAsync();
+        return Page();
     }
 
     private async Task LoadItemsAsync()
     {
+        var teamResponse = await teamHttpClient.GetTeamAsync(Team);
+        if (teamResponse.HasError)
+        {
+            ModelState.AddModelError(string.Empty, teamResponse.Message ?? "");
+            return;
+        }
+
+        TeamName = teamResponse.Data.Name;
         var response = await playerHttpClient.ListAsync(Team);
         if (response.HasError)
         {
@@ -72,8 +75,10 @@ public class Players(PlayerHttpClient playerHttpClient, StampCardHttpClient stam
     /// <summary>
     /// Alternative to deleting, the player and its stamp cards are kept.
     /// </summary>
-    public async Task<IActionResult> OnGetDisableAsync(Guid id)
+    public async Task<IActionResult> OnPostDisableAsync(Guid id)
     {
+        // the fields of a new player are not part of this form
+        ModelState.Clear();
         var response = await playerHttpClient.SetActiveAsync(Team, id, false);
         if (!response.HasError) return RedirectToPage();
         
@@ -82,8 +87,9 @@ public class Players(PlayerHttpClient playerHttpClient, StampCardHttpClient stam
         return Page();
     }
     
-    public async Task<IActionResult> OnGetDeleteAsync(Guid id)
+    public async Task<IActionResult> OnPostDeleteAsync(Guid id)
     {
+        ModelState.Clear();
         var response = await playerHttpClient.DeleteAsync(Team, id);
         if (!response.HasError) return RedirectToPage();
         

@@ -11,83 +11,86 @@
 @* the club is the same for all teams of a backend, so it is shown once in the heading *@
 @{ var club = Model.Items.FirstOrDefault()?.Club; }
 <h2>Teamverwaltung@(string.IsNullOrEmpty(club) ? "" : " - " + club)</h2>
-<x:form asp-page="" method="post">
-    <x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
-    </x:div>
-    <table class="table table-striped">
+
+<x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
+</x:div>
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
         <thead>
         <tr>
             <th scope="col">#</th>
-            <th scope="col">Team Name</th>
+            <th scope="col">Team-Name</th>
             <th scope="col"></th>
         </tr>
         </thead>
         <tbody>
         @if (Model.Items.Count == 0)
         {
-            <td colspan="3">Keine Daten</td>
+            <tr>
+                <td colspan="3">Keine Daten</td>
+            </tr>
         }
 
         @for (var i = 0; i < Model.Items.Count; i++)
         {
             var team = Model.Items[i];
+            var isCoach = User.IsCoachOf(team);
             <tr>
                 <td>@(i + 1)</td>
                 <td>@team.Name</td>
                 <td>
-                    @if(User.IsInRole("manager")) 
-                    {
-                        <x:a class ="btn btn-dark" asp-route-target="Team" asp-route-id="@team.Id" asp-page-handler="item">
-                            <i class="bi bi-diagram-3"> Team bearbeiten </i>
-                        </x:a>
-                    }
-                    @if (team.Coaches.Contains(User.Identity?.Name ?? string.Empty))
-                    {
-                        <x:a class="btn btn-dark" asp-route-target="Players" asp-route-id="@team.Id" asp-page-handler="item">
-                            <i class="bi bi-people-fill"> Spieler verwalten</i>
-                        </x:a>
-                    }
-                    @if (team.Coaches.Contains(User.Identity?.Name ?? string.Empty))
-                    {
-                        <x:a class="btn btn-dark" asp-route-target="StampCards" asp-route-id="@team.Id" asp-page-handler="item">
-                            <i class="bi bi-postage"> Stempelkarten verwalten</i>
-                        </x:a>
-                    }
-                    @if (Model.IsCoachOf(team))
-                    {
-                        var pendingCount = Model.PendingStampCounts.GetValueOrDefault(team.Id);
-                        <x:a class="btn btn-dark position-relative" asp-route-target="Approvals" asp-route-id="@team.Id" asp-page-handler="item">
-                            <i class="bi bi-patch-check"> Freigaben</i>
-                            @if (pendingCount > 0)
-                            {
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                    @pendingCount
-                                    <span class="visually-hidden">Stempel warten auf Freigabe</span>
-                                </span>
-                            }
-                        </x:a>
-                    }
+                    <div class="d-flex flex-wrap gap-1">
+                        @if (User.IsInRole("manager"))
+                        {
+                            <x:a class="btn btn-dark" asp-route-target="Team" asp-route-id="@team.Id" asp-page-handler="item">
+                                <i class="bi bi-diagram-3" aria-hidden="true"></i> Team bearbeiten
+                            </x:a>
+                        }
+                        @if (isCoach)
+                        {
+                            var pendingCount = Model.PendingStampCounts.GetValueOrDefault(team.Id);
+                            <x:a class="btn btn-dark" asp-route-target="Players" asp-route-id="@team.Id" asp-page-handler="item">
+                                <i class="bi bi-people-fill" aria-hidden="true"></i> Spieler verwalten
+                            </x:a>
+                            <x:a class="btn btn-dark" asp-route-target="StampCards" asp-route-id="@team.Id" asp-page-handler="item">
+                                <i class="bi bi-postage" aria-hidden="true"></i> Stempelkarten verwalten
+                            </x:a>
+                            <x:a class="btn btn-dark position-relative" asp-route-target="Approvals" asp-route-id="@team.Id" asp-page-handler="item">
+                                <i class="bi bi-patch-check" aria-hidden="true"></i> Freigaben
+                                @if (pendingCount > 0)
+                                {
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                        @pendingCount
+                                        <span class="visually-hidden">Stempel warten auf Freigabe</span>
+                                    </span>
+                                }
+                            </x:a>
+                        }
+                        @if (User.IsInRole("manager"))
+                        {
+                            <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#deleteModal-@team.Id">
+                                <i class="bi bi-trash3-fill" aria-hidden="true"></i> Team löschen
+                            </button>
+                        }
+                    </div>
                     @if (User.IsInRole("manager"))
                     {
-                        <x:a class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#deleteModal-@team.Id">
-                            <i class="bi bi-trash3-fill"> Team löschen</i>
-                        </x:a>
-                        <!-- Modal -->
                         <div class="modal fade" id="deleteModal-@team.Id" tabindex="-1" aria-labelledby="deleteModalLabel-@team.Id" aria-hidden="true">
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <h5 class="modal-title" id="deleteModalLabel-@team.Id">Wirklich löschen?</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
                                     </div>
                                     <div class="modal-body">
                                         Möchten Sie das <strong>Team: @team.Name</strong> endgültig löschen?<br>
                                         Diese Aktion kann <strong>nicht</strong> rückgängig gemacht werden.
                                     </div>
-                                    <div class="modal-footer">
+                                    <x:form class="modal-footer" asp-page-handler="delete" asp-route-id="@team.Id" method="post" data-loading="true">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                                        <x:a class="btn btn-danger" asp-route-id="@team.Id" asp-page-handler="delete" data-loading="true">Ja, löschen</x:a>
-                                    </div>
+                                        <button type="submit" class="btn btn-danger">Ja, löschen</button>
+                                    </x:form>
                                 </div>
                             </div>
                         </div>
@@ -97,14 +100,16 @@
         }
         </tbody>
     </table>
+</div>
 
-    @if (User.IsInRole("manager"))
-    {
+@if (User.IsInRole("manager"))
+{
+    <x:form asp-page="" method="post">
         <div class="mb-3">
             <x:label asp-for="Name" class="form-label">Name</x:label>
             <x:input asp-for="Name" class="form-control"/>
         </div>
 
-        <button class="btn-primary btn">Anlegen</button>
-    }
-</x:form>
+        <button type="submit" class="btn btn-primary">Anlegen</button>
+    </x:form>
+}

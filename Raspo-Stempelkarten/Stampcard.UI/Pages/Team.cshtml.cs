@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Stampcard.UI.Clients;
@@ -11,7 +11,7 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
     [Required]
     public string Id { get; set; }
     
-    public TeamReadDto Item { get; set; }
+    public TeamReadDto? Item { get; set; }
 
     [BindProperty]
     [MinLength(2, ErrorMessage = "Team Name darf nicht leer sein!")]
@@ -29,15 +29,8 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
 
     public async Task<IActionResult> OnGetAsync()
     {
-        try
-        {
-            await LoadItemsAsync();
-            return Page();
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return RedirectToPage("/Index");
-        }
+        await LoadItemsAsync();
+        return Page();
     }
 
     private async Task LoadItemsAsync()
@@ -68,7 +61,7 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
             ModelState.AddModelError(string.Empty, response.Message);
             return Page();
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not UnauthorizedAccessException)
         {
             logger.LogError(exception, "Unerwarteter Fehler");
             await LoadItemsAsync();
@@ -90,7 +83,7 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
             ModelState.AddModelError(string.Empty, response.Message);
             return Page();
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not UnauthorizedAccessException)
         {
             logger.LogError(exception, "Unerwarteter Fehler");
             await LoadItemsAsync();
@@ -101,8 +94,10 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
         }
     }
     
-    public async Task<IActionResult> OnGetDeleteAsync(string name)
+    public async Task<IActionResult> OnPostDeleteAsync(string name)
     {
+        // neither the team name nor a new coach are part of this form
+        ModelState.Clear();
         try
         {
             var response = await teamHttpClient.DeleteCoachAsync(Id, name);
@@ -111,7 +106,7 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
             ModelState.AddModelError(string.Empty, response.Message);
             return Page();
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not UnauthorizedAccessException)
         {
             logger.LogError(exception, "Unerwarteter Fehler");
             await LoadItemsAsync();

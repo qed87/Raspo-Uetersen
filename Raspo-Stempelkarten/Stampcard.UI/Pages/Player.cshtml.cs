@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Stampcard.UI.Clients;
 
@@ -28,15 +28,8 @@ public class PlayerModel(PlayerHttpClient playerHttpClient) : PageModel
 
     public async Task<IActionResult> OnGetAsync()
     {
-        try
-        {
-            await LoadItemAsync();
-            return Page();
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return RedirectToPage("/Index");
-        }
+        await LoadItemAsync();
+        return Page();
     }
 
     private async Task LoadItemAsync()

@@ -159,6 +159,22 @@ public class StampCardHttpClient(IRestClient restClient)
     }
 
     /// <summary>
+    /// Revokes the <param name="id">share code</param> of the <param name="stampCardId">StampCard</param> in <param name="teamId">Team</param>.
+    /// The stamp card can still be read with it, but no more stamps can be submitted.
+    /// </summary>
+    /// <param name="teamId">The team id.</param>
+    /// <param name="stampCardId">The stamp card id.</param>
+    /// <param name="id">The share code id.</param>
+    public Task<ResponseWrapperDto> RevokeSharedCodeAsync(string teamId, Guid stampCardId, Guid id)
+    {
+        var request = new RestRequest("/api/teams/{teamId}/stampcard/{stampCardId}/share/{sharedCodeId}/revoke", Method.Post)
+            .AddUrlSegment("teamId", teamId)
+            .AddUrlSegment("stampCardId", stampCardId)
+            .AddUrlSegment("sharedCodeId", id);
+        return restClient.SendAsync(request);
+    }
+
+    /// <summary>
     /// Deletes the <param name="id">share code</param> from the <param name="stampCardId">StampCard</param> in <param name="teamId">Team</param>.
     /// </summary>
     /// <param name="teamId">The team id.</param>

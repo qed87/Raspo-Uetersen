@@ -1,10 +1,10 @@
-@page "/Teams/{Team}/StampCard/{StampCardId}/Stamps"
+﻿@page "/Teams/{Team}/StampCard/{StampCardId}/Stamps"
 @using SmartBreadcrumbs.Nodes
 @model Stamps
 @tagHelperPrefix x:
 
 @{
-    ViewData["Title"] = "Stempelkarten - " + Model.Team;
+    ViewData["Title"] = "Stempelkarte - " + Model.PlayerName;
     ViewData["BreadcrumbNode"] = new RazorPageBreadcrumbNode("Stamps", "Stempel")
     {
         Parent = new RazorPageBreadcrumbNode("StampCards", "Stempelkarten")
@@ -23,85 +23,90 @@
     };
 }
 
-<h2>Stempelkarten - @Model.Team/@Model.StampCardId</h2>
+<h2>Stempelkarte: @Model.PlayerName@(Model.AccountingYear is null ? "" : $" ({Model.AccountingYear})")</h2>
 
-<table class="table table-striped">
-    <thead>
-    <tr>
-        <th scope="col">#</th>
-        <th scope="col">Grund</th>
-        <th scope="col">Stempel erstellt von</th>
-        <th scope="col">Stempel erhalten am</th>
-        <th scope="col">Status</th>
-        <th scope="col"></th>
-    </tr>
-    </thead>
-    <tbody>
-    @if(Model.Items.Count > 0) 
-    {
-        @for (var i = 0; i < Model.Items.Count; i++)
+<x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
+</x:div>
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Grund</th>
+            <th scope="col">Stempel erstellt von</th>
+            <th scope="col">Stempel erhalten am</th>
+            <th scope="col">Status</th>
+            <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (Model.Items.Count > 0)
         {
-            var itemId = Model.Items[i].Id;
-            <tr>
-                <td>@(i + 1)</td>
-                <td>
-                    @Model.Items[i].Reason
-                </td>
-                <td>
-                    @Model.Items[i].Issuer
-                </td>
-                <td>
-                    @Model.Items[i].IssuedOn
-                </td>
-                <td>
-                    @(Model.Items[i].Pending ? "Wartet auf Freigabe" : "Bestätigt")
-                </td>
-                <td>
-                    <x:a class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#deleteModal-@itemId">
-                        <i class="bi bi-trash3-fill"> Stempel löschen</i>
-                    </x:a>
-                    <!-- Modal -->
-                    <div class="modal fade" id="deleteModal-@itemId" tabindex="-1" aria-labelledby="deleteModalLabel-@itemId" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="deleteModalLabel-@itemId">Wirklich löschen?</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    Möchten Sie den <strong>Stempel: @Model.Items[i].Reason</strong> endgültig löschen?<br>
-                                    Diese Aktion kann <strong>nicht</strong> rückgängig gemacht werden.
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                                    <x:a class="btn btn-danger" asp-route-id="@itemId" asp-page-handler="delete" data-loading="true">Ja, löschen</x:a>
+            @for (var i = 0; i < Model.Items.Count; i++)
+            {
+                var stamp = Model.Items[i];
+                var itemId = stamp.Id;
+                <tr>
+                    <td>@(i + 1)</td>
+                    <td>@stamp.Reason</td>
+                    <td>@stamp.Issuer</td>
+                    <td>@DisplayFormat.Date(stamp.IssuedOn)</td>
+                    <td>
+                        @if (stamp.Pending)
+                        {
+                            <span class="badge bg-warning text-dark">Wartet auf Freigabe</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">Bestätigt</span>
+                        }
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#deleteModal-@itemId">
+                            <i class="bi bi-trash3-fill" aria-hidden="true"></i> Stempel löschen
+                        </button>
+                        <div class="modal fade" id="deleteModal-@itemId" tabindex="-1" aria-labelledby="deleteModalLabel-@itemId" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteModalLabel-@itemId">Wirklich löschen?</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Möchten Sie den <strong>Stempel: @stamp.Reason</strong> endgültig löschen?<br>
+                                        Diese Aktion kann <strong>nicht</strong> rückgängig gemacht werden.
+                                    </div>
+                                    <x:form class="modal-footer" asp-page-handler="delete" asp-route-id="@itemId" method="post" data-loading="true">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                                        <button type="submit" class="btn btn-danger">Ja, löschen</button>
+                                    </x:form>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </td>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="6">Keine Daten</td>
             </tr>
         }
-    }
-    else
-    {
-        <td colspan="6">Keine Daten</td>
-    }
-    </tbody>
-</table>
+        </tbody>
+    </table>
+</div>
 
 <x:form asp-area="" asp-page="" method="post">
-    <!-- Validation summary -->
-    <x:div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert">
-    </x:div>
-    <div class="row g-3 mb-3">
+    <div class="row g-3 mb-3 align-items-end">
         <div class="col-auto">
             <x:label asp-for="@Model.Fields.Reason" class="form-label">Grund</x:label>
             <x:input asp-for="@Model.Fields.Reason" class="form-control"/>
         </div>
-    </div>
-    <div class="mb-3">
-        <button class="btn-primary btn">Stempeln</button>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Stempeln</button>
+        </div>
     </div>
 </x:form>
 
@@ -109,9 +114,12 @@
 {
     <h3 class="mt-4">Geteilte Links</h3>
     <p class="text-muted">
-        Mit einem geteilten Link können Personen ohne Anmeldung, z. B. Eltern, diese Stempelkarte einsehen.
+        Mit einem geteilten Link können Personen ohne Anmeldung, z. B. Eltern, diese Stempelkarte einsehen und
+        Stempel zur Freigabe einreichen. Ein widerrufener Link zeigt die Stempelkarte weiterhin an, über ihn können
+        aber keine Stempel mehr eingereicht werden.
     </p>
-    <table class="table table-striped">
+    <div class="table-responsive">
+    <table class="table table-striped align-middle">
         <thead>
         <tr>
             <th scope="col">#</th>
@@ -137,26 +145,46 @@
                             </button>
                         </div>
                     </td>
-                    <td>@(sharedCode.Revoked ? "Widerrufen" : "Aktiv")</td>
                     <td>
-                        <a class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#deleteSharedCodeModal-@sharedCode.Id">
-                            <i class="bi bi-trash3-fill"> Link löschen</i>
-                        </a>
+                        @if (sharedCode.Revoked)
+                        {
+                            <span class="badge bg-secondary">Widerrufen</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">Aktiv</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-1">
+                            @if (!sharedCode.Revoked)
+                            {
+                                <x:form asp-page-handler="revokeSharedCode" asp-route-id="@sharedCode.Id" method="post" data-loading="true">
+                                    <button type="submit" class="btn btn-outline-dark"
+                                            data-confirm="Möchten Sie Link @(i + 1) widerrufen? Über ihn können dann keine Stempel mehr eingereicht werden.">
+                                        <i class="bi bi-slash-circle" aria-hidden="true"></i> Widerrufen
+                                    </button>
+                                </x:form>
+                            }
+                            <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#deleteSharedCodeModal-@sharedCode.Id">
+                                <i class="bi bi-trash3-fill" aria-hidden="true"></i> Link löschen
+                            </button>
+                        </div>
                         <div class="modal fade" id="deleteSharedCodeModal-@sharedCode.Id" tabindex="-1" aria-labelledby="deleteSharedCodeModalLabel-@sharedCode.Id" aria-hidden="true">
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <h5 class="modal-title" id="deleteSharedCodeModalLabel-@sharedCode.Id">Wirklich löschen?</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
                                     </div>
                                     <div class="modal-body">
                                         Möchten Sie den <strong>Link @(i + 1)</strong> endgültig löschen?<br>
                                         Danach kann die Stempelkarte über diesen Link <strong>nicht</strong> mehr aufgerufen werden.
                                     </div>
-                                    <div class="modal-footer">
+                                    <x:form class="modal-footer" asp-page-handler="deleteSharedCode" asp-route-id="@sharedCode.Id" method="post" data-loading="true">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                                        <x:a class="btn btn-danger" asp-route-id="@sharedCode.Id" asp-page-handler="deleteSharedCode" data-loading="true">Ja, löschen</x:a>
-                                    </div>
+                                        <button type="submit" class="btn btn-danger">Ja, löschen</button>
+                                    </x:form>
                                 </div>
                             </div>
                         </div>
@@ -172,6 +200,7 @@
         }
         </tbody>
     </table>
+    </div>
 
     <x:form asp-page="" asp-page-handler="share" method="post">
         <button type="submit" class="btn btn-primary">
@@ -187,7 +216,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="createdSharedCodeModalLabel">Link erstellt</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
                     </div>
                     <div class="modal-body">
                         <p>Über diesen öffentlichen Link kann die Stempelkarte ohne Anmeldung aufgerufen werden:</p>

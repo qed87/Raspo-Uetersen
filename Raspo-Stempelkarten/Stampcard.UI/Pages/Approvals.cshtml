@@ -1,10 +1,10 @@
-@page "/Teams/{Team}/Approvals"
+﻿@page "/Teams/{Team}/Approvals"
 @using SmartBreadcrumbs.Nodes
 @model Approvals
 @tagHelperPrefix x:
 
 @{
-    ViewData["Title"] = "Freigaben - " + Model.Team;
+    ViewData["Title"] = "Freigaben - " + Model.TeamName;
     ViewData["BreadcrumbNode"] = new RazorPageBreadcrumbNode("Approvals", "Freigaben")
     {
         Parent = new RazorPageBreadcrumbNode("Index", "Startseite"),
@@ -15,7 +15,7 @@
     };
 }
 
-<h2>Freigaben</h2>
+<h2>Freigaben - @Model.TeamName</h2>
 <p class="text-muted">
     Diese Stempel wurden über geteilte Links eingereicht. Erst nach der Freigabe zählen sie auf der Stempelkarte,
     abgelehnte Stempel werden von der Stempelkarte entfernt.
@@ -25,7 +25,8 @@
     <x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
     </x:div>
 
-    <table class="table table-striped">
+    <div class="table-responsive">
+    <table class="table table-striped align-middle">
         <thead>
         <tr>
             <th scope="col">
@@ -54,15 +55,17 @@
                     <td>@stamp.AccountingYear</td>
                     <td>@stamp.Reason</td>
                     <td>@stamp.Issuer</td>
-                    <td>@stamp.IssuedOn.ToString("dd.MM.yyyy HH:mm")</td>
-                    <td class="text-nowrap">
+                    <td>@DisplayFormat.DateTime(stamp.IssuedOn)</td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-1">
                         <x:button type="submit" class="btn btn-success" asp-page-handler="approve" asp-route-stampId="@stamp.Id">
-                            <i class="bi bi-check-lg"></i> Freigeben
+                            <i class="bi bi-check-lg" aria-hidden="true"></i> Freigeben
                         </x:button>
                         <x:button type="submit" class="btn btn-outline-danger" asp-page-handler="reject" asp-route-stampId="@stamp.Id"
                                   data-confirm="Möchten Sie den Stempel „@stamp.Reason“ wirklich ablehnen? Er wird von der Stempelkarte entfernt.">
-                            <i class="bi bi-x-lg"></i> Ablehnen
+                            <i class="bi bi-x-lg" aria-hidden="true"></i> Ablehnen
                         </x:button>
+                        </div>
                     </td>
                 </tr>
             }
@@ -75,16 +78,17 @@
         }
         </tbody>
     </table>
+    </div>
 
     @if (Model.Items.Count > 0)
     {
-        <div class="mb-3">
+        <div class="d-flex flex-wrap gap-2 mb-3">
             <x:button type="submit" class="btn btn-success" asp-page-handler="approveSelected">
-                <i class="bi bi-check-all"></i> Ausgewählte freigeben
+                <i class="bi bi-check-all" aria-hidden="true"></i> Ausgewählte freigeben
             </x:button>
             <x:button type="submit" class="btn btn-outline-danger" asp-page-handler="rejectSelected"
                       data-confirm="Möchten Sie die ausgewählten Stempel wirklich ablehnen? Sie werden von den Stempelkarten entfernt.">
-                <i class="bi bi-x-lg"></i> Ausgewählte ablehnen
+                <i class="bi bi-x-lg" aria-hidden="true"></i> Ausgewählte ablehnen
             </x:button>
         </div>
     }
@@ -99,9 +103,6 @@
             $('[data-stamp-selection]').on('change', function () {
                 const $boxes = $('[data-stamp-selection]');
                 $('#selectAllStamps').prop('checked', $boxes.length === $boxes.filter(':checked').length);
-            });
-            $('[data-confirm]').on('click', function (e) {
-                if (!confirm($(this).data('confirm'))) e.preventDefault();
             });
         });
     </script>

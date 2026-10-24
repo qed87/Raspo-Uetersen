@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Stampcard.UI.Clients;
 
 namespace Stampcard.UI.Pages;
 
-public class Stamps(StampCardHttpClient stampCardHttpClient, TeamHttpClient teamHttpClient) : PageModel
+public class Stamps(StampCardHttpClient stampCardHttpClient, TeamHttpClient teamHttpClient, PlayerHttpClient playerHttpClient) : PageModel
 {
     private const string CreatedSharedCodeKey = "CreatedSharedCode";
 
@@ -15,6 +15,10 @@ public class Stamps(StampCardHttpClient stampCardHttpClient, TeamHttpClient team
     public Guid StampCardId { get; set; }
     
     public List<Stamp> Items { get; set; } = [];
+
+    public string PlayerName { get; set; } = "";
+
+    public int? AccountingYear { get; set; }
 
     public List<SharedCodeReadDto> SharedCodes { get; set; } = [];
 
@@ -37,15 +41,8 @@ public class Stamps(StampCardHttpClient stampCardHttpClient, TeamHttpClient team
 
     public async Task<IActionResult> OnGetAsync()
     {
-        try
-        {
-            await LoadItemsAsync();
-            return Page();
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return RedirectToPage("/Index");
-        }
+        await LoadItemsAsync();
+        return Page();
     }
 
     private async Task LoadItemsAsync()
@@ -56,6 +53,12 @@ public class Stamps(StampCardHttpClient stampCardHttpClient, TeamHttpClient team
             ModelState.AddModelError(string.Empty, response.Message!);
             return;
         }
+
+        AccountingYear = response.Data.AccountingYear;
+        var playerResponse = await playerHttpClient.GetAsync(Team, response.Data.PlayerId);
+        PlayerName = playerResponse.HasError
+            ? "(Spieler gelöscht)"
+            : $"{playerResponse.Data.FirstName} {playerResponse.Data.LastName}";
 
         foreach (var stampReadDto in response.Data.Stamps)
         {
@@ -76,7 +79,7 @@ public class Stamps(StampCardHttpClient stampCardHttpClient, TeamHttpClient team
             return;
         }
 
-        IsCoach = teamResponse.Data.Coaches.Contains(User.Identity?.Name ?? string.Empty);
+        IsCoach = User.IsCoachOf(teamResponse.Data);
         if (!IsCoach) return;
 
         var sharedCodeResponse = await stampCardHttpClient.ListSharedCodesAsync(Team, StampCardId);
@@ -107,8 +110,10 @@ public class Stamps(StampCardHttpClient stampCardHttpClient, TeamHttpClient team
         return Page();
     }
 
-    public async Task<IActionResult> OnGetDeleteAsync(Guid id)
+    public async Task<IActionResult> OnPostDeleteAsync(Guid id)
     {
+        // the reason of a new stamp is not part of this form
+        ModelState.Clear();
         var response = await stampCardHttpClient.DeleteStampAsync(Team, StampCardId, id);
         if (!response.HasError) return RedirectToPage();
         ModelState.AddModelError(string.Empty, response.Message!);
@@ -118,7 +123,7 @@ public class Stamps(StampCardHttpClient stampCardHttpClient, TeamHttpClient team
 
     public async Task<IActionResult> OnPostShareAsync()
     {
-        ModelState.Remove($"{nameof(Fields)}.{nameof(UpdateStamp.Reason)}");
+        ModelState.Clear();
         var response = await stampCardHttpClient.ShareAsync(Team, StampCardId);
         if (!response.HasError)
         {
@@ -131,8 +136,22 @@ public class Stamps(StampCardHttpClient stampCardHttpClient, TeamHttpClient team
         return Page();
     }
 
-    public async Task<IActionResult> OnGetDeleteSharedCodeAsync(Guid id)
+    /// <summary>
+    /// The link keeps showing the stamp card, but no more stamps can be submitted with it.
+    /// </summary>
+    public async Task<IActionResult> OnPostRevokeSharedCodeAsync(Guid id)
     {
+        ModelState.Clear();
+        var response = await stampCardHttpClient.RevokeSharedCodeAsync(Team, StampCardId, id);
+        if (!response.HasError) return RedirectToPage();
+        ModelState.AddModelError(string.Empty, response.Message!);
+        await LoadItemsAsync();
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPostDeleteSharedCodeAsync(Guid id)
+    {
+        ModelState.Clear();
         var response = await stampCardHttpClient.DeleteSharedCodeAsync(Team, StampCardId, id);
         if (!response.HasError) return RedirectToPage();
         ModelState.AddModelError(string.Empty, response.Message!);

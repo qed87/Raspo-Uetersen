@@ -44,7 +44,7 @@ $(function () {
                     // Optional: Fallback-Timeout (z. B. 15 Sekunden), falls Server hängt
                     setTimeout(() => {
                         $('#loadingOverlay').css('display', 'none');
-                        $submitBtn.prop('disabled', false).html('Absenden');
+                        $clickedButton.prop('disabled', false).html($clickedButton.data('originalText'));
                     }, 15000);
                 };
             }
@@ -70,6 +70,20 @@ $('form').on('click', 'button[type="submit"], input[type="submit"]', function (e
     if (fa) {
         $form.attr('action', fa);
     }
+});
+
+// Rückfrage vor Aktionen, die sich nicht rückgängig machen lassen, z. B. Ablehnen oder Entfernen
+$(document).on('click', '[data-confirm]', function (e) {
+    if (!confirm($(this).data('confirm'))) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+    }
+});
+
+// Formulare ohne Validierung, z. B. Löschen per POST, zeigen beim Absenden den Lade-Indikator
+$(document).on('submit', 'form[data-loading="true"]', function () {
+    $('#loadingOverlay').css('display', 'flex');
+    $(this).find('button[type="submit"]').prop('disabled', true);
 });
 
 $(function() {

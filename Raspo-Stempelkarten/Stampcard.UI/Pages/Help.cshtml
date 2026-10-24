@@ -1,4 +1,4 @@
-@page
+﻿@page
 @using SmartBreadcrumbs.Nodes
 @model Help
 
@@ -105,7 +105,11 @@
         <div id="helpStampCards" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
             <div class="accordion-body">
                 <ol>
-                    <li>Klicken Sie in der Teamübersicht beim gewünschten Team auf <em>Stempelkarten verwalten</em>.</li>
+                    <li>
+                        Klicken Sie in der Teamübersicht beim gewünschten Team auf <em>Stempelkarten verwalten</em>.
+                        Die Liste zeigt die Karten des aktuellen Geschäftsjahres, über <em>Geschäftsjahr</em> wählen
+                        Sie ein anderes Jahr oder <em>Alle</em>.
+                    </li>
                     <li>
                         Einzelne Karte: Spieler und Geschäftsjahr auswählen und auf <em>Anlegen</em> klicken.
                         Pro Spieler gibt es je Geschäftsjahr eine Stempelkarte.
@@ -133,10 +137,21 @@
                     <li>Tragen Sie einen <em>Grund</em> ein (z. B. „Training 12.03.“) und klicken Sie auf <em>Stempeln</em>.</li>
                     <li>Mit <em>Stempel löschen</em> entfernen Sie einen versehentlich vergebenen Stempel.</li>
                 </ol>
+                <p>
+                    <strong>Mehrere Spieler auf einmal:</strong> Setzen Sie in der Stempelkartenübersicht die Haken bei
+                    allen Spielern, die z. B. beim Training waren, tragen Sie unter <em>Mehrere Spieler stempeln</em>
+                    einen Grund ein und klicken Sie auf <em>Ausgewählte stempeln</em>.
+                </p>
                 <p class="mb-0">
                     Die Spalte <em>Status</em> zeigt, ob ein Stempel <em>Bestätigt</em> ist oder noch
                     <em>auf Freigabe wartet</em>. Stempel, die nicht von einem Coach des Teams vergeben wurden, müssen
                     erst von einem Coach freigegeben werden.
+                </p>
+                <p class="mt-3 mb-0">
+                    <strong>Geteilte Links:</strong> Unter <em>Geteilte Links</em> erstellen Sie einen öffentlichen Link
+                    auf die Stempelkarte, z. B. für Eltern. Mit <em>Widerrufen</em> kann über den Link weiterhin die
+                    Karte angesehen, aber kein Stempel mehr eingereicht werden. <em>Link löschen</em> macht den Link
+                    vollständig ungültig.
                 </p>
             </div>
         </div>

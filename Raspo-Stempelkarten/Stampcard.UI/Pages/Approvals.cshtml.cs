@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Stampcard.UI.Clients;
 
@@ -7,7 +7,7 @@ namespace Stampcard.UI.Pages;
 /// <summary>
 /// Stamps submitted by external users that wait for the approval of a coach.
 /// </summary>
-public class Approvals(StampCardHttpClient stampCardHttpClient, PlayerHttpClient playerHttpClient) : PageModel
+public class Approvals(StampCardHttpClient stampCardHttpClient, PlayerHttpClient playerHttpClient, TeamHttpClient teamHttpClient) : PageModel
 {
     [BindProperty(SupportsGet = true)]
     public string Team { get; set; }
@@ -20,17 +20,12 @@ public class Approvals(StampCardHttpClient stampCardHttpClient, PlayerHttpClient
 
     public List<PendingStamp> Items { get; set; } = [];
 
+    public string TeamName { get; set; } = "";
+
     public async Task<IActionResult> OnGetAsync()
     {
-        try
-        {
-            await LoadItemsAsync();
-            return Page();
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return RedirectToPage("/Index");
-        }
+        await LoadItemsAsync();
+        return Page();
     }
 
     private async Task<ResponseWrapperDto<List<PendingStampReadDto>>> LoadItemsAsync()
@@ -55,6 +50,15 @@ public class Approvals(StampCardHttpClient stampCardHttpClient, PlayerHttpClient
             ModelState.AddModelError(string.Empty, stampCardResponse.Message!);
             return pendingResponse;
         }
+
+        var teamResponse = await teamHttpClient.GetTeamAsync(Team);
+        if (teamResponse.HasError)
+        {
+            ModelState.AddModelError(string.Empty, teamResponse.Message!);
+            return pendingResponse;
+        }
+
+        TeamName = teamResponse.Data.Name;
 
         var playerNames = playerResponse.Data.ToDictionary(player => player.Id, player => $"{player.LastName}, {player.FirstName}");
         var accountingYears = stampCardResponse.Data.ToDictionary(card => card.Id, card => card.AccountingYear);

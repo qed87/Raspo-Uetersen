@@ -17,17 +17,10 @@ public class Index(TeamHttpClient teamHttpClient, StampCardHttpClient stampCardH
 
     public async Task<IActionResult> OnGetAsync()
     {
-        try
-        {
-            var response = await LoadItemsAsync();
-            if (response!.HasError)
-                ModelState.AddModelError(string.Empty, response.Message!);
-            return Page();
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return RedirectToPage("/Index");
-        }
+        var response = await LoadItemsAsync();
+        if (response!.HasError)
+            ModelState.AddModelError(string.Empty, response.Message!);
+        return Page();
     }
 
     private async Task<ResponseWrapperDto<List<TeamReadDto>>?> LoadItemsAsync()
@@ -37,7 +30,7 @@ public class Index(TeamHttpClient teamHttpClient, StampCardHttpClient stampCardH
         foreach (var teamReadDto in teamResponse.Data)
         {
             Items.Add(teamReadDto);
-            if (!IsCoachOf(teamReadDto)) continue;
+            if (!User.IsCoachOf(teamReadDto)) continue;
             // a missing count only hides the badge, the overview stays usable
             var pendingResponse = await stampCardHttpClient.ListPendingStampsAsync(teamReadDto.Id);
             if (!pendingResponse.HasError) PendingStampCounts[teamReadDto.Id] = pendingResponse.Data.Count;
@@ -56,7 +49,7 @@ public class Index(TeamHttpClient teamHttpClient, StampCardHttpClient stampCardH
             ModelState.AddModelError(string.Empty, response.Message!);
             return Page();
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not UnauthorizedAccessException)
         {
             logger.LogError(exception, "Unerwarteter Fehler");
             await LoadItemsAsync();
@@ -67,8 +60,10 @@ public class Index(TeamHttpClient teamHttpClient, StampCardHttpClient stampCardH
         }
     }
 
-    public async Task<IActionResult> OnGetDelete(string id)
+    public async Task<IActionResult> OnPostDeleteAsync(string id)
     {
+        // the name of a new team is not part of this form
+        ModelState.Clear();
         try
         {
             var response = await teamHttpClient.DeleteTeamAsync(id);
@@ -77,7 +72,7 @@ public class Index(TeamHttpClient teamHttpClient, StampCardHttpClient stampCardH
             ModelState.AddModelError(string.Empty, response.Message);
             return Page();
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not UnauthorizedAccessException)
         {
             logger.LogError(exception, "Unerwarteter Fehler");
             ModelState.AddModelError(
@@ -87,11 +82,6 @@ public class Index(TeamHttpClient teamHttpClient, StampCardHttpClient stampCardH
         }
     }
     
-    public bool IsCoachOf(TeamReadDto team)
-    {
-        return team.Coaches.Contains(User.Identity?.Name ?? string.Empty);
-    }
-
     public IActionResult OnGetItem(string target, string id)
     {
         return RedirectToPage(target, new { Team = id });

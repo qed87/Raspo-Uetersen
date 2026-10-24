@@ -1,10 +1,10 @@
-@page "/Teams/{Team}/StampCards"
+﻿@page "/Teams/{Team}/StampCards"
 @using SmartBreadcrumbs.Nodes
 @model StampCards
 @tagHelperPrefix x:
 
 @{
-    ViewData["Title"] = "Stempelkarten - " + Model.Team;
+    ViewData["Title"] = "Stempelkarten - " + Model.TeamName;
     ViewData["BreadcrumbNode"] =
         new RazorPageBreadcrumbNode("StampCards", "Stempelkarten")
         {
@@ -16,87 +16,159 @@
         };
 }
 
-<h2>Stempelkarten - @Model.Team</h2>
+<h2>Stempelkarten - @Model.TeamName</h2>
 
-<table class="table table-striped">
-    <thead>
-    <tr>
-        <th scope="col">#</th>
-        <th scope="col">Spieler</th>
-        <th scope="col">Geschäftsjahr</th>
-        <th scope="col"></th>
-    </tr>
-    </thead>
-    <tbody>
-    @if (Model.Items.Count > 0)
-    {
-        @for (var i = 0; i < Model.Items.Count; i++)
+@if (Model.StampedCount is not null)
+{
+    <div class="alert alert-success" role="status">
+        @(Model.StampedCount == 1 ? "1 Stempel wurde vergeben." : $"{Model.StampedCount} Stempel wurden vergeben.")
+    </div>
+}
+
+<x:div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert">
+</x:div>
+
+<form method="get" class="row g-2 align-items-center mb-3">
+    <div class="col-auto">
+        <label for="yearFilter" class="col-form-label">Geschäftsjahr</label>
+    </div>
+    <div class="col-auto">
+        <select id="yearFilter" name="year" class="form-select" onchange="this.form.submit()">
+            @foreach (var year in Model.AvailableYears)
+            {
+                <option value="@year" selected="@(Model.SelectedYear == year)">@year</option>
+            }
+            <option value="alle" selected="@(Model.SelectedYear is null)">Alle</option>
+        </select>
+    </div>
+    <noscript>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-secondary">Anzeigen</button>
+        </div>
+    </noscript>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+        <tr>
+            <th scope="col">
+                <input type="checkbox" class="form-check-input" id="selectAllStampCards" aria-label="Alle auswählen"
+                       @(Model.Items.Count == 0 ? "disabled" : "")/>
+            </th>
+            <th scope="col">Spieler</th>
+            <th scope="col">Geschäftsjahr</th>
+            <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (Model.Items.Count > 0)
         {
-            var itemId = Model.Items[i].Id;
-            <tr>
-                <td>@(i + 1)</td>
-                <td>
-                    @Model.Items[i].PlayerName
-                </td>
-                <td>
-                    @Model.Items[i].AccountingYear
-                </td>
-                <td>
-                    <x:a class="btn btn-dark" asp-page="Stamps" asp-route-team="@Model.Team" asp-route-stampCardId="@itemId">
-                        <i class="bi bi-credit-card-2-front"> Stempelkarte bearbeiten</i>
-                    </x:a>
-                    <x:a class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#deleteModal-@itemId">
-                        <i class="bi bi-trash3-fill"> Stempelkarte löschen</i>
-                    </x:a>
-                    <!-- Modal -->
-                    <div class="modal fade" id="deleteModal-@itemId" tabindex="-1" aria-labelledby="deleteModalLabel-@itemId" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="deleteModalLabel-@itemId">Wirklich löschen?</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    Möchten Sie die <strong>Stempelkarte: @Model.Items[i].PlayerName (@Model.Items[i].AccountingYear)</strong> endgültig löschen?<br>
-                                    Diese Aktion kann <strong>nicht</strong> rückgängig gemacht werden.
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                                    <x:a class="btn btn-danger" asp-route-id="@itemId" asp-page-handler="delete" data-loading="true">Ja, löschen</x:a>
+            @foreach (var card in Model.Items)
+            {
+                var itemId = card.Id;
+                <tr>
+                    <td>
+                        @* the checkbox belongs to the quick stamp form below, forms cannot be nested in the table *@
+                        <input type="checkbox" class="form-check-input" name="SelectedStampCardIds" value="@itemId"
+                               form="quickStampForm" aria-label="Stempelkarte von @card.PlayerName auswählen" data-stamp-card-selection
+                               checked="@Model.SelectedStampCardIds.Contains(itemId)"/>
+                    </td>
+                    <td>@card.PlayerName</td>
+                    <td>@card.AccountingYear</td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-1">
+                            <x:a class="btn btn-dark" asp-page="Stamps" asp-route-team="@Model.Team" asp-route-stampCardId="@itemId">
+                                <i class="bi bi-credit-card-2-front" aria-hidden="true"></i> Stempelkarte bearbeiten
+                            </x:a>
+                            <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#deleteModal-@itemId">
+                                <i class="bi bi-trash3-fill" aria-hidden="true"></i> Stempelkarte löschen
+                            </button>
+                        </div>
+                        <div class="modal fade" id="deleteModal-@itemId" tabindex="-1" aria-labelledby="deleteModalLabel-@itemId" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteModalLabel-@itemId">Wirklich löschen?</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Möchten Sie die <strong>Stempelkarte: @card.PlayerName (@card.AccountingYear)</strong> endgültig löschen?<br>
+                                        Diese Aktion kann <strong>nicht</strong> rückgängig gemacht werden.
+                                    </div>
+                                    <x:form class="modal-footer" asp-page-handler="delete" asp-route-id="@itemId" asp-route-year="@Model.Year" method="post" data-loading="true">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                                        <button type="submit" class="btn btn-danger">Ja, löschen</button>
+                                    </x:form>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </td>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="4">Keine Stempelkarten@(Model.SelectedYear is null ? "" : $" für {Model.SelectedYear}")</td>
             </tr>
         }
-    }
-    else
-    {
-        <td colspan="4">Keine Daten</td>
-    }
-    </tbody>
-</table>
+        </tbody>
+    </table>
+</div>
 
+@if (Model.Items.Count > 0)
+{
+    <h3 class="mt-4">Mehrere Spieler stempeln</h3>
+    <p class="text-muted">
+        Wählen Sie oben die Stempelkarten aus, z. B. alle Spieler, die beim Training waren, und vergeben Sie allen
+        denselben Stempel.
+    </p>
+    <x:form id="quickStampForm" asp-page="" asp-page-handler="stampSelected" asp-route-year="@Model.Year" method="post" data-loading="true">
+        <div class="row g-3 mb-3 align-items-end">
+            <div class="col-auto">
+                <x:label asp-for="QuickStampReason" class="form-label">Grund</x:label>
+                <x:input asp-for="QuickStampReason" class="form-control" placeholder="z. B. Training 12.03."/>
+                <x:span asp-validation-for="QuickStampReason" class="text-danger"></x:span>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check2-all" aria-hidden="true"></i> Ausgewählte stempeln
+                </button>
+            </div>
+        </div>
+    </x:form>
+}
+
+<h3 class="mt-4">Stempelkarten anlegen</h3>
 <x:form method="post" asp-page="">
-    <!-- Validation summary -->
-    <x:div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert">
-    </x:div>
     <div class="row g-3 mb-3">
         <div class="col-auto">
-            <x:label asp-for="PlayerName">Spieler</x:label>
-            <x:select asp-for="PlayerName" asp-items="@Model.Players" class="form-control">
+            <x:label asp-for="PlayerName" class="form-label">Spieler</x:label>
+            <x:select asp-for="PlayerName" asp-items="@Model.Players" class="form-select">
             </x:select>
         </div>
         <div class="col-auto">
-            <x:label asp-for="AccountingYear">Geschäftsjahr</x:label>
+            <x:label asp-for="AccountingYear" class="form-label">Geschäftsjahr</x:label>
             <x:input asp-for="AccountingYear" class="form-control"/>
         </div>
     </div>
-    <div class="mb-3">
-        <x:button type="submit" class="btn-primary btn" asp-page-handler="manual">Anlegen</x:button>
-    </div>
-    <div class="mb-3">
-        <x:button type="submit" class="btn-primary btn" asp-page-handler="auto">Automatisch füllen</x:button>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <x:button type="submit" class="btn btn-primary" asp-page-handler="manual">Anlegen</x:button>
+        <x:button type="submit" class="btn btn-primary" asp-page-handler="auto">Automatisch füllen</x:button>
     </div>
 </x:form>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('#selectAllStampCards').on('change', function () {
+                $('[data-stamp-card-selection]').prop('checked', this.checked);
+            });
+            $('[data-stamp-card-selection]').on('change', function () {
+                const $boxes = $('[data-stamp-card-selection]');
+                $('#selectAllStampCards').prop('checked', $boxes.length === $boxes.filter(':checked').length);
+            });
+        });
+    </script>
+}

@@ -92,6 +92,47 @@ public class StampCardHttpClient(IRestClient restClient)
     }
 
     /// <summary>
+    /// Gets all stamps of the <param name="teamId">Team</param> that wait for approval.
+    /// </summary>
+    /// <param name="teamId">The team id.</param>
+    public Task<ResponseWrapperDto<List<PendingStampReadDto>>> ListPendingStampsAsync(string teamId)
+    {
+        var request = new RestRequest("/api/teams/{teamId}/stamp/pending")
+            .AddUrlSegment("teamId", teamId);
+        return restClient.SendAsync<List<PendingStampReadDto>>(request);
+    }
+
+    /// <summary>
+    /// Approves the pending <param name="stampIds">Stamps</param> of the <param name="teamId">Team</param> at once.
+    /// Either all or none of them are approved.
+    /// </summary>
+    /// <param name="teamId">The team id.</param>
+    /// <param name="stampIds">The ids of the pending stamps.</param>
+    public Task<ResponseWrapperDto> ApproveStampsAsync(string teamId, IEnumerable<Guid> stampIds)
+    {
+        var request = new RestRequest("/api/teams/{teamId}/stamp/pending/approve", Method.Post)
+            .AddUrlSegment("teamId", teamId)
+            .AddJsonBody(new { stampIds });
+        return restClient.SendAsync(request);
+    }
+
+    /// <summary>
+    /// Rejects the pending <param name="id">Stamp</param> of the <param name="stampCardId">StampCard</param> in <param name="teamId">Team</param>,
+    /// which removes it from the stamp card.
+    /// </summary>
+    /// <param name="teamId">The team id.</param>
+    /// <param name="stampCardId">The stamp card id.</param>
+    /// <param name="id">The stamp id.</param>
+    public Task<ResponseWrapperDto> RejectStampAsync(string teamId, Guid stampCardId, Guid id)
+    {
+        var request = new RestRequest("/api/teams/{teamId}/stampcard/{stampCardId}/stamp/{stampId}/reject", Method.Post)
+            .AddUrlSegment("teamId", teamId)
+            .AddUrlSegment("stampCardId", stampCardId)
+            .AddUrlSegment("stampId", id);
+        return restClient.SendAsync(request);
+    }
+
+    /// <summary>
     /// Gets all share codes of the <param name="stampCardId">StampCard</param> in <param name="teamId">Team</param>.
     /// </summary>
     /// <param name="teamId">The team id.</param>

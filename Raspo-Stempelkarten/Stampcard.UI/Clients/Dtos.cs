@@ -21,6 +21,12 @@ public record StampCardReadDto(Guid Id, Guid PlayerId, int AccountingYear, List<
 public record StampReadDto(Guid Id, string Reason, string Issuer, DateTimeOffset IssuedOn, string Status);
 
 /// <summary>
+/// A stamp submitted by an external user that waits for the approval of a coach, as returned by the backend.
+/// The issuer is the name the external user entered.
+/// </summary>
+public record PendingStampReadDto(Guid Id, string Reason, string Issuer, DateTimeOffset IssuedOn, Guid StampCardId, Guid PlayerId);
+
+/// <summary>
 /// A share code of a stamp card as returned by the backend. A revoked code still grants read access,
 /// but stamps can no longer be submitted with it.
 /// </summary>

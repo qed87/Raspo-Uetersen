@@ -1,12 +1,17 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Stampcard.UI.Clients;
 
 namespace Stampcard.UI.Pages;
 
-public class Index(TeamHttpClient teamHttpClient, ILogger<Index> logger) : PageModel
+public class Index(TeamHttpClient teamHttpClient, StampCardHttpClient stampCardHttpClient, ILogger<Index> logger) : PageModel
 {
     public required List<TeamReadDto> Items { get; set; } = [];
+
+    /// <summary>
+    /// The number of stamps waiting for approval per team id, only for teams the user coaches.
+    /// </summary>
+    public Dictionary<string, int> PendingStampCounts { get; set; } = [];
     
     [BindProperty] public string Name { get; set; }
 
@@ -32,6 +37,10 @@ public class Index(TeamHttpClient teamHttpClient, ILogger<Index> logger) : PageM
         foreach (var teamReadDto in teamResponse.Data)
         {
             Items.Add(teamReadDto);
+            if (!IsCoachOf(teamReadDto)) continue;
+            // a missing count only hides the badge, the overview stays usable
+            var pendingResponse = await stampCardHttpClient.ListPendingStampsAsync(teamReadDto.Id);
+            if (!pendingResponse.HasError) PendingStampCounts[teamReadDto.Id] = pendingResponse.Data.Count;
         }
 
         return teamResponse;
@@ -78,6 +87,11 @@ public class Index(TeamHttpClient teamHttpClient, ILogger<Index> logger) : PageM
         }
     }
     
+    public bool IsCoachOf(TeamReadDto team)
+    {
+        return team.Coaches.Contains(User.Identity?.Name ?? string.Empty);
+    }
+
     public IActionResult OnGetItem(string target, string id)
     {
         return RedirectToPage(target, new { Team = id });

@@ -1,0 +1,108 @@
+@page "/Teams/{Team}/Approvals"
+@using SmartBreadcrumbs.Nodes
+@model Approvals
+@tagHelperPrefix x:
+
+@{
+    ViewData["Title"] = "Freigaben - " + Model.Team;
+    ViewData["BreadcrumbNode"] = new RazorPageBreadcrumbNode("Approvals", "Freigaben")
+    {
+        Parent = new RazorPageBreadcrumbNode("Index", "Startseite"),
+        RouteValues = new Dictionary<string, object>
+        {
+            { "Team", Model.Team }
+        }
+    };
+}
+
+<h2>Freigaben</h2>
+<p class="text-muted">
+    Diese Stempel wurden über geteilte Links eingereicht. Erst nach der Freigabe zählen sie auf der Stempelkarte,
+    abgelehnte Stempel werden von der Stempelkarte entfernt.
+</p>
+
+<x:form asp-page="" method="post">
+    <x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
+    </x:div>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th scope="col">
+                <input type="checkbox" class="form-check-input" id="selectAllStamps" aria-label="Alle auswählen"
+                       @(Model.Items.Count == 0 ? "disabled" : "")/>
+            </th>
+            <th scope="col">Spieler</th>
+            <th scope="col">Geschäftsjahr</th>
+            <th scope="col">Grund</th>
+            <th scope="col">Eingereicht von</th>
+            <th scope="col">Eingereicht am</th>
+            <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (Model.Items.Count > 0)
+        {
+            @foreach (var stamp in Model.Items)
+            {
+                <tr>
+                    <td>
+                        <input type="checkbox" class="form-check-input" name="SelectedStampIds" value="@stamp.Id"
+                               aria-label="Stempel auswählen" data-stamp-selection/>
+                    </td>
+                    <td>@stamp.PlayerName</td>
+                    <td>@stamp.AccountingYear</td>
+                    <td>@stamp.Reason</td>
+                    <td>@stamp.Issuer</td>
+                    <td>@stamp.IssuedOn.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td class="text-nowrap">
+                        <x:button type="submit" class="btn btn-success" asp-page-handler="approve" asp-route-stampId="@stamp.Id">
+                            <i class="bi bi-check-lg"></i> Freigeben
+                        </x:button>
+                        <x:button type="submit" class="btn btn-outline-danger" asp-page-handler="reject" asp-route-stampId="@stamp.Id"
+                                  data-confirm="Möchten Sie den Stempel „@stamp.Reason“ wirklich ablehnen? Er wird von der Stempelkarte entfernt.">
+                            <i class="bi bi-x-lg"></i> Ablehnen
+                        </x:button>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="7">Keine Stempel warten auf Freigabe.</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+
+    @if (Model.Items.Count > 0)
+    {
+        <div class="mb-3">
+            <x:button type="submit" class="btn btn-success" asp-page-handler="approveSelected">
+                <i class="bi bi-check-all"></i> Ausgewählte freigeben
+            </x:button>
+            <x:button type="submit" class="btn btn-outline-danger" asp-page-handler="rejectSelected"
+                      data-confirm="Möchten Sie die ausgewählten Stempel wirklich ablehnen? Sie werden von den Stempelkarten entfernt.">
+                <i class="bi bi-x-lg"></i> Ausgewählte ablehnen
+            </x:button>
+        </div>
+    }
+</x:form>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('#selectAllStamps').on('change', function () {
+                $('[data-stamp-selection]').prop('checked', this.checked);
+            });
+            $('[data-stamp-selection]').on('change', function () {
+                const $boxes = $('[data-stamp-selection]');
+                $('#selectAllStamps').prop('checked', $boxes.length === $boxes.filter(':checked').length);
+            });
+            $('[data-confirm]').on('click', function (e) {
+                if (!confirm($(this).data('confirm'))) e.preventDefault();
+            });
+        });
+    </script>
+}

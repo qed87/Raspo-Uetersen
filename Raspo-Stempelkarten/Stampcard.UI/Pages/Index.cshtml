@@ -1,4 +1,4 @@
-@page
+﻿@page
 @using SmartBreadcrumbs.Nodes
 @model Index
 @tagHelperPrefix x:
@@ -51,6 +51,20 @@
                     {
                         <x:a class="btn btn-dark" asp-route-target="StampCards" asp-route-id="@team.Id" asp-page-handler="item">
                             <i class="bi bi-postage"> Stempelkarten verwalten</i>
+                        </x:a>
+                    }
+                    @if (Model.IsCoachOf(team))
+                    {
+                        var pendingCount = Model.PendingStampCounts.GetValueOrDefault(team.Id);
+                        <x:a class="btn btn-dark position-relative" asp-route-target="Approvals" asp-route-id="@team.Id" asp-page-handler="item">
+                            <i class="bi bi-patch-check"> Freigaben</i>
+                            @if (pendingCount > 0)
+                            {
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    @pendingCount
+                                    <span class="visually-hidden">Stempel warten auf Freigabe</span>
+                                </span>
+                            }
                         </x:a>
                     }
                     @if (User.IsInRole("manager"))

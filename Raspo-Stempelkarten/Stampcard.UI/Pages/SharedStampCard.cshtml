@@ -1,0 +1,47 @@
+@page "/Shared/Teams/{Team}/StampCard/{StampCardId}"
+@model SharedStampCard
+@tagHelperPrefix x:
+
+@{
+    ViewData["Title"] = "Stempelkarte";
+}
+
+<h2>Stempelkarte@(Model.Item is null ? "" : " " + Model.Item.AccountingYear)</h2>
+
+<x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
+</x:div>
+
+@if (Model.Item is not null)
+{
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Grund</th>
+            <th scope="col">Stempel erhalten am</th>
+            <th scope="col">Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (Model.Item.Stamps.Count > 0)
+        {
+            @for (var i = 0; i < Model.Item.Stamps.Count; i++)
+            {
+                var stamp = Model.Item.Stamps[i];
+                <tr>
+                    <td>@(i + 1)</td>
+                    <td>@stamp.Reason</td>
+                    <td>@stamp.IssuedOn.ToString("dd.MM.yyyy")</td>
+                    <td>@(stamp.Status == "pending" ? "Wartet auf Freigabe" : "Bestätigt")</td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="4">Noch keine Stempel</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

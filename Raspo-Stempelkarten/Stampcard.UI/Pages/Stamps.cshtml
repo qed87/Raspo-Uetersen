@@ -104,3 +104,124 @@
         <button class="btn-primary btn">Stempeln</button>
     </div>
 </x:form>
+
+@if (Model.IsCoach)
+{
+    <h3 class="mt-4">Geteilte Links</h3>
+    <p class="text-muted">
+        Mit einem geteilten Link können Personen ohne Anmeldung, z. B. Eltern, diese Stempelkarte einsehen.
+    </p>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Link</th>
+            <th scope="col">Status</th>
+            <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (Model.SharedCodes.Count > 0)
+        {
+            @for (var i = 0; i < Model.SharedCodes.Count; i++)
+            {
+                var sharedCode = Model.SharedCodes[i];
+                var link = Model.SharedLinkOf(sharedCode.Code);
+                <tr>
+                    <td>@(i + 1)</td>
+                    <td>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="@link" readonly aria-label="Geteilter Link"/>
+                            <button type="button" class="btn btn-outline-secondary" data-copy-link="@link" title="Link kopieren">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td>@(sharedCode.Revoked ? "Widerrufen" : "Aktiv")</td>
+                    <td>
+                        <a class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#deleteSharedCodeModal-@sharedCode.Id">
+                            <i class="bi bi-trash3-fill"> Link löschen</i>
+                        </a>
+                        <div class="modal fade" id="deleteSharedCodeModal-@sharedCode.Id" tabindex="-1" aria-labelledby="deleteSharedCodeModalLabel-@sharedCode.Id" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteSharedCodeModalLabel-@sharedCode.Id">Wirklich löschen?</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Möchten Sie den <strong>Link @(i + 1)</strong> endgültig löschen?<br>
+                                        Danach kann die Stempelkarte über diesen Link <strong>nicht</strong> mehr aufgerufen werden.
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                                        <x:a class="btn btn-danger" asp-route-id="@sharedCode.Id" asp-page-handler="deleteSharedCode" data-loading="true">Ja, löschen</x:a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="4">Keine Links</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+
+    <x:form asp-page="" asp-page-handler="share" method="post">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-share-fill"></i> Link erstellen
+        </button>
+    </x:form>
+
+    @if (Model.CreatedSharedCode is not null)
+    {
+        var createdLink = Model.SharedLinkOf(Model.CreatedSharedCode);
+        <div class="modal fade" id="createdSharedCodeModal" tabindex="-1" aria-labelledby="createdSharedCodeModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createdSharedCodeModalLabel">Link erstellt</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Über diesen öffentlichen Link kann die Stempelkarte ohne Anmeldung aufgerufen werden:</p>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="@createdLink" readonly aria-label="Öffentlicher Link"/>
+                            <button type="button" class="btn btn-outline-secondary" data-copy-link="@createdLink" title="Link kopieren">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                        <p class="text-muted small mt-2 mb-0">
+                            Geben Sie den Link nur an Personen weiter, die die Stempelkarte sehen dürfen.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@section Scripts {
+    <script>
+        $(function () {
+            const createdSharedCodeModal = document.getElementById('createdSharedCodeModal');
+            if (createdSharedCodeModal) bootstrap.Modal.getOrCreateInstance(createdSharedCodeModal).show();
+
+            $('[data-copy-link]').on('click', function () {
+                const $button = $(this);
+                navigator.clipboard.writeText($button.data('copyLink')).then(function () {
+                    $button.find('i').removeClass('bi-clipboard').addClass('bi-clipboard-check');
+                });
+            });
+        });
+    </script>
+}

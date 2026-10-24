@@ -90,4 +90,45 @@ public class StampCardHttpClient(IRestClient restClient)
             .AddUrlSegment("stampId", id);
         return restClient.SendAsync(request);
     }
+
+    /// <summary>
+    /// Gets all share codes of the <param name="stampCardId">StampCard</param> in <param name="teamId">Team</param>.
+    /// </summary>
+    /// <param name="teamId">The team id.</param>
+    /// <param name="stampCardId">The stamp card id.</param>
+    public Task<ResponseWrapperDto<List<SharedCodeReadDto>>> ListSharedCodesAsync(string teamId, Guid stampCardId)
+    {
+        var request = new RestRequest("/api/teams/{teamId}/stampcard/{stampCardId}/share")
+            .AddUrlSegment("teamId", teamId)
+            .AddUrlSegment("stampCardId", stampCardId);
+        return restClient.SendAsync<List<SharedCodeReadDto>>(request);
+    }
+
+    /// <summary>
+    /// Creates a new share code for the <param name="stampCardId">StampCard</param> in <param name="teamId">Team</param>.
+    /// </summary>
+    /// <param name="teamId">The team id.</param>
+    /// <param name="stampCardId">The stamp card id.</param>
+    public Task<ResponseWrapperDto<SharedCodeReadDto>> ShareAsync(string teamId, Guid stampCardId)
+    {
+        var request = new RestRequest("/api/teams/{teamId}/stampcard/{stampCardId}/share", Method.Post)
+            .AddUrlSegment("teamId", teamId)
+            .AddUrlSegment("stampCardId", stampCardId);
+        return restClient.SendAsync<SharedCodeReadDto>(request);
+    }
+
+    /// <summary>
+    /// Deletes the <param name="id">share code</param> from the <param name="stampCardId">StampCard</param> in <param name="teamId">Team</param>.
+    /// </summary>
+    /// <param name="teamId">The team id.</param>
+    /// <param name="stampCardId">The stamp card id.</param>
+    /// <param name="id">The share code id.</param>
+    public Task<ResponseWrapperDto> DeleteSharedCodeAsync(string teamId, Guid stampCardId, Guid id)
+    {
+        var request = new RestRequest("/api/teams/{teamId}/stampcard/{stampCardId}/share/{sharedCodeId}", Method.Delete)
+            .AddUrlSegment("teamId", teamId)
+            .AddUrlSegment("stampCardId", stampCardId)
+            .AddUrlSegment("sharedCodeId", id);
+        return restClient.SendAsync(request);
+    }
 }

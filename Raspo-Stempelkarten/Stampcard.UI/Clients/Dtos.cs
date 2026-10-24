@@ -19,3 +19,9 @@ public record StampCardReadDto(Guid Id, Guid PlayerId, int AccountingYear, List<
 /// A stamp as returned by the backend. The status is either <c>pending</c> or <c>accepted</c>.
 /// </summary>
 public record StampReadDto(Guid Id, string Reason, string Issuer, DateTimeOffset IssuedOn, string Status);
+
+/// <summary>
+/// A share code of a stamp card as returned by the backend. A revoked code still grants read access,
+/// but stamps can no longer be submitted with it.
+/// </summary>
+public record SharedCodeReadDto(Guid Id, string Code, bool Revoked);

@@ -1,0 +1,163 @@
+@page
+@using SmartBreadcrumbs.Nodes
+@model Help
+
+@{
+    ViewData["Title"] = "Hilfe";
+    ViewData["BreadcrumbNode"] = new RazorPageBreadcrumbNode("Help", "Hilfe")
+    {
+        Parent = new RazorPageBreadcrumbNode("Index", "Startseite")
+    };
+}
+
+<h2>Hilfe</h2>
+<p>
+    Mit dieser Anwendung verwalten Sie die Stempelkarten Ihrer Spieler. Ein Stempel wird z. B. für
+    Trainingsbeteiligung oder Helfereinsätze vergeben und auf der Stempelkarte des Spielers für das jeweilige
+    Geschäftsjahr gesammelt.
+</p>
+
+<div class="accordion mb-3" id="helpAccordion">
+    <div class="accordion-item">
+        <h3 class="accordion-header">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#helpRoles" aria-expanded="true" aria-controls="helpRoles">
+                <i class="bi bi-person-badge me-2"></i> Rollen und Berechtigungen
+            </button>
+        </h3>
+        <div id="helpRoles" class="accordion-collapse collapse show" data-bs-parent="#helpAccordion">
+            <div class="accordion-body">
+                <ul>
+                    <li>
+                        <strong>Manager</strong> legen Teams an, benennen sie um, löschen sie und ordnen ihnen Coaches zu
+                        (Schaltfläche <em>Team bearbeiten</em>).
+                    </li>
+                    <li>
+                        <strong>Coaches</strong> verwalten die Spieler und Stempelkarten der Teams, denen sie zugeordnet
+                        sind (Schaltflächen <em>Spieler verwalten</em> und <em>Stempelkarten verwalten</em>).
+                    </li>
+                </ul>
+                <p class="mb-0">
+                    Sie sehen nur die Schaltflächen, für die Sie berechtigt sind. Fehlt Ihnen eine Funktion, wenden Sie
+                    sich bitte an einen Manager Ihres Vereins.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h3 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpTeams" aria-expanded="false" aria-controls="helpTeams">
+                <i class="bi bi-diagram-3 me-2"></i> Teams und Coaches verwalten (Manager)
+            </button>
+        </h3>
+        <div id="helpTeams" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+            <div class="accordion-body">
+                <ol>
+                    <li>Öffnen Sie über <em>Teams</em> in der Navigationsleiste die Teamübersicht.</li>
+                    <li>Neues Team: Namen unter der Tabelle eintragen und auf <em>Anlegen</em> klicken.</li>
+                    <li>
+                        Über <em>Team bearbeiten</em> können Sie den Team-Namen ändern und Coaches hinzufügen oder
+                        entfernen. Coaches werden über ihre E-Mail-Adresse hinzugefügt, mit der sie sich anmelden.
+                    </li>
+                    <li>
+                        <em>Team löschen</em> entfernt das Team endgültig. Diese Aktion kann nicht rückgängig gemacht
+                        werden.
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h3 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpPlayers" aria-expanded="false" aria-controls="helpPlayers">
+                <i class="bi bi-people-fill me-2"></i> Spieler verwalten (Coach)
+            </button>
+        </h3>
+        <div id="helpPlayers" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+            <div class="accordion-body">
+                <ol>
+                    <li>Klicken Sie in der Teamübersicht beim gewünschten Team auf <em>Spieler verwalten</em>.</li>
+                    <li>Neuer Spieler: Vorname, Nachname und Geburtsjahr eintragen und auf <em>Anlegen</em> klicken.</li>
+                    <li>
+                        Über <em>Spieler bearbeiten</em> ändern Sie die Daten eines Spielers. Mit dem Haken
+                        <em>Aktiv</em> legen Sie fest, ob der Spieler noch zum Team gehört.
+                    </li>
+                    <li><em>Spieler löschen</em> entfernt den Spieler endgültig.</li>
+                </ol>
+                <p class="mb-0">
+                    Tipp: Spieler, die das Team verlassen, besser deaktivieren statt löschen. So bleiben ihre
+                    bisherigen Daten erhalten.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h3 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpStampCards" aria-expanded="false" aria-controls="helpStampCards">
+                <i class="bi bi-postage me-2"></i> Stempelkarten anlegen (Coach)
+            </button>
+        </h3>
+        <div id="helpStampCards" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+            <div class="accordion-body">
+                <ol>
+                    <li>Klicken Sie in der Teamübersicht beim gewünschten Team auf <em>Stempelkarten verwalten</em>.</li>
+                    <li>
+                        Einzelne Karte: Spieler und Geschäftsjahr auswählen und auf <em>Anlegen</em> klicken.
+                        Pro Spieler gibt es je Geschäftsjahr eine Stempelkarte.
+                    </li>
+                    <li>
+                        <em>Automatisch füllen</em> legt für alle <strong>aktiven</strong> Spieler, die für das
+                        eingetragene Geschäftsjahr noch keine Karte haben, eine Stempelkarte an.
+                    </li>
+                    <li><em>Stempelkarte löschen</em> entfernt die Karte samt aller Stempel endgültig.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h3 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpStamps" aria-expanded="false" aria-controls="helpStamps">
+                <i class="bi bi-credit-card-2-front me-2"></i> Stempel vergeben (Coach)
+            </button>
+        </h3>
+        <div id="helpStamps" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+            <div class="accordion-body">
+                <ol>
+                    <li>Öffnen Sie in der Stempelkartenübersicht die gewünschte Karte über <em>Stempelkarte bearbeiten</em>.</li>
+                    <li>Tragen Sie einen <em>Grund</em> ein (z. B. „Training 12.03.“) und klicken Sie auf <em>Stempeln</em>.</li>
+                    <li>Mit <em>Stempel löschen</em> entfernen Sie einen versehentlich vergebenen Stempel.</li>
+                </ol>
+                <p class="mb-0">
+                    Die Spalte <em>Status</em> zeigt, ob ein Stempel <em>Bestätigt</em> ist oder noch
+                    <em>auf Freigabe wartet</em>. Stempel, die nicht von einem Coach des Teams vergeben wurden, müssen
+                    erst von einem Coach freigegeben werden.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h3 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpNavigation" aria-expanded="false" aria-controls="helpNavigation">
+                <i class="bi bi-signpost-split me-2"></i> Navigation und Abmelden
+            </button>
+        </h3>
+        <div id="helpNavigation" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+            <div class="accordion-body">
+                <ul class="mb-0">
+                    <li>Die Pfadnavigation oberhalb jeder Seite (z. B. <em>Startseite / Stempelkarten / Stempel</em>) führt Sie schnell zurück.</li>
+                    <li>Rechts in der Navigationsleiste sehen Sie, mit welchem Benutzer Sie angemeldet sind.</li>
+                    <li>Über <em>Logout</em> melden Sie sich ab. Bitte melden Sie sich an gemeinsam genutzten Geräten immer ab.</li>
+                    <li>
+                        Erscheint eine rote Fehlermeldung, hat eventuell jemand anderes die Daten zwischenzeitlich
+                        geändert. Laden Sie die Seite neu und versuchen Sie es erneut. Bleibt der Fehler bestehen,
+                        informieren Sie bitte Ihren Systemadministrator.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

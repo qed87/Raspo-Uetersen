@@ -8,7 +8,9 @@
     ViewData["BreadcrumbNode"] = new RazorPageBreadcrumbNode("Index", "Startseite");
 }
 
-<h2>Teamverwaltung</h2>
+@* the club is the same for all teams of a backend, so it is shown once in the heading *@
+@{ var club = Model.Items.FirstOrDefault()?.Club; }
+<h2>Teamverwaltung@(string.IsNullOrEmpty(club) ? "" : " - " + club)</h2>
 <x:form asp-page="" method="post">
     <x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
     </x:div>
@@ -31,7 +33,7 @@
             var team = Model.Items[i];
             <tr>
                 <td>@(i + 1)</td>
-                <td>@team.Club - @team.Name</td>
+                <td>@team.Name</td>
                 <td>
                     @if(User.IsInRole("manager")) 
                     {
@@ -65,7 +67,7 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        Möchten Sie das <strong>Team: @team.Club - @team.Name</strong> endgültig löschen?<br>
+                                        Möchten Sie das <strong>Team: @team.Name</strong> endgültig löschen?<br>
                                         Diese Aktion kann <strong>nicht</strong> rückgängig gemacht werden.
                                     </div>
                                     <div class="modal-footer">

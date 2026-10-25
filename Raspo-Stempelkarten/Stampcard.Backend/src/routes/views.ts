@@ -115,6 +115,8 @@ export const incompleteStampCardViewSchema = z.object({
   PlayerId: z.uuid(),
   FirstName: z.string().nullable(),
   LastName: z.string().nullable(),
+  // null if the player is active or unknown
+  DisabledOn: z.iso.datetime().nullable(),
   AcceptedStamps: z.int()
 });
 
@@ -128,6 +130,7 @@ export function toIncompleteStampCardView(incomplete: IncompleteStampCard & { co
     PlayerId: incomplete.playerId,
     FirstName: incomplete.player?.firstName ?? null,
     LastName: incomplete.player?.lastName ?? null,
+    DisabledOn: incomplete.player?.disabledOn?.toISOString() ?? null,
     AcceptedStamps: incomplete.acceptedStamps
   };
 }

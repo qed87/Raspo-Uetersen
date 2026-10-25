@@ -77,6 +77,13 @@ export class StampCardAlreadyExistsError extends ConflictError {
     }
 }
 
+export class PlayerDisabledError extends ConflictError {
+    constructor(playerId: string) {
+        super(`Player '${playerId}' is disabled and collects no stamps.`);
+        this.name = "PlayerDisabledError";
+    }
+}
+
 export class TeamAlreadyExistsError extends ConflictError {
     constructor(club: string, name: string) {
         super(`Team '${name}' of club '${club}' already exists.`);

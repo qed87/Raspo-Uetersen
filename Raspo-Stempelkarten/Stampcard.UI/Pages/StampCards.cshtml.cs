@@ -88,7 +88,8 @@ public class StampCards(StampCardHttpClient stampCardHttpClient, PlayerHttpClien
         if (hasErrors) return;
 
         TeamName = teamResponse.Data.Name;
-        foreach (var playerReadDto in playerResponse.Data.OrderBy(player => player.LastName).ThenBy(player => player.FirstName))
+        // disabled players collect no stamps, the backend rejects new stamp cards for them
+        foreach (var playerReadDto in playerResponse.Data.Where(player => player.Active).OrderBy(player => player.LastName).ThenBy(player => player.FirstName))
             Players.Add(new SelectListItem($"{playerReadDto.LastName}, {playerReadDto.FirstName}", Convert.ToString(playerReadDto.Id)));
 
         AvailableYears = stampCardResponse.Data

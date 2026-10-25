@@ -41,7 +41,7 @@ public record SharedCodeReadDto(Guid Id, string Code, string HolderName, bool Re
 /// <summary>
 /// A player lacking accepted stamps in an accounting year, as returned by the backend for the accounting.
 /// The stamp card id is null if the player has no stamp card for the accounting year,
-/// first and last name are null if the player was removed.
+/// first and last name are null if the player was removed, disabled on is null unless the player is disabled.
 /// </summary>
 public record IncompleteStampCardReadDto(
     string TeamId,
@@ -51,4 +51,5 @@ public record IncompleteStampCardReadDto(
     Guid PlayerId,
     string? FirstName,
     string? LastName,
+    DateTimeOffset? DisabledOn,
     int AcceptedStamps);

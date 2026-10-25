@@ -4,6 +4,7 @@ import {
     CoachNotFoundError,
     InvalidShareCodeError,
     PlayerAlreadyExistsError,
+    PlayerDisabledError,
     PlayerNotFoundError,
     SharedCodeRevokedError,
     StampCardAlreadyExistsError,
@@ -218,6 +219,13 @@ describe("players", () => {
 });
 
 describe("stamp cards and stamps", () => {
+    test("disabled players get no new stamp card", () => {
+        const { team, playerId } = teamWithStampCard();
+        team.disablePlayer(playerId, ISSUER);
+
+        assert.throws(() => team.addStampCard({ playerId, accountingYear: 2027 }, ISSUER), PlayerDisabledError);
+    });
+
     test("a second stamp card for the same player and accounting year is rejected", () => {
         const { team, playerId } = teamWithStampCard();
 
@@ -394,11 +402,49 @@ describe("incomplete stamp cards", () => {
             [[playerId, undefined, 0]]);
     });
 
-    test("disabled players without a stamp card are not listed", () => {
+    test("disabled players are listed in accounting years before they were disabled", () => {
+        const { team, playerId } = teamWithStampCard();
+        const disabledOn = new Date(2026, 4, 1);
+        team.replay({ type: "PlayerDisabled", data: { id: playerId, issuer: ISSUER, issuedOn: disabledOn } });
+
+        const incomplete = team.listIncompleteStampCards(2025, 1);
+
+        assert.deepEqual(
+            incomplete.map(card => [card.playerId, card.stampCard, card.player?.disabledOn]),
+            [[playerId, undefined, disabledOn]]);
+    });
+
+    test("disabled players are listed in the accounting year they were disabled in", () => {
+        const { team, playerId, stampCardId } = teamWithStampCard();
+        const disabledOn = new Date(2026, 4, 1);
+        team.replay({ type: "PlayerDisabled", data: { id: playerId, issuer: ISSUER, issuedOn: disabledOn } });
+
+        const incomplete = team.listIncompleteStampCards(2026, 1);
+
+        assert.deepEqual(
+            incomplete.map(card => [card.stampCard?.id, card.player?.disabledOn]),
+            [[stampCardId, disabledOn]]);
+    });
+
+    test("disabled players are not listed in later accounting years", () => {
+        const { team, playerId } = teamWithStampCard();
+        team.replay({ type: "PlayerDisabled", data: { id: playerId, issuer: ISSUER, issuedOn: new Date(2026, 4, 1) } });
+        // older streams added stamp cards for disabled players
+        team.replay({ type: "StampCardAdded", data: {
+            id: "00000000-0000-4000-8000-000000000002", playerId, accountingYear: 2027, issuer: ISSUER, issuedOn: new Date()
+        } });
+
+        assert.deepEqual(team.listIncompleteStampCards(2027, 1), []);
+        assert.deepEqual(team.listIncompleteStampCards(2028, 1), []);
+    });
+
+    test("enabled players are no longer disabled", () => {
         const { team, playerId } = teamWithStampCard();
         team.disablePlayer(playerId, ISSUER);
 
-        assert.deepEqual(team.listIncompleteStampCards(2025, 1), []);
+        team.enablePlayer(playerId, ISSUER);
+
+        assert.equal(team.findPlayer(playerId).disabledOn, undefined);
     });
 
     test("stamp cards of players removed by older streams are listed without player", () => {

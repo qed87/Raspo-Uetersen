@@ -7,6 +7,7 @@ import {
     CoachNotFoundError,
     InconsistentStreamError,
     PlayerAlreadyExistsError,
+    PlayerDisabledError,
     PlayerNotFoundError,
     StampCardAlreadyExistsError,
     StampCardNotFoundError,
@@ -16,7 +17,10 @@ import {
 } from "./stamp-card-errors.js";
 import { StampCard, type SharedCode, type SharedStampCard, type Stamp } from "./stamp-card.js";
 
-export type Player = PlayerDto & { id: string, active: boolean };
+/**
+ * disabledOn is only set while the player is disabled.
+ */
+export type Player = PlayerDto & { id: string, active: boolean, disabledOn?: Date };
 
 export type NewTeam = CreateTeamDto & { club: string };
 
@@ -110,15 +114,19 @@ export class TeamAggregate {
 
     /**
      * Stamp cards of the accounting year with fewer accepted stamps than required, followed by the active players
-     * without a stamp card for the accounting year. Disabled players need no stamp card.
+     * without a stamp card for the accounting year. Disabled players are listed up to the accounting year
+     * they were disabled in, with or without a stamp card, but not in later years.
      * Cards of players removed before their cards were removed along with them are included, their player is unknown.
      */
     listIncompleteStampCards(accountingYear: number, requiredStamps: number): IncompleteStampCard[] {
         if (!this.exists) return [];
         const team = this.describe();
         const cardsOfYear = this.listStampCards().filter(card => card.accountingYear === accountingYear);
+        const isListed = (player: Player | undefined) => player === undefined
+            || player.active
+            || (player.disabledOn !== undefined && accountingYear <= player.disabledOn.getFullYear());
         const incompleteCards = cardsOfYear
-            .filter(card => card.countAcceptedStamps() < requiredStamps)
+            .filter(card => card.countAcceptedStamps() < requiredStamps && isListed(this.players.get(card.playerId)))
             .map(card => ({
                 team,
                 accountingYear,
@@ -128,7 +136,7 @@ export class TeamAggregate {
                 acceptedStamps: card.countAcceptedStamps()
             }));
         const missingCards = this.listPlayers()
-            .filter(player => player.active && !cardsOfYear.some(card => card.playerId === player.id))
+            .filter(player => isListed(player) && !cardsOfYear.some(card => card.playerId === player.id))
             .map(player => ({ team, accountingYear, playerId: player.id, player, stampCard: undefined, acceptedStamps: 0 }));
         return [...incompleteCards, ...missingCards];
     }
@@ -240,8 +248,13 @@ export class TeamAggregate {
         }
     }
 
+    /**
+     * Disabled players collect no stamps, so they get no new stamp cards.
+     */
     addStampCard(card: StampCardDto, issuer: string): string {
-        this.findPlayer(card.playerId);
+        if (!this.findPlayer(card.playerId).active) {
+            throw new PlayerDisabledError(card.playerId);
+        }
         if ([...this.stampCards.values()].some(existing => existing.isFor(card))) {
             throw new StampCardAlreadyExistsError(card);
         }
@@ -395,9 +408,15 @@ export class TeamAggregate {
             case "PlayerRemoved":
                 return this.playerReferencedBy(event).map(player => { this.players.delete(player.id); });
             case "PlayerEnabled":
-                return this.playerReferencedBy(event).map(player => { player.active = true; });
+                return this.playerReferencedBy(event).map(player => {
+                    player.active = true;
+                    delete player.disabledOn;
+                });
             case "PlayerDisabled":
-                return this.playerReferencedBy(event).map(player => { player.active = false; });
+                return this.playerReferencedBy(event).map(player => {
+                    player.active = false;
+                    player.disabledOn = event.data.issuedOn;
+                });
             default:
                 return this.applyToStampCards(event);
         }

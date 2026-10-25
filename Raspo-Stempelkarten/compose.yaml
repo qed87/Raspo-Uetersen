@@ -127,3 +127,6 @@ volumes:
 networks:
   proxy-net:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.26.0/24 # fester Bereich, muss zu KnownProxyNetworks in config/Stampcard.UI/appsettings.json passen

@@ -1,0 +1,80 @@
+﻿@page "/Shared/Teams/{Team}/StampCard/{StampCardId}"
+@model SharedStampCard
+@tagHelperPrefix x:
+
+@{
+    ViewData["Title"] = "Stempelkarte";
+}
+
+<h2>Stempelkarte@(Model.Item is null ? "" : " " + Model.Item.AccountingYear)</h2>
+
+@if (Model.Submitted)
+{
+    <div class="alert alert-success" role="status">
+        Vielen Dank! Ihr Stempel wurde eingereicht und wartet auf die Freigabe durch einen Coach.
+    </div>
+}
+
+@if (Model.Item is null)
+{
+    <x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
+    </x:div>
+}
+else
+{
+    <div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Grund</th>
+            <th scope="col">Stempel erhalten am</th>
+            <th scope="col">Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (Model.Item.Stamps.Count > 0)
+        {
+            @for (var i = 0; i < Model.Item.Stamps.Count; i++)
+            {
+                var stamp = Model.Item.Stamps[i];
+                <tr>
+                    <td>@(i + 1)</td>
+                    <td>@stamp.Reason</td>
+                    <td>@DisplayFormat.Date(stamp.IssuedOn)</td>
+                    <td>@(stamp.Status == "pending" ? "Wartet auf Freigabe" : "Bestätigt")</td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="4">Noch keine Stempel</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    </div>
+
+    <h3 class="mt-4">Stempel einreichen</h3>
+    <p class="text-muted">
+        Eingereichte Stempel erscheinen sofort mit dem Status „Wartet auf Freigabe“ und zählen erst,
+        wenn ein Coach sie bestätigt hat.
+    </p>
+    <x:form asp-page="" asp-route-code="@Model.Code" method="post">
+        <x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
+        </x:div>
+        <div class="row g-3 mb-3">
+            <div class="col-auto">
+                <x:label asp-for="NewStamp.Reason" class="form-label">Grund</x:label>
+                <x:input asp-for="NewStamp.Reason" class="form-control" placeholder="z. B. Lauftraining"/>
+                <x:span asp-validation-for="NewStamp.Reason" class="text-danger"></x:span>
+            </div>
+            <div class="col-auto">
+                <label for="holderName" class="form-label">Eingereicht von</label>
+                <input id="holderName" type="text" class="form-control-plaintext" value="@Model.Item.HolderName" readonly/>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Stempel einreichen</button>
+    </x:form>
+}

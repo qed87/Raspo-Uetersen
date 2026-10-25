@@ -1,0 +1,21 @@
+meta {
+  name: Stamp of coach is accepted
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/teams/{{teamId}}/stampcard/{{stampCardId}}
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("stamp is accepted", function () {
+    expect(res.body.Data.Stamps.find(s => s.Id === bru.getVar("stampId")).Status).to.equal("accepted");
+  });
+}

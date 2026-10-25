@@ -1,0 +1,25 @@
+meta {
+  name: List Teams
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/teams
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("contains the team", function () {
+    expect(res.body.Data.map(team => team.Name)).to.include(bru.getEnvVar("teamName"));
+  });
+
+  test("every team carries its concurrency token", function () {
+    res.body.Data.forEach(team => expect(team.ConcurrencyToken).to.be.a('number'));
+  });
+}

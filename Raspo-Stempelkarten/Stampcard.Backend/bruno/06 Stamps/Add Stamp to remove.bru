@@ -1,0 +1,27 @@
+meta {
+  name: Add Stamp to remove
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/teams/{{teamId}}/stampcard/{{stampCardId}}/stamp
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "reason": "Versehentlich"
+  }
+}
+
+script:post-response {
+  bru.setVar("stampToRemoveId", res.body.Data);
+}
+
+tests {
+  test("responds with 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

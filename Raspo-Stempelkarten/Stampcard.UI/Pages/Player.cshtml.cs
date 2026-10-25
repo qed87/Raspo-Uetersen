@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Stampcard.UI.Clients;
 
@@ -17,7 +17,9 @@ public class PlayerModel(PlayerHttpClient playerHttpClient) : PageModel
     public async Task<IActionResult> OnPostAsync()
     {
         var response = await playerHttpClient.UpdateAsync(Team, PlayerId, Player.FirstName, Player.LastName, 
-            Player.Birthdate, Player.Birthplace, Player.Active, Player.ConcurrencyToken);
+            Player.Birthdate, Player.ConcurrencyToken);
+        if (!response.HasError && Player.Active != Player.WasActive)
+            response = await playerHttpClient.SetActiveAsync(Team, PlayerId, Player.Active);
         if (!response.HasError) return RedirectToPage("Players", new {Team = Team });
         ModelState.AddModelError(string.Empty, response.Message!);
         await LoadItemAsync();
@@ -26,15 +28,8 @@ public class PlayerModel(PlayerHttpClient playerHttpClient) : PageModel
 
     public async Task<IActionResult> OnGetAsync()
     {
-        try
-        {
-            await LoadItemAsync();
-            return Page();
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return RedirectToPage("/Index");
-        }
+        await LoadItemAsync();
+        return Page();
     }
 
     private async Task LoadItemAsync()
@@ -52,9 +47,12 @@ public class PlayerModel(PlayerHttpClient playerHttpClient) : PageModel
             FirstName = response.Data.FirstName,
             LastName = response.Data.LastName,
             Birthdate = response.Data.Birthdate,
-            Birthplace = response.Data.Birthplace,
             Active = response.Data.Active,
-            ConcurrencyToken = response.Data.ConcurrencyToken
+            WasActive = response.Data.Active,
+            ConcurrencyToken = response.ConcurrencyToken!.Value
         };
+        // render the reloaded state instead of the posted one, otherwise an outdated token would be sent again
+        ModelState.Remove("Player.ConcurrencyToken");
+        ModelState.Remove("Player.WasActive");
     }
 }

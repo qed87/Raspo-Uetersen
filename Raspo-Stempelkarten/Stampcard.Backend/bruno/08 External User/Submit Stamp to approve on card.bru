@@ -1,0 +1,31 @@
+meta {
+  name: Submit Stamp to approve on card
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/shared/teams/{{teamId}}/stampcard/{{stampCardId}}/stamp
+  body: json
+  auth: none
+}
+
+headers {
+  X-Share-Code: {{shareCode}}
+}
+
+body:json {
+  {
+    "reason": "Schwimmen"
+  }
+}
+
+script:post-response {
+  bru.setVar("cardStampId", res.body.Data);
+}
+
+tests {
+  test("responds with 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

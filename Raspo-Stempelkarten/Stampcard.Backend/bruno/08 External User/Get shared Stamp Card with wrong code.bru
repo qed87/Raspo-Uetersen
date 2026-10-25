@@ -1,0 +1,21 @@
+meta {
+  name: Get shared Stamp Card with wrong code
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/shared/teams/{{teamId}}/stampcard/{{stampCardId}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Share-Code: guessed
+}
+
+tests {
+  test("responds with 404", function () {
+    expect(res.getStatus()).to.equal(404);
+  });
+}

@@ -1,0 +1,17 @@
+meta {
+  name: Approve pending Stamp again
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/teams/{{teamId}}/stamp/pending/{{pendingStampId}}/approve
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("responds with 409", function () {
+    expect(res.getStatus()).to.equal(409);
+  });
+}

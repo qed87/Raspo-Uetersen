@@ -1,0 +1,25 @@
+meta {
+  name: Get Team
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/teams/{{teamId}}
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("returns the configured club", function () {
+    expect(res.body.Data.Club).to.be.a('string');
+  });
+
+  test("returns the concurrency token", function () {
+    expect(res.body.ConcurrencyToken).to.be.a('number');
+  });
+}

@@ -1,0 +1,31 @@
+meta {
+  name: Submit Stamp to approve in bulk
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/shared/teams/{{teamId}}/stampcard/{{stampCardId}}/stamp
+  body: json
+  auth: none
+}
+
+headers {
+  X-Share-Code: {{shareCode}}
+}
+
+body:json {
+  {
+    "reason": "Turnier"
+  }
+}
+
+script:post-response {
+  bru.setVar("bulkStampId", res.body.Data);
+}
+
+tests {
+  test("responds with 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

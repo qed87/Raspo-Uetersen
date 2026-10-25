@@ -1,0 +1,29 @@
+meta {
+  name: Add Player
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/teams/{{teamId}}/player
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "firstName": "Max",
+    "lastName": "Muster",
+    "birthdate": "2017-03-04"
+  }
+}
+
+script:post-response {
+  bru.setVar("playerId", res.body.Data);
+}
+
+tests {
+  test("responds with 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

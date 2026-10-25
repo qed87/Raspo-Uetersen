@@ -1,0 +1,38 @@
+meta {
+  name: Login as Accounting
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{tokenUrl}}
+  body: formUrlEncoded
+  auth: none
+}
+
+headers {
+  Content-Type: application/x-www-form-urlencoded
+}
+
+body:form-urlencoded {
+  grant_type: password
+  client_id: {{clientId}}
+  client_secret: {{clientSecret}}
+  username: {{accountingUsername}}
+  password: {{accountingPassword}}
+  scope: openid profile email
+}
+
+script:post-response {
+  bru.setVar("accessToken", res.body.access_token);
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  Fetches a token from Keycloak, all following requests use it until the next login.
+}

@@ -1,0 +1,27 @@
+meta {
+  name: Submit Stamp with revoked code
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/shared/teams/{{teamId}}/stampcard/{{stampCardId}}/stamp
+  body: json
+  auth: none
+}
+
+headers {
+  X-Share-Code: {{shareCode}}
+}
+
+body:json {
+  {
+    "reason": "Zu sp\u00e4t"
+  }
+}
+
+tests {
+  test("responds with 403", function () {
+    expect(res.getStatus()).to.equal(403);
+  });
+}

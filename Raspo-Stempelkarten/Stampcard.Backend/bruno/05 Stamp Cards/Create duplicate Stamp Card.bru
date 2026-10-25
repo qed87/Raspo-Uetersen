@@ -1,0 +1,24 @@
+meta {
+  name: Create duplicate Stamp Card
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/teams/{{teamId}}/stampcard
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "playerId": "{{playerId}}",
+    "accountingYear": {{accountingYear}}
+  }
+}
+
+tests {
+  test("responds with 409", function () {
+    expect(res.getStatus()).to.equal(409);
+  });
+}

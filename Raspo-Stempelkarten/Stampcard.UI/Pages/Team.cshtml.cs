@@ -1,7 +1,6 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Stampcard.Contracts.Dtos;
 using Stampcard.UI.Clients;
 
 namespace Stampcard.UI.Pages;
@@ -12,14 +11,14 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
     [Required]
     public string Id { get; set; }
     
-    public TeamDetailedReadDto Item { get; set; }
-    
+    public TeamReadDto? Item { get; set; }
+
     [BindProperty]
     [MinLength(2, ErrorMessage = "Team Name darf nicht leer sein!")]
     public string NewName { get; set; }
-    
+
     [BindProperty]
-    public ulong SetConcurrencyToken { get; set; }
+    public long SetConcurrencyToken { get; set; }
     
     public List<string> Coaches { get; set; } = [];
     
@@ -30,24 +29,25 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
 
     public async Task<IActionResult> OnGetAsync()
     {
-        try
-        {
-            await LoadItemsAsync();
-            return Page();
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return RedirectToPage("/Index");
-        }
+        await LoadItemsAsync();
+        return Page();
     }
 
     private async Task LoadItemsAsync()
     {
         var response = await teamHttpClient.GetTeamAsync(Id);
+        if (response.HasError)
+        {
+            ModelState.AddModelError(string.Empty, response.Message!);
+            return;
+        }
+
         Item = response.Data;
         NewName = Item.Name;
-        SetConcurrencyToken = Item.ConcurrencyToken;
-        Coaches.AddRange(response.Data.Coaches ?? []);
+        SetConcurrencyToken = response.ConcurrencyToken!.Value;
+        // render the reloaded token instead of the posted one, otherwise an outdated token would be sent again
+        ModelState.Remove(nameof(SetConcurrencyToken));
+        Coaches.AddRange(Item.Coaches);
     }
     
     public async Task<IActionResult> OnPostTeamAsync()
@@ -61,7 +61,7 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
             ModelState.AddModelError(string.Empty, response.Message);
             return Page();
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not UnauthorizedAccessException)
         {
             logger.LogError(exception, "Unerwarteter Fehler");
             await LoadItemsAsync();
@@ -83,7 +83,7 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
             ModelState.AddModelError(string.Empty, response.Message);
             return Page();
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not UnauthorizedAccessException)
         {
             logger.LogError(exception, "Unerwarteter Fehler");
             await LoadItemsAsync();
@@ -94,8 +94,10 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
         }
     }
     
-    public async Task<IActionResult> OnGetDeleteAsync(string name)
+    public async Task<IActionResult> OnPostDeleteAsync(string name)
     {
+        // neither the team name nor a new coach are part of this form
+        ModelState.Clear();
         try
         {
             var response = await teamHttpClient.DeleteCoachAsync(Id, name);
@@ -104,7 +106,7 @@ public class Team(TeamHttpClient  teamHttpClient, ILogger<Team> logger) : PageMo
             ModelState.AddModelError(string.Empty, response.Message);
             return Page();
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not UnauthorizedAccessException)
         {
             logger.LogError(exception, "Unerwarteter Fehler");
             await LoadItemsAsync();

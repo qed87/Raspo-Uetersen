@@ -1,0 +1,25 @@
+meta {
+  name: List Stamp Cards
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/teams/{{teamId}}/stampcard?accountingYear={{accountingYear}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  accountingYear: {{accountingYear}}
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("contains the stamp card", function () {
+    expect(res.body.Data).to.have.lengthOf(1);
+  });
+}

@@ -1,0 +1,17 @@
+meta {
+  name: Remove Stamp
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/teams/{{teamId}}/stampcard/{{stampCardId}}/stamp/{{stampToRemoveId}}
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

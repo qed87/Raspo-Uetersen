@@ -1,4 +1,5 @@
-using System.Net;
+﻿using System.Net;
+using System.Net.Security;
 using Duende.AccessTokenManagement.OpenIdConnect;
 using RestSharp;
 using RestSharp.Authenticators;
@@ -19,7 +20,27 @@ public static class ServiceCollectionExtensions
         services.AddTransient<StampCardHttpClient>(sp => !TryGetRestClient(configuration, sp, out var restClient) 
             ? throw new InvalidOperationException("Could not create backend client for teams.") 
             : new StampCardHttpClient(restClient!));
+        services.AddTransient<AccountingHttpClient>(sp => !TryGetRestClient(configuration, sp, out var restClient)
+            ? throw new InvalidOperationException("Could not create backend client for accounting.")
+            : new AccountingHttpClient(restClient!));
+        // external users are anonymous, so this client must not request an access token
+        services.AddTransient<SharedStampCardHttpClient>(sp => new SharedStampCardHttpClient(new RestClient(
+            new RestClientOptions(configuration.GetConnectionString("Backend")!)
+            {
+                RemoteCertificateValidationCallback = CertificateValidationOf(sp)
+            })));
         return services;
+    }
+
+    /// <summary>
+    /// Self-signed certificates of a local backend are accepted during development only,
+    /// otherwise the certificate is validated as usual.
+    /// </summary>
+    private static RemoteCertificateValidationCallback? CertificateValidationOf(IServiceProvider sp)
+    {
+        return sp.GetRequiredService<IHostEnvironment>().IsDevelopment()
+            ? (_, _, _, _) => true
+            : null;
     }
 
     private static bool TryGetRestClient(
@@ -47,7 +68,7 @@ public static class ServiceCollectionExtensions
             BaseUrl = new Uri(backendUrl),
             Interceptors = [new UnauthorizedRedirectInterceptor(httpContextAccessor)],
             Authenticator = new JwtAuthenticator(tokenResult.Token.AccessToken),
-            RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true
+            RemoteCertificateValidationCallback = CertificateValidationOf(sp)
         };
         restClient = new RestClient(restClientOptions);
         return true;

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using SmartBreadcrumbs.Extensions;
+using Stampcard.UI;
 using Stampcard.UI.Clients;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,7 +20,9 @@ builder.Services.AddBreadcrumbs(typeof(Program).Assembly, options =>
     options.RazorPagesRootDirectory = "/Pages";
 });
 builder.Services.AddBackendClients(builder.Configuration);
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages(options => options.Conventions
+    .ConfigureFilter(new UnauthorizedPageFilter())
+    .ConfigureFilter(new AccountingPageFilter()));
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -105,8 +108,8 @@ app.UseAntiforgery();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapStaticAssets();
-app.MapRazorPages()
-    .WithStaticAssets();
+// stylesheets, scripts and images are public, otherwise the fallback policy hides them from external users of shared stamp cards
+app.MapStaticAssets().AllowAnonymous();
+app.MapRazorPages().WithStaticAssets();
 
 await app.RunAsync();

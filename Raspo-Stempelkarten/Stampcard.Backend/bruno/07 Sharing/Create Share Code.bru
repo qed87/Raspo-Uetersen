@@ -1,0 +1,32 @@
+meta {
+  name: Create Share Code
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/teams/{{teamId}}/stampcard/{{stampCardId}}/share
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "holderName": "Oma Erna"
+  }
+}
+
+script:post-response {
+  bru.setVar("sharedCodeId", res.body.Data.Id);
+  bru.setVar("shareCode", res.body.Data.Code);
+}
+
+tests {
+  test("responds with 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("is issued to the holder", function () {
+    expect(res.body.Data.HolderName).to.equal("Oma Erna");
+  });
+}

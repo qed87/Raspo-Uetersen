@@ -1,0 +1,25 @@
+meta {
+  name: Approve Stamps in bulk
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/teams/{{teamId}}/stamp/pending/approve
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "stampIds": [
+      "{{bulkStampId}}"
+    ]
+  }
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -1,0 +1,17 @@
+meta {
+  name: Disable Player
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/teams/{{teamId}}/player/{{playerId}}/disable
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

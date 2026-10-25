@@ -1,0 +1,21 @@
+meta {
+  name: Read Stamp Card with deleted code
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/shared/teams/{{teamId}}/stampcard/{{stampCardId}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Share-Code: {{shareCode}}
+}
+
+tests {
+  test("responds with 404", function () {
+    expect(res.getStatus()).to.equal(404);
+  });
+}

@@ -1,0 +1,21 @@
+meta {
+  name: Delete Team
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/teams/{{teamId}}
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("responds with 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("returns the team id", function () {
+    expect(res.body.Data).to.equal(bru.getVar("teamId"));
+  });
+}

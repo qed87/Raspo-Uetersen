@@ -1,0 +1,27 @@
+meta {
+  name: Add Stamp
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/teams/{{teamId}}/stampcard/{{stampCardId}}/stamp
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "reason": "Training"
+  }
+}
+
+script:post-response {
+  bru.setVar("stampId", res.body.Data);
+}
+
+tests {
+  test("responds with 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

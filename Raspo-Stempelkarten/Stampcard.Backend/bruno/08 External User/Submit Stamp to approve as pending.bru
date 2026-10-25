@@ -1,0 +1,31 @@
+meta {
+  name: Submit Stamp to approve as pending
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/shared/teams/{{teamId}}/stampcard/{{stampCardId}}/stamp
+  body: json
+  auth: none
+}
+
+headers {
+  X-Share-Code: {{shareCode}}
+}
+
+body:json {
+  {
+    "reason": "Lauftraining"
+  }
+}
+
+script:post-response {
+  bru.setVar("pendingStampId", res.body.Data);
+}
+
+tests {
+  test("responds with 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

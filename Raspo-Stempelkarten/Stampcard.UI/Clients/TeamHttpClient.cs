@@ -1,6 +1,4 @@
-using System.Text.Json;
 using RestSharp;
-using Stampcard.Contracts.Dtos;
 
 namespace Stampcard.UI.Clients;
 
@@ -13,97 +11,81 @@ public class TeamHttpClient(IRestClient restClient)
     /// <summary>
     /// Gets the team with the given <param name="id">Id</param>.
     /// </summary>
-    /// <param name="id">The team id (stream name).</param>
-    public async Task<ResponseWrapperDto<TeamDetailedReadDto>> GetTeamAsync(string id)
+    /// <param name="id">The team id.</param>
+    public Task<ResponseWrapperDto<TeamReadDto>> GetTeamAsync(string id)
     {
-        var response = await restClient.ExecuteGetAsync<ResponseWrapperDto<TeamDetailedReadDto>>($"/api/teams/{id}");
-        return response.Data!;
+        var request = new RestRequest("/api/teams/{teamId}")
+            .AddUrlSegment("teamId", id);
+        return restClient.SendAsync<TeamReadDto>(request);
     }
-    
+
     /// <summary>
-    /// Gets all coaches of the team with the given <param name="id">Id</param>.
+    /// Gets all teams visible to the current user.
     /// </summary>
-    /// <param name="id">The team id (stream name).</param>
-    public async Task<ResponseWrapperDto<List<string>>> ListCoachesAsync(string id)
+    public Task<ResponseWrapperDto<List<TeamReadDto>>> ListTeamsAsync()
     {
-        var response = await restClient.ExecuteGetAsync<ResponseWrapperDto<List<string>>>($"/api/teams/{id}/coach");
-        return response.Data!;
-    }
-    
-    /// <summary>
-    /// Gets all teams.
-    /// </summary>
-    public async Task<ResponseWrapperDto<List<TeamReadDto>>> ListTeamsAsync()
-    {
-        var response = await restClient.ExecuteGetAsync<ResponseWrapperDto<List<TeamReadDto>>>("/api/teams");
-        return response.Data ?? ResponseWrapperDto<List<TeamReadDto>>.Fail("Unerwarteter Fehler.");
+        return restClient.SendAsync<List<TeamReadDto>>(new RestRequest("/api/teams"));
     }
 
     /// <summary>
     /// Creates a new team with the <param name="name">Name</param>.
     /// </summary>
     /// <param name="name">The team name.</param>
-    public async Task<ResponseWrapperDto> CreateTeamAsync(string name)
+    public Task<ResponseWrapperDto> CreateTeamAsync(string name)
     {
-        var request = new RestRequest("/api/teams");
-        request.AddParameter("club", "raspo1926", ParameterType.GetOrPost);
-        request.AddParameter("name", name, ParameterType.GetOrPost);
-        var response = await restClient.ExecutePostAsync(request);
-        return JsonSerializer.Deserialize<ResponseWrapperDto>(
-            response.Content!, 
-            new JsonSerializerOptions {  PropertyNameCaseInsensitive = true })!;
+        var request = new RestRequest("/api/teams", Method.Post)
+            .AddJsonBody(new { name });
+        return restClient.SendAsync(request);
     }
 
     /// <summary>
     /// Deletes the team with the <param name="id">Id</param>.
     /// </summary>
-    /// <param name="id">The team id (stream name).</param>
-    public async Task<ResponseWrapperDto> DeleteTeamAsync(string id)
+    /// <param name="id">The team id.</param>
+    public Task<ResponseWrapperDto> DeleteTeamAsync(string id)
     {
-        var request = new RestRequest($"/api/teams/{id}");
-        var response = await restClient.ExecuteDeleteAsync<ResponseWrapperDto>(request);
-        return response.Data!;
+        var request = new RestRequest("/api/teams/{teamId}", Method.Delete)
+            .AddUrlSegment("teamId", id);
+        return restClient.SendAsync(request);
     }
 
     /// <summary>
-    /// Creates a new coach for a team.
+    /// Adds a coach to a team.
     /// </summary>
-    /// <param name="id">The team id (stream name).</param>
-    /// <param name="name">The name (e-mail) of the coach.</param>
-    public async Task<ResponseWrapperDto> CreateCoachAsync(string id, string name)
+    /// <param name="id">The team id.</param>
+    /// <param name="email">The e-mail of the coach.</param>
+    public Task<ResponseWrapperDto> CreateCoachAsync(string id, string email)
     {
-        var request = new RestRequest($"/api/teams/{id}/coach/");
-        request.AddOrUpdateParameter("name", name, ParameterType.GetOrPost);
-        var response = await restClient.ExecutePostAsync<ResponseWrapperDto>(request);
-        return response.Data!;
+        var request = new RestRequest("/api/teams/{teamId}/coach", Method.Post)
+            .AddUrlSegment("teamId", id)
+            .AddJsonBody(new { email });
+        return restClient.SendAsync(request);
     }
 
     /// <summary>
-    /// Deletes the coach with <param name="name">Name</param> from the team with <param name="id">Id</param>.
+    /// Removes the coach with <param name="email">E-Mail</param> from the team with <param name="id">Id</param>.
     /// </summary>
-    /// <param name="id">The team id (stream name).</param>
-    /// <param name="name">The name (e-mail) of the coach.</param>
-    public async Task<ResponseWrapperDto> DeleteCoachAsync(string id, string name)
+    /// <param name="id">The team id.</param>
+    /// <param name="email">The e-mail of the coach.</param>
+    public Task<ResponseWrapperDto> DeleteCoachAsync(string id, string email)
     {
-        var request = new RestRequest($"/api/teams/{id}/coach/{name}");
-        var response = await restClient.ExecuteDeleteAsync<ResponseWrapperDto>(request);
-        return response.Data!;
+        var request = new RestRequest("/api/teams/{teamId}/coach/{email}", Method.Delete)
+            .AddUrlSegment("teamId", id)
+            .AddUrlSegment("email", email);
+        return restClient.SendAsync(request);
     }
 
     /// <summary>
-    /// Updates the team with <param name="id">Id</param> and updates the <param name="name">Name</param>.
+    /// Renames the team with <param name="id">Id</param>.
     /// </summary>
-    /// <param name="id">The team id (stream name).</param>
+    /// <param name="id">The team id.</param>
     /// <param name="name">New team name.</param>
-    /// <param name="concurrencyToken">The concurrency token.</param>
-    public async Task<ResponseWrapperDto> UpdateTeamAsync(string id, string name, ulong concurrencyToken)
+    /// <param name="concurrencyToken">The concurrency token of the team last read.</param>
+    public Task<ResponseWrapperDto> UpdateTeamAsync(string id, string name, long concurrencyToken)
     {
-        var request = new RestRequest($"/api/teams/{id}");
-        request.AddParameter("name", name, ParameterType.GetOrPost);
-        request.AddParameter("concurrencyToken", concurrencyToken, ParameterType.GetOrPost);
-        var response = await restClient.ExecutePutAsync(request);
-        return JsonSerializer.Deserialize<ResponseWrapperDto>(
-            response.Content!, 
-            new JsonSerializerOptions {  PropertyNameCaseInsensitive = true })!;
+        var request = new RestRequest("/api/teams/{teamId}", Method.Put)
+            .AddUrlSegment("teamId", id)
+            .AddJsonBody(new { name, concurrencyToken });
+        return restClient.SendAsync(request);
     }
 }

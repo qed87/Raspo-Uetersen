@@ -1,11 +1,11 @@
-@page "/Teams/{Team}/Players/{id}"
+﻿@page "/Teams/{Team}/Players/{id}"
 @using SmartBreadcrumbs.Nodes
 @model PlayerModel
 @tagHelperPrefix x:
 
 
 @{
-    ViewData["Title"] = "Spieler: " + Model.Team;
+    ViewData["Title"] = "Spieler: " + Model.Player?.FirstName + " " + Model.Player?.LastName;
     ViewData["BreadcrumbNode"] = new RazorPageBreadcrumbNode("Player", "Spieler")
     {
         Parent = new RazorPageBreadcrumbNode("Players", "Spielerübersicht") 
@@ -24,7 +24,7 @@
     };
 }
 
-<h2>Spieler: @Model.PlayerId</h2>
+<h2>Spieler: @Model.Player?.FirstName @Model.Player?.LastName</h2>
 
 <x:form asp-page="">
     <!-- Validation summary -->
@@ -34,6 +34,7 @@
     <div class="row g-3 mb-3">
         <x:input asp-for="Player.Id" type="hidden" />
         <x:input asp-for="Player.ConcurrencyToken" type="hidden" />
+        <x:input asp-for="Player.WasActive" type="hidden" />
         <div class="col-auto">
             <x:label asp-for="Player.FirstName" class="form-label">Vorname</x:label>
             <x:input asp-for="Player.FirstName" class="form-control"/>
@@ -43,12 +44,8 @@
             <x:input asp-for="Player.LastName" class="form-control"/>
         </div>
         <div class="col-auto">
-            <x:label asp-for="Player.Birthdate" class="form-label">Geburtsjahr</x:label>
+            <x:label asp-for="Player.Birthdate" class="form-label">Geburtsdatum</x:label>
             <x:input asp-for="Player.Birthdate" class="form-control"/>
-        </div>
-        <div class="col-auto">
-            <x:label asp-for="Player.Birthplace" class="form-label">Geburtsort</x:label>
-            <x:input asp-for="Player.Birthplace" class="form-control"/>
         </div>
         <div class="col-auto">
             <x:label asp-for="Player.Active" class="form-check-label">Aktiv</x:label>

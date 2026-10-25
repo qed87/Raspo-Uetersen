@@ -79,7 +79,9 @@ export const stampRejectedSchema = stampReferenceSchema;
 export const sharedCodeAddedSchema = issuedSchema.extend({
   id: z.uuid(),
   stampCardId: z.uuid(),
-  code: z.string()
+  code: z.string(),
+  // Codes shared before they were issued to a named holder
+  holderName: z.string().default("Unbekannt")
 });
 
 export const sharedCodeRemovedSchema = issuedSchema.extend({

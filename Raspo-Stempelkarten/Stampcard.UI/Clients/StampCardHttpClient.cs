@@ -150,11 +150,13 @@ public class StampCardHttpClient(IRestClient restClient)
     /// </summary>
     /// <param name="teamId">The team id.</param>
     /// <param name="stampCardId">The stamp card id.</param>
-    public Task<ResponseWrapperDto<SharedCodeReadDto>> ShareAsync(string teamId, Guid stampCardId)
+    /// <param name="holderName">Name of the player or parent the code is issued to, stamps submitted with it are issued in this name.</param>
+    public Task<ResponseWrapperDto<SharedCodeReadDto>> ShareAsync(string teamId, Guid stampCardId, string holderName)
     {
         var request = new RestRequest("/api/teams/{teamId}/stampcard/{stampCardId}/share", Method.Post)
             .AddUrlSegment("teamId", teamId)
-            .AddUrlSegment("stampCardId", stampCardId);
+            .AddUrlSegment("stampCardId", stampCardId)
+            .AddJsonBody(new { holderName });
         return restClient.SendAsync<SharedCodeReadDto>(request);
     }
 

@@ -8,7 +8,7 @@ namespace Stampcard.UI.Pages;
 
 /// <summary>
 /// View of a stamp card for external users, who open it with a link containing a share code.
-/// They may submit stamps, which are pending until a coach approves them.
+/// They may submit stamps in the name of the holder of the share code, which are pending until a coach approves them.
 /// </summary>
 [AllowAnonymous]
 public class SharedStampCard(SharedStampCardHttpClient sharedStampCardHttpClient) : PageModel
@@ -27,7 +27,7 @@ public class SharedStampCard(SharedStampCardHttpClient sharedStampCardHttpClient
     [BindProperty]
     public SubmittedStamp NewStamp { get; set; } = new();
 
-    public StampCardReadDto? Item { get; set; }
+    public SharedStampCardReadDto? Item { get; set; }
 
     /// <summary>
     /// Indicates that the previous request submitted a stamp, so a confirmation is shown.
@@ -52,7 +52,7 @@ public class SharedStampCard(SharedStampCardHttpClient sharedStampCardHttpClient
         if (ModelState.IsValid)
         {
             var response = await sharedStampCardHttpClient.SubmitStampAsync(
-                Team, StampCardId, Code, NewStamp.Reason, NewStamp.IssuerName);
+                Team, StampCardId, Code, NewStamp.Reason);
             if (!response.HasError)
             {
                 TempData[SubmittedKey] = true;
@@ -90,8 +90,4 @@ public class SubmittedStamp
 {
     [Required(ErrorMessage = "Grund darf nicht leer sein!")]
     public string Reason { get; set; } = "";
-
-    [Required(ErrorMessage = "Name darf nicht leer sein!")]
-    [MinLength(2, ErrorMessage = "Name muss mindestens 2 Zeichen lang sein!")]
-    public string IssuerName { get; set; } = "";
 }

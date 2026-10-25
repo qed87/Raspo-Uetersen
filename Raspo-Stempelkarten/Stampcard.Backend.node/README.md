@@ -269,14 +269,14 @@ The bulk approval is all or nothing: if one of the stamps is unknown or no longe
 
 ### Share codes
 
-A share code (24 random bytes, base64url) gives an external user – e.g. a parent – access to exactly one stamp card.
+A share code (24 random bytes, base64url) gives an external user – e.g. a parent – access to exactly one stamp card. It is issued to a named holder (at least 2 characters), who is recorded as issuer of every stamp submitted with it.
 
-| Method | Path | `Data` |
-| --- | --- | --- |
-| GET | `/api/teams/:teamId/stampcard/:stampCardId/share` | list of `{ Id, Code, Revoked }` |
-| POST | `/api/teams/:teamId/stampcard/:stampCardId/share` | new share code (201) |
-| POST | `/api/teams/:teamId/stampcard/:stampCardId/share/:sharedCodeId/revoke` | share code id |
-| DELETE | `/api/teams/:teamId/stampcard/:stampCardId/share/:sharedCodeId` | share code id |
+| Method | Path | Body | `Data` |
+| --- | --- | --- | --- |
+| GET | `/api/teams/:teamId/stampcard/:stampCardId/share` | – | list of `{ Id, Code, HolderName, Revoked }` |
+| POST | `/api/teams/:teamId/stampcard/:stampCardId/share` | `{ holderName }` | new share code (201) |
+| POST | `/api/teams/:teamId/stampcard/:stampCardId/share/:sharedCodeId/revoke` | – | share code id |
+| DELETE | `/api/teams/:teamId/stampcard/:stampCardId/share/:sharedCodeId` | – | share code id |
 
 - **Revoke**: the card stays readable with the code, but no more stamps can be submitted with it (403).
 - **Delete**: the code becomes invalid, every access with it results in 404.
@@ -287,10 +287,10 @@ No JWT, authorized by the header `x-share-code: <code>`. Rate limit: 30 requests
 
 | Method | Path | Body | `Data` |
 | --- | --- | --- | --- |
-| GET | `/api/shared/teams/:teamId/stampcard/:stampCardId` | – | stamp card, stamps **without** `Issuer` |
-| POST | `/api/shared/teams/:teamId/stampcard/:stampCardId/stamp` | `{ reason, issuerName }` | stamp id (201), status `pending` |
+| GET | `/api/shared/teams/:teamId/stampcard/:stampCardId` | – | stamp card with the `HolderName` of the code, stamps **without** `Issuer` |
+| POST | `/api/shared/teams/:teamId/stampcard/:stampCardId/stamp` | `{ reason }` | stamp id (201), status `pending` |
 
-The `Issuer` is hidden because for accepted stamps it is the coach's email address. `issuerName` (at least 2 characters) is the freely chosen name of the submitting person.
+The `Issuer` is hidden because for accepted stamps it is the coach's email address. Submitted stamps are issued by the holder of the share code, external users cannot choose another name.
 
 ### Accounting
 
@@ -310,7 +310,7 @@ All events carry `issuer` (email of the user or name of the external user) and `
 | Player | `PlayerAdded`, `PlayerUpdated`, `PlayerRemoved`, `PlayerEnabled`, `PlayerDisabled` |
 | Stamp card | `StampCardAdded`, `StampCardRemoved` |
 | Stamp | `StampAdded` (accepted immediately), `StampSubmitted` (pending, with `sharedCodeId`), `StampApproved`, `StampRejected`, `StampRemoved` |
-| Share code | `SharedCodeAdded`, `SharedCodeRevoked`, `SharedCodeRemoved` |
+| Share code | `SharedCodeAdded` (with `holderName`, `Unbekannt` for older events), `SharedCodeRevoked`, `SharedCodeRemoved` |
 
 **Adding a new event type:** add its schema to `stamp-card-events.ts` and register it in `teamEventSchemas`, handle it in `apply` of the `TeamAggregate` and – if the team list is affected – extend the query of the projection in the event-store-plugin. Stored events are immutable; if a schema changes, old events must remain valid.
 

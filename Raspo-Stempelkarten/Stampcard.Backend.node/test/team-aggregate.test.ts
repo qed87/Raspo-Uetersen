@@ -18,6 +18,7 @@ import {
     createdTeam,
     emptyTeam,
     expectErr,
+    expectOk,
     ISSUER,
     max,
     otherCoach,
@@ -25,12 +26,13 @@ import {
     TEAM_ID,
     teamWithStampCard
 } from "./helpers/fixtures.js";
+import { parseTeamEvent } from "../src/stamp-card-events.js";
 
-const guestStamp = { reason: "Lauftraining", issuerName: "Oma Erna" };
+const guestStamp = { reason: "Lauftraining" };
 
 function sharedTeam() {
     const { team, playerId, stampCardId } = teamWithStampCard();
-    const sharedCode = team.shareStampCard(stampCardId, ISSUER);
+    const sharedCode = team.shareStampCard(stampCardId, { holderName: "Oma Erna" }, ISSUER);
     return { team, playerId, stampCardId, sharedCode };
 }
 
@@ -254,7 +256,7 @@ describe("approval of submitted stamps", () => {
         assert.equal(team.findStampCard(stampCardId).findStamp(stampId).status, "pending");
     });
 
-    test("the name of the external user is recorded as issuer", () => {
+    test("the holder of the share code is recorded as issuer", () => {
         const { team, stampCardId, sharedCode } = sharedTeam();
 
         const stampId = team.submitStamp(stampCardId, sharedCode.code, guestStamp);
@@ -326,7 +328,24 @@ describe("shared codes", () => {
 
         team.revokeSharedCode(stampCardId, sharedCode.id, ISSUER);
 
-        assert.equal(team.findSharedStampCard(stampCardId, sharedCode.code).id, stampCardId);
+        assert.equal(team.findSharedStampCard(stampCardId, sharedCode.code).stampCard.id, stampCardId);
+    });
+
+    test("the shared stamp card tells the holder of the share code", () => {
+        const { team, stampCardId, sharedCode } = sharedTeam();
+
+        assert.equal(team.findSharedStampCard(stampCardId, sharedCode.code).sharedCode.holderName, "Oma Erna");
+    });
+
+    test("codes shared before they were issued to a holder are replayed with an unknown holder", () => {
+        const { team, stampCardId } = teamWithStampCard();
+        const sharedCodeAdded = expectOk(parseTeamEvent("SharedCodeAdded", {
+            id: "00000000-0000-4000-8000-000000000001", stampCardId, code: "legacy", issuer: ISSUER, issuedOn: new Date()
+        }));
+
+        team.replay(sharedCodeAdded);
+
+        assert.equal(team.findSharedStampCard(stampCardId, "legacy").sharedCode.holderName, "Unbekannt");
     });
 
     test("a removed code grants no access at all", () => {

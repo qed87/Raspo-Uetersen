@@ -1,7 +1,7 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { err, ok, type Result } from "neverthrow";
 import type { AuthenticatedUser } from "./authenticated-user.js";
-import type { CreateTeamDto, PlayerDto, StampCardDto, StampDto, SubmittedStampDto } from "./stamp-card-dtos.js";
+import type { CreateTeamDto, PlayerDto, ShareStampCardDto, StampCardDto, StampDto } from "./stamp-card-dtos.js";
 import type { TeamEvent } from "./stamp-card-events.js";
 import {
     CoachNotFoundError,
@@ -14,7 +14,7 @@ import {
     TeamAlreadyExistsError,
     TeamNotFoundError
 } from "./stamp-card-errors.js";
-import { StampCard, type SharedCode, type Stamp } from "./stamp-card.js";
+import { StampCard, type SharedCode, type SharedStampCard, type Stamp } from "./stamp-card.js";
 
 export type Player = PlayerDto & { id: string, active: boolean };
 
@@ -141,10 +141,9 @@ export class TeamAggregate {
     /**
      * Returns the stamp card an external user may access with the given share code.
      */
-    findSharedStampCard(stampCardId: string, code: string): StampCard {
+    findSharedStampCard(stampCardId: string, code: string): SharedStampCard {
         const stampCard = this.findStampCard(stampCardId);
-        stampCard.findSharedCodeByCode(code);
-        return stampCard;
+        return { stampCard, sharedCode: stampCard.findSharedCodeByCode(code) };
     }
 
     /**
@@ -255,11 +254,14 @@ export class TeamAggregate {
         this.record({ type: "StampRemoved", data: { id: stampId, stampCardId, issuer, issuedOn: new Date() } });
     }
 
-    shareStampCard(stampCardId: string, issuer: string): SharedCode {
+    shareStampCard(stampCardId: string, share: ShareStampCardDto, issuer: string): SharedCode {
         this.findStampCard(stampCardId);
         const id = randomUUID();
         const code = randomBytes(SHARE_CODE_BYTES).toString("base64url");
-        this.record({ type: "SharedCodeAdded", data: { id, code, stampCardId, issuer, issuedOn: new Date() } });
+        this.record({
+            type: "SharedCodeAdded",
+            data: { id, code, stampCardId, holderName: share.holderName, issuer, issuedOn: new Date() }
+        });
         return this.findStampCard(stampCardId).findSharedCode(id);
     }
 
@@ -274,7 +276,10 @@ export class TeamAggregate {
         this.record({ type: "SharedCodeRemoved", data: { id: sharedCodeId, stampCardId, issuer, issuedOn: new Date() } });
     }
 
-    submitStamp(stampCardId: string, code: string, stamp: SubmittedStampDto): string {
+    /**
+     * The holder the share code was issued to is recorded as issuer of the stamp.
+     */
+    submitStamp(stampCardId: string, code: string, stamp: StampDto): string {
         const sharedCode = this.findStampCard(stampCardId).findUsableSharedCodeByCode(code);
         const id = randomUUID();
         this.record({
@@ -284,7 +289,7 @@ export class TeamAggregate {
                 stampCardId,
                 reason: stamp.reason,
                 sharedCodeId: sharedCode.id,
-                issuer: stamp.issuerName,
+                issuer: sharedCode.holderName,
                 issuedOn: new Date()
             }
         });
@@ -412,8 +417,9 @@ export class TeamAggregate {
                 return this.stampCardReferencedBy(event)
                     .andThen(card => referenceExists(card.deleteStamp(event.data.id), event));
             case "SharedCodeAdded": {
-                const { id, code } = event.data;
-                return this.stampCardReferencedBy(event).map(card => card.putSharedCode({ id, code, revoked: false }));
+                const { id, code, holderName } = event.data;
+                return this.stampCardReferencedBy(event)
+                    .map(card => card.putSharedCode({ id, code, holderName, revoked: false }));
             }
             case "SharedCodeRevoked":
                 return this.stampCardReferencedBy(event)

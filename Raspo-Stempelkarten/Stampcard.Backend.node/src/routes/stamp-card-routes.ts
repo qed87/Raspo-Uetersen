@@ -5,6 +5,7 @@ import {
   approveStampsDtoSchema,
   pendingStampReferenceSchema,
   sharedCodeReferenceSchema,
+  shareStampCardDtoSchema,
   stampCardDtoSchema,
   stampCardFilterSchema,
   stampCardReferenceSchema,
@@ -239,6 +240,7 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
     {
       schema: {
         params: stampCardReferenceSchema,
+        body: shareStampCardDtoSchema,
         response: {
           201: versionedResponseSchema(sharedCodeViewSchema),
           ...errorResponseSchemas
@@ -246,7 +248,7 @@ export default async function stampCardRoutes(fastify: FastifyInstance) {
       }
     },
     async function (request, reply) {
-      const sharedCode = await service.shareStampCard(request.params, request.user);
+      const sharedCode = await service.shareStampCard(request.params, request.body, request.user);
       return reply.code(201).send(versionedResponse(sharedCode, toSharedCodeView));
     }
   );

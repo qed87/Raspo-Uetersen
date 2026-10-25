@@ -115,14 +115,16 @@
     <h3 class="mt-4">Geteilte Links</h3>
     <p class="text-muted">
         Mit einem geteilten Link können Personen ohne Anmeldung, z. B. Eltern, diese Stempelkarte einsehen und
-        Stempel zur Freigabe einreichen. Ein widerrufener Link zeigt die Stempelkarte weiterhin an, über ihn können
-        aber keine Stempel mehr eingereicht werden.
+        Stempel zur Freigabe einreichen. Jeder Link wird für einen Spieler oder ein Elternteil erstellt, dessen Name
+        bei eingereichten Stempeln automatisch eingetragen wird. Ein widerrufener Link zeigt die Stempelkarte weiterhin
+        an, über ihn können aber keine Stempel mehr eingereicht werden.
     </p>
     <div class="table-responsive">
     <table class="table table-striped align-middle">
         <thead>
         <tr>
             <th scope="col">#</th>
+            <th scope="col">Erstellt für</th>
             <th scope="col">Link</th>
             <th scope="col">Status</th>
             <th scope="col"></th>
@@ -137,9 +139,10 @@
                 var link = Model.SharedLinkOf(sharedCode.Code);
                 <tr>
                     <td>@(i + 1)</td>
+                    <td>@sharedCode.HolderName</td>
                     <td>
                         <div class="input-group">
-                            <input type="text" class="form-control" value="@link" readonly aria-label="Geteilter Link"/>
+                            <input type="text" class="form-control" value="@link" readonly aria-label="Geteilter Link für @sharedCode.HolderName"/>
                             <button type="button" class="btn btn-outline-secondary" data-copy-link="@link" title="Link kopieren">
                                 <i class="bi bi-clipboard"></i>
                             </button>
@@ -161,7 +164,7 @@
                             {
                                 <x:form asp-page-handler="revokeSharedCode" asp-route-id="@sharedCode.Id" method="post" data-loading="true">
                                     <button type="submit" class="btn btn-outline-dark"
-                                            data-confirm="Möchten Sie Link @(i + 1) widerrufen? Über ihn können dann keine Stempel mehr eingereicht werden.">
+                                            data-confirm="Möchten Sie den Link für @sharedCode.HolderName widerrufen? Über ihn können dann keine Stempel mehr eingereicht werden.">
                                         <i class="bi bi-slash-circle" aria-hidden="true"></i> Widerrufen
                                     </button>
                                 </x:form>
@@ -178,7 +181,7 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
                                     </div>
                                     <div class="modal-body">
-                                        Möchten Sie den <strong>Link @(i + 1)</strong> endgültig löschen?<br>
+                                        Möchten Sie den <strong>Link für @sharedCode.HolderName</strong> endgültig löschen?<br>
                                         Danach kann die Stempelkarte über diesen Link <strong>nicht</strong> mehr aufgerufen werden.
                                     </div>
                                     <x:form class="modal-footer" asp-page-handler="deleteSharedCode" asp-route-id="@sharedCode.Id" method="post" data-loading="true">
@@ -195,7 +198,7 @@
         else
         {
             <tr>
-                <td colspan="4">Keine Links</td>
+                <td colspan="5">Keine Links</td>
             </tr>
         }
         </tbody>
@@ -203,14 +206,23 @@
     </div>
 
     <x:form asp-page="" asp-page-handler="share" method="post">
-        <button type="submit" class="btn btn-primary">
-            <i class="bi bi-share-fill"></i> Link erstellen
-        </button>
+        <div class="row g-3 mb-3 align-items-end">
+            <div class="col-auto">
+                <x:label asp-for="Share.HolderName" class="form-label">Link erstellen für</x:label>
+                <x:input asp-for="Share.HolderName" class="form-control" placeholder="Name von Spieler oder Elternteil"/>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-share-fill"></i> Link erstellen
+                </button>
+            </div>
+        </div>
+        <x:span asp-validation-for="Share.HolderName" class="text-danger"></x:span>
     </x:form>
 
     @if (Model.CreatedSharedCode is not null)
     {
-        var createdLink = Model.SharedLinkOf(Model.CreatedSharedCode);
+        var createdLink = Model.SharedLinkOf(Model.CreatedSharedCode.Code);
         <div class="modal fade" id="createdSharedCodeModal" tabindex="-1" aria-labelledby="createdSharedCodeModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -219,7 +231,10 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
                     </div>
                     <div class="modal-body">
-                        <p>Über diesen öffentlichen Link kann die Stempelkarte ohne Anmeldung aufgerufen werden:</p>
+                        <p>
+                            Über diesen öffentlichen Link kann die Stempelkarte ohne Anmeldung aufgerufen werden.
+                            Stempel werden im Namen von <strong>@Model.CreatedSharedCode.HolderName</strong> eingereicht.
+                        </p>
                         <div class="input-group">
                             <input type="text" class="form-control" value="@createdLink" readonly aria-label="Öffentlicher Link"/>
                             <button type="button" class="btn btn-outline-secondary" data-copy-link="@createdLink" title="Link kopieren">
@@ -227,7 +242,7 @@
                             </button>
                         </div>
                         <p class="text-muted small mt-2 mb-0">
-                            Geben Sie den Link nur an Personen weiter, die die Stempelkarte sehen dürfen.
+                            Geben Sie den Link nur an @Model.CreatedSharedCode.HolderName weiter.
                         </p>
                     </div>
                     <div class="modal-footer">

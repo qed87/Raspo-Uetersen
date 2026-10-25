@@ -71,9 +71,8 @@ else
                 <x:span asp-validation-for="NewStamp.Reason" class="text-danger"></x:span>
             </div>
             <div class="col-auto">
-                <x:label asp-for="NewStamp.IssuerName" class="form-label">Ihr Name</x:label>
-                <x:input asp-for="NewStamp.IssuerName" class="form-control"/>
-                <x:span asp-validation-for="NewStamp.IssuerName" class="text-danger"></x:span>
+                <label for="holderName" class="form-label">Eingereicht von</label>
+                <input id="holderName" type="text" class="form-control-plaintext" value="@Model.Item.HolderName" readonly/>
             </div>
         </div>
         <button type="submit" class="btn btn-primary">Stempel einreichen</button>

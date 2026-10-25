@@ -17,8 +17,14 @@ export type Stamp = StampDto & { id: string, issuer: string, issuedOn: Date, sta
 
 /**
  * A revoked shared code still grants read access to its stamp card, but no stamps can be submitted with it.
+ * Stamps submitted with it are issued by its holder.
  */
-export type SharedCode = { id: string, code: string, revoked: boolean };
+export type SharedCode = { id: string, code: string, holderName: string, revoked: boolean };
+
+/**
+ * A stamp card as seen by an external user, together with the shared code they opened it with.
+ */
+export type SharedStampCard = { stampCard: StampCard, sharedCode: SharedCode };
 
 /**
  * A stamp card of a team, holding its stamps and the codes it was shared with.

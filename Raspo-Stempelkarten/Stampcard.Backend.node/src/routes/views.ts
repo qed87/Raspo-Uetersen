@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { IncompleteStampCard, PendingStamp, Player, TeamDetails } from '../stamp-card-model.js';
-import type { SharedCode, Stamp, StampCard } from '../stamp-card.js';
+import type { SharedCode, SharedStampCard, Stamp, StampCard } from '../stamp-card.js';
 
 export const teamViewSchema = z.object({
   Id: z.string(),
@@ -70,13 +70,19 @@ export function toStampCardView(card: StampCard) {
 // External users do not see who issued a stamp, issuers of accepted stamps are coach email addresses
 const sharedStampViewSchema = stampViewSchema.omit({ Issuer: true });
 
+// The holder of the share code is shown, because the stamps the external user submits are issued in their name
 export const sharedStampCardViewSchema = stampCardViewSchema.extend({
-  Stamps: z.array(sharedStampViewSchema)
+  Stamps: z.array(sharedStampViewSchema),
+  HolderName: z.string()
 });
 
-export function toSharedStampCardView(card: StampCard) {
-  const view = toStampCardView(card);
-  return { ...view, Stamps: view.Stamps.map(({ Issuer, ...stamp }) => stamp) };
+export function toSharedStampCardView(shared: SharedStampCard) {
+  const view = toStampCardView(shared.stampCard);
+  return {
+    ...view,
+    Stamps: view.Stamps.map(({ Issuer, ...stamp }) => stamp),
+    HolderName: shared.sharedCode.holderName
+  };
 }
 
 export const pendingStampViewSchema = stampViewSchema.extend({
@@ -91,11 +97,12 @@ export function toPendingStampView(pending: PendingStamp) {
 export const sharedCodeViewSchema = z.object({
   Id: z.uuid(),
   Code: z.string(),
+  HolderName: z.string(),
   Revoked: z.boolean()
 });
 
 export function toSharedCodeView(sharedCode: SharedCode) {
-  return { Id: sharedCode.id, Code: sharedCode.code, Revoked: sharedCode.revoked };
+  return { Id: sharedCode.id, Code: sharedCode.code, HolderName: sharedCode.holderName, Revoked: sharedCode.revoked };
 }
 
 export const incompleteStampCardViewSchema = z.object({

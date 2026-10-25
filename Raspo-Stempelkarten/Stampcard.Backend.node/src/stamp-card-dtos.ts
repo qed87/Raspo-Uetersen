@@ -124,11 +124,14 @@ export const stampReferenceSchema = stampCardReferenceSchema.extend({
 
 export type StampReference = z.infer<typeof stampReferenceSchema>;
 
-export const submittedStampDtoSchema = stampDtoSchema.extend({
-  issuerName: z.string().trim().min(2)
+/**
+ * A share code is issued to a named player or parent, whose name is recorded as issuer of the stamps submitted with it.
+ */
+export const shareStampCardDtoSchema = z.object({
+  holderName: z.string().trim().min(2)
 });
 
-export type SubmittedStampDto = z.infer<typeof submittedStampDtoSchema>;
+export type ShareStampCardDto = z.infer<typeof shareStampCardDtoSchema>;
 
 export const sharedCodeReferenceSchema = stampCardReferenceSchema.extend({
   sharedCodeId: z.uuid()

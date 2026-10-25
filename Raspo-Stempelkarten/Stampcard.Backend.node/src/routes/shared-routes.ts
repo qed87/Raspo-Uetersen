@@ -5,7 +5,7 @@ import {
   SHARE_CODE_HEADER,
   shareCodeHeadersSchema,
   stampCardReferenceSchema,
-  submittedStampDtoSchema
+  stampDtoSchema
 } from '../stamp-card-dtos.js';
 import { apiResponseSchema, errorResponseSchemas, successResponse } from './api-response.js';
 import { sharedStampCardViewSchema, toSharedStampCardView } from './views.js';
@@ -49,7 +49,7 @@ export default async function sharedRoutes(fastify: FastifyInstance) {
       schema: {
         params: stampCardReferenceSchema,
         headers: shareCodeHeadersSchema,
-        body: submittedStampDtoSchema,
+        body: stampDtoSchema,
         response: {
           201: apiResponseSchema(z.uuid()),
           403: apiResponseSchema(z.null()),

@@ -6,7 +6,7 @@ import * as dtos from './stamp-card-dtos.js'
 import { ConcurrentModificationError, TeamAlreadyExistsError, TeamNotFoundError } from "./stamp-card-errors.js";
 import type { IncompleteStampCard, PendingStamp, Player, TeamAggregate, TeamDetails } from "./stamp-card-model.js";
 import { TeamRepository } from "./stamp-card-repository.js";
-import type { SharedCode, StampCard } from "./stamp-card.js";
+import type { SharedCode, SharedStampCard, StampCard } from "./stamp-card.js";
 
 /**
  * Data of a team together with the concurrency token of the team stream it was read from or written to.
@@ -189,10 +189,14 @@ export class StampCardService {
         return { data: reference.stampId, concurrencyToken: concurrencyTokenOf(team.nextRevision) };
     }
 
-    async shareStampCard(reference: dtos.StampCardReference, user: AuthenticatedUser): Promise<Versioned<SharedCode>> {
+    async shareStampCard(
+        reference: dtos.StampCardReference,
+        share: dtos.ShareStampCardDto,
+        user: AuthenticatedUser
+    ): Promise<Versioned<SharedCode>> {
         const team = await this.loadTeam(reference.teamId);
         ensureVisible(team, user);
-        const sharedCode = team.shareStampCard(reference.stampCardId, user.email);
+        const sharedCode = team.shareStampCard(reference.stampCardId, share, user.email);
         await this.saveTeam(team);
         return { data: sharedCode, concurrencyToken: concurrencyTokenOf(team.nextRevision) };
     }
@@ -249,7 +253,7 @@ export class StampCardService {
      * Submits a stamp of an external user. The share code authorizes the access instead of a user,
      * the stamp only becomes active once a coach approves it.
      */
-    async submitStamp(reference: dtos.StampCardReference, code: string, stamp: dtos.SubmittedStampDto): Promise<string> {
+    async submitStamp(reference: dtos.StampCardReference, code: string, stamp: dtos.StampDto): Promise<string> {
         const team = await this.loadTeam(reference.teamId);
         const stampId = team.submitStamp(reference.stampCardId, code, stamp);
         await this.saveTeam(team);
@@ -304,7 +308,7 @@ export class StampCardService {
      * Returns the stamp card an external user may see with the given share code.
      * External users do not change the team, so they get no concurrency token.
      */
-    async getSharedStampCard(reference: dtos.StampCardReference, code: string): Promise<StampCard> {
+    async getSharedStampCard(reference: dtos.StampCardReference, code: string): Promise<SharedStampCard> {
         const team = await this.loadTeam(reference.teamId);
         return team.findSharedStampCard(reference.stampCardId, code);
     }

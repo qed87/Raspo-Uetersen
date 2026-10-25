@@ -109,8 +109,8 @@ describe("StampCardService", () => {
     test("approving several stamps saves nothing if one of them is unknown", async () => {
         const { teamId, stampCardId } = await createTeamWithStampCard();
         const reference = { teamId, stampCardId };
-        const { data: sharedCode } = await service.shareStampCard(reference, coach);
-        const stampId = await service.submitStamp(reference, sharedCode.code, { reason: "Lauf", issuerName: "Oma" });
+        const { data: sharedCode } = await service.shareStampCard(reference, { holderName: "Oma" }, coach);
+        const stampId = await service.submitStamp(reference, sharedCode.code, { reason: "Lauf" });
         const eventCount = store.eventTypesOf(teamStream(teamId)).length;
 
         await assert.rejects(service.approveStamps(teamId,
@@ -122,8 +122,8 @@ describe("StampCardService", () => {
     test("a stamp submitted by an external user is listed as pending", async () => {
         const { teamId, stampCardId } = await createTeamWithStampCard();
         const reference = { teamId, stampCardId };
-        const { data: sharedCode } = await service.shareStampCard(reference, coach);
-        const stampId = await service.submitStamp(reference, sharedCode.code, { reason: "Lauf", issuerName: "Oma" });
+        const { data: sharedCode } = await service.shareStampCard(reference, { holderName: "Oma" }, coach);
+        const stampId = await service.submitStamp(reference, sharedCode.code, { reason: "Lauf" });
 
         const { data: pending } = await service.listPendingStamps(teamId, coach);
 

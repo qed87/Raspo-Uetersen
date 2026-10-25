@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Stampcard.UI.Clients;
 
@@ -30,7 +31,12 @@ public class Stamps(StampCardHttpClient stampCardHttpClient, TeamHttpClient team
     /// <summary>
     /// The code created by the previous request, its link is shown in a dialog.
     /// </summary>
-    public string? CreatedSharedCode { get; set; }
+    public SharedCodeReadDto? CreatedSharedCode { get; set; }
+
+    /// <summary>
+    /// Holder of a new share code. Bound by the share handler only, so that the other forms are not validated against it.
+    /// </summary>
+    public NewSharedCode Share { get; set; } = new();
 
     [BindProperty] 
     public UpdateStamp Fields
@@ -90,7 +96,8 @@ public class Stamps(StampCardHttpClient stampCardHttpClient, TeamHttpClient team
         }
 
         SharedCodes.AddRange(sharedCodeResponse.Data);
-        CreatedSharedCode = TempData[CreatedSharedCodeKey] as string;
+        var createdCode = TempData[CreatedSharedCodeKey] as string;
+        CreatedSharedCode = SharedCodes.FirstOrDefault(sharedCode => sharedCode.Code == createdCode);
     }
 
     /// <summary>
@@ -121,10 +128,17 @@ public class Stamps(StampCardHttpClient stampCardHttpClient, TeamHttpClient team
         return Page();
     }
 
-    public async Task<IActionResult> OnPostShareAsync()
+    public async Task<IActionResult> OnPostShareAsync(NewSharedCode share)
     {
         ModelState.Clear();
-        var response = await stampCardHttpClient.ShareAsync(Team, StampCardId);
+        Share = share;
+        if (!TryValidateModel(share, nameof(Share)))
+        {
+            await LoadItemsAsync();
+            return Page();
+        }
+
+        var response = await stampCardHttpClient.ShareAsync(Team, StampCardId, share.HolderName);
         if (!response.HasError)
         {
             // survives the redirect, so the dialog with the new link opens on the reloaded page
@@ -158,6 +172,13 @@ public class Stamps(StampCardHttpClient stampCardHttpClient, TeamHttpClient team
         await LoadItemsAsync();
         return Page();
     }
+}
+
+public class NewSharedCode
+{
+    [Required(ErrorMessage = "Name darf nicht leer sein!")]
+    [MinLength(2, ErrorMessage = "Name muss mindestens 2 Zeichen lang sein!")]
+    public string HolderName { get; set; } = "";
 }
 
 public class UpdateStamp

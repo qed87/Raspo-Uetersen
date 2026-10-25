@@ -24,10 +24,15 @@ export type TeamDetails = { id: string, club: string, name: string, coaches: str
 
 export type PendingStamp = { stampCardId: string, playerId: string, stamp: Stamp };
 
+/**
+ * A player that lacks accepted stamps in an accounting year, either on its stamp card or because it has none.
+ */
 export type IncompleteStampCard = {
     team: TeamDetails,
-    stampCard: StampCard,
+    accountingYear: number,
+    playerId: string,
     player: Player | undefined,
+    stampCard: StampCard | undefined,
     acceptedStamps: number
 };
 
@@ -104,20 +109,28 @@ export class TeamAggregate {
     }
 
     /**
-     * Stamp cards of the accounting year with fewer accepted stamps than required.
+     * Stamp cards of the accounting year with fewer accepted stamps than required, followed by the active players
+     * without a stamp card for the accounting year. Disabled players need no stamp card.
      * Cards of players removed before their cards were removed along with them are included, their player is unknown.
      */
     listIncompleteStampCards(accountingYear: number, requiredStamps: number): IncompleteStampCard[] {
         if (!this.exists) return [];
         const team = this.describe();
-        return this.listStampCards()
-            .filter(card => card.accountingYear === accountingYear && card.countAcceptedStamps() < requiredStamps)
+        const cardsOfYear = this.listStampCards().filter(card => card.accountingYear === accountingYear);
+        const incompleteCards = cardsOfYear
+            .filter(card => card.countAcceptedStamps() < requiredStamps)
             .map(card => ({
                 team,
-                stampCard: card,
+                accountingYear,
+                playerId: card.playerId,
                 player: this.players.get(card.playerId),
+                stampCard: card,
                 acceptedStamps: card.countAcceptedStamps()
             }));
+        const missingCards = this.listPlayers()
+            .filter(player => player.active && !cardsOfYear.some(card => card.playerId === player.id))
+            .map(player => ({ team, accountingYear, playerId: player.id, player, stampCard: undefined, acceptedStamps: 0 }));
+        return [...incompleteCards, ...missingCards];
     }
 
     findPlayer(playerId: string): Player {

@@ -364,7 +364,7 @@ describe("incomplete stamp cards", () => {
 
         const incomplete = team.listIncompleteStampCards(2026, 2);
 
-        assert.deepEqual(incomplete.map(card => [card.stampCard.id, card.acceptedStamps]), [[stampCardId, 1]]);
+        assert.deepEqual(incomplete.map(card => [card.stampCard?.id, card.acceptedStamps]), [[stampCardId, 1]]);
     });
 
     test("pending stamps do not count as accepted", () => {
@@ -377,8 +377,26 @@ describe("incomplete stamp cards", () => {
         assert.equal(incomplete.length, 1);
     });
 
-    test("stamp cards of other accounting years are not listed", () => {
-        const { team } = teamWithStampCard();
+    test("stamp cards with enough accepted stamps are not listed", () => {
+        const { team, stampCardId } = teamWithStampCard();
+        team.addStamp(stampCardId, { reason: "Training" }, ISSUER);
+
+        assert.deepEqual(team.listIncompleteStampCards(2026, 1), []);
+    });
+
+    test("active players without a stamp card for the accounting year are listed without stamp card", () => {
+        const { team, playerId } = teamWithStampCard();
+
+        const incomplete = team.listIncompleteStampCards(2025, 1);
+
+        assert.deepEqual(
+            incomplete.map(card => [card.playerId, card.stampCard, card.acceptedStamps]),
+            [[playerId, undefined, 0]]);
+    });
+
+    test("disabled players without a stamp card are not listed", () => {
+        const { team, playerId } = teamWithStampCard();
+        team.disablePlayer(playerId, ISSUER);
 
         assert.deepEqual(team.listIncompleteStampCards(2025, 1), []);
     });

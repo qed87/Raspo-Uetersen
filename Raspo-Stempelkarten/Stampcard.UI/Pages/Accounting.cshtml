@@ -1,0 +1,92 @@
+@page
+@model Accounting
+@tagHelperPrefix x:
+
+@{
+    ViewData["Title"] = "Auswertung";
+}
+
+<h2>Auswertung der Stempelkarten</h2>
+<p class="text-muted">
+    Listet alle Spieler aller Teams, die im Geschäftsjahr weniger bestätigte Stempel als erforderlich haben oder
+    für das Geschäftsjahr keine Stempelkarte besitzen. Stempel, die noch auf Freigabe warten, zählen nicht.
+    Deaktivierte Spieler ohne Stempelkarte werden nicht aufgeführt.
+</p>
+
+<x:form asp-page="" method="get" data-loading="true">
+    <x:div asp-validation-summary="All" class="alert alert-danger" role="alert">
+    </x:div>
+    <div class="row g-3 mb-3 align-items-end">
+        <div class="col-auto">
+            <x:label asp-for="AccountingYear" class="form-label">Geschäftsjahr</x:label>
+            <x:input asp-for="AccountingYear" type="number" class="form-control" min="2000" max="2100" required/>
+        </div>
+        <div class="col-auto">
+            <x:label asp-for="RequiredStamps" class="form-label">Erforderliche Stempel</x:label>
+            <x:input asp-for="RequiredStamps" type="number" class="form-control" min="1" max="1000" required/>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search" aria-hidden="true"></i> Auswerten
+            </button>
+        </div>
+    </div>
+</x:form>
+
+@if (Model.Items is not null)
+{
+    <h3 class="mt-4">
+        Ergebnis für @Model.AccountingYear
+        <span class="badge bg-secondary">@Model.Items.Count Spieler</span>
+    </h3>
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+            <tr>
+                <th scope="col">Team</th>
+                <th scope="col">Nachname</th>
+                <th scope="col">Vorname</th>
+                <th scope="col">Bestätigte Stempel</th>
+                <th scope="col">Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Model.Items.Count > 0)
+            {
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.TeamName</td>
+                        @if (item.LastName is null)
+                        {
+                            <td colspan="2" class="text-muted">(Spieler gelöscht)</td>
+                        }
+                        else
+                        {
+                            <td>@item.LastName</td>
+                            <td>@item.FirstName</td>
+                        }
+                        <td>@item.AcceptedStamps von @Model.RequiredStamps</td>
+                        <td>
+                            @if (item.StampCardId is null)
+                            {
+                                <span class="badge bg-danger">Keine Stempelkarte</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">Zu wenige Stempel</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5">Alle Spieler haben ausreichend bestätigte Stempel.</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

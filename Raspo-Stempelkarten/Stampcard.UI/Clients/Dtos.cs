@@ -37,3 +37,18 @@ public record PendingStampReadDto(Guid Id, string Reason, string Issuer, DateTim
 /// A revoked code still grants read access, but stamps can no longer be submitted with it.
 /// </summary>
 public record SharedCodeReadDto(Guid Id, string Code, string HolderName, bool Revoked);
+
+/// <summary>
+/// A player lacking accepted stamps in an accounting year, as returned by the backend for the accounting.
+/// The stamp card id is null if the player has no stamp card for the accounting year,
+/// first and last name are null if the player was removed.
+/// </summary>
+public record IncompleteStampCardReadDto(
+    string TeamId,
+    string TeamName,
+    Guid? StampCardId,
+    int AccountingYear,
+    Guid PlayerId,
+    string? FirstName,
+    string? LastName,
+    int AcceptedStamps);

@@ -5,6 +5,18 @@ namespace Stampcard.UI;
 
 public static class ClaimsPrincipalExtensions
 {
+    public const string ManagerRole = "manager";
+
+    public const string AccountingRole = "accounting";
+
+    /// <summary>
+    /// Users of the accounting only see the accounting page, unless they are managers as well.
+    /// </summary>
+    public static bool IsRestrictedToAccounting(this ClaimsPrincipal user)
+    {
+        return user.IsInRole(AccountingRole) && !user.IsInRole(ManagerRole);
+    }
+
     /// <summary>
     /// The email of the user, which the backend identifies coaches by. The preferred username may differ from it.
     /// </summary>

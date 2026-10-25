@@ -109,7 +109,8 @@ export const incompleteStampCardViewSchema = z.object({
   TeamId: z.string(),
   TeamName: z.string(),
   ConcurrencyToken: z.int(),
-  StampCardId: z.uuid(),
+  // null if the player has no stamp card for the accounting year
+  StampCardId: z.uuid().nullable(),
   AccountingYear: z.int(),
   PlayerId: z.uuid(),
   FirstName: z.string().nullable(),
@@ -122,9 +123,9 @@ export function toIncompleteStampCardView(incomplete: IncompleteStampCard & { co
     TeamId: incomplete.team.id,
     TeamName: incomplete.team.name,
     ConcurrencyToken: incomplete.concurrencyToken,
-    StampCardId: incomplete.stampCard.id,
-    AccountingYear: incomplete.stampCard.accountingYear,
-    PlayerId: incomplete.stampCard.playerId,
+    StampCardId: incomplete.stampCard?.id ?? null,
+    AccountingYear: incomplete.accountingYear,
+    PlayerId: incomplete.playerId,
     FirstName: incomplete.player?.firstName ?? null,
     LastName: incomplete.player?.lastName ?? null,
     AcceptedStamps: incomplete.acceptedStamps

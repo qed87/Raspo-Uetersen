@@ -20,6 +20,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient<StampCardHttpClient>(sp => !TryGetRestClient(configuration, sp, out var restClient) 
             ? throw new InvalidOperationException("Could not create backend client for teams.") 
             : new StampCardHttpClient(restClient!));
+        services.AddTransient<AccountingHttpClient>(sp => !TryGetRestClient(configuration, sp, out var restClient)
+            ? throw new InvalidOperationException("Could not create backend client for accounting.")
+            : new AccountingHttpClient(restClient!));
         // external users are anonymous, so this client must not request an access token
         services.AddTransient<SharedStampCardHttpClient>(sp => new SharedStampCardHttpClient(new RestClient(
             new RestClientOptions(configuration.GetConnectionString("Backend")!)

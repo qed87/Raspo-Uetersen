@@ -20,7 +20,9 @@ builder.Services.AddBreadcrumbs(typeof(Program).Assembly, options =>
     options.RazorPagesRootDirectory = "/Pages";
 });
 builder.Services.AddBackendClients(builder.Configuration);
-builder.Services.AddRazorPages(options => options.Conventions.ConfigureFilter(new UnauthorizedPageFilter()));
+builder.Services.AddRazorPages(options => options.Conventions
+    .ConfigureFilter(new UnauthorizedPageFilter())
+    .ConfigureFilter(new AccountingPageFilter()));
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;

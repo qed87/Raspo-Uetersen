@@ -182,7 +182,7 @@ Every request needs an `Authorization: Bearer <JWT>` header, except the routes u
 | --- | --- |
 | **Admin** | see and edit all teams; create, rename and delete teams |
 | **Coach** (every authenticated user) | only teams listing their email as coach: players, stamp cards, stamps, approvals, share codes |
-| **Accounting** | evaluate incomplete stamp cards across all teams |
+| **Accounting** | evaluate incomplete and missing stamp cards across all teams |
 | **External user** (not logged in) | read a shared stamp card and submit stamps for approval, authorized by the share code |
 
 Teams a user may not see are answered with **404**, so that their existence is not revealed.
@@ -296,7 +296,7 @@ The `Issuer` is hidden because for accepted stamps it is the coach's email addre
 
 | Method | Path | Permission | Query | `Data` |
 | --- | --- | --- | --- | --- |
-| GET | `/api/accounting/stampcard/incomplete` | accounting | `accountingYear`, `requiredStamps` (≥ 1) | list of incomplete stamp cards |
+| GET | `/api/accounting/stampcard/incomplete` | accounting | `accountingYear`, `requiredStamps` (≥ 1) | list of incomplete stamp cards, then active players without stamp card (`StampCardId: null`) |
 
 Returns the stamp cards of the year across all teams that have fewer than `requiredStamps` **accepted** stamps, each with `TeamId`, `TeamName`, `ConcurrencyToken`, `StampCardId`, `AccountingYear`, `PlayerId`, `FirstName`, `LastName` and `AcceptedStamps`. Cards of players that have been removed are included, with `FirstName` and `LastName` set to `null`. If a team stream cannot be replayed, the whole evaluation fails.
 

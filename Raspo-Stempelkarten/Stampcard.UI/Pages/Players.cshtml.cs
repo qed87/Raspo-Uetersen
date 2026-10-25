@@ -13,6 +13,21 @@ public class Players(PlayerHttpClient playerHttpClient, StampCardHttpClient stam
     [BindProperty]
     public Player NewPlayer { get; set; }
 
+    private const int PageSize = 10;
+
+    /// <summary>
+    /// The 1-based page of the players shown, kept across the post requests of this page.
+    /// </summary>
+    [BindProperty(SupportsGet = true)]
+    public int PageNumber { get; set; } = 1;
+
+    public int PageCount { get; set; } = 1;
+
+    /// <summary>
+    /// The number of players on the previous pages, so that the row numbers continue across pages.
+    /// </summary>
+    public int Offset => (PageNumber - 1) * PageSize;
+
     public List<Player> Items { get; set; } = [];
 
     public string TeamName { get; set; } = "";
@@ -51,21 +66,31 @@ public class Players(PlayerHttpClient playerHttpClient, StampCardHttpClient stam
         var stampCardCounts = stampCardResponse.Data
             .GroupBy(card => card.PlayerId)
             .ToDictionary(group => group.Key, group => group.Count());
-        Items = response.Data.Select(dto => new Player
-        {
-            Id = dto.Id, 
-            FirstName = dto.FirstName, 
-            LastName = dto.LastName, 
-            Birthdate = dto.Birthdate, 
-            Active = dto.Active,
-            StampCardCount = stampCardCounts.GetValueOrDefault(dto.Id)
-        }).ToList();
+        PageCount = Math.Max(1, (int)Math.Ceiling(response.Data.Count / (double)PageSize));
+        // e.g. the last player of the last page was deleted
+        PageNumber = Math.Clamp(PageNumber, 1, PageCount);
+        Items = response.Data
+            .OrderBy(dto => dto.LastName, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(dto => dto.FirstName, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(dto => dto.Birthdate)
+            .Skip(Offset)
+            .Take(PageSize)
+            .Select(dto => new Player
+            {
+                Id = dto.Id, 
+                FirstName = dto.FirstName, 
+                LastName = dto.LastName, 
+                Birthdate = dto.Birthdate, 
+                Active = dto.Active,
+                StampCardCount = stampCardCounts.GetValueOrDefault(dto.Id)
+            })
+            .ToList();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
         var response = await playerHttpClient.CreateAsync(Team, NewPlayer.FirstName, NewPlayer.LastName, NewPlayer.Birthdate);
-        if (!response.HasError) return RedirectToPage();
+        if (!response.HasError) return RedirectToPage(new { PageNumber });
         
         ModelState.AddModelError(string.Empty, response.Message!);
         await LoadItemsAsync();
@@ -80,7 +105,7 @@ public class Players(PlayerHttpClient playerHttpClient, StampCardHttpClient stam
         // the fields of a new player are not part of this form
         ModelState.Clear();
         var response = await playerHttpClient.SetActiveAsync(Team, id, false);
-        if (!response.HasError) return RedirectToPage();
+        if (!response.HasError) return RedirectToPage(new { PageNumber });
         
         ModelState.AddModelError(string.Empty, response.Message!);
         await LoadItemsAsync();
@@ -91,7 +116,7 @@ public class Players(PlayerHttpClient playerHttpClient, StampCardHttpClient stam
     {
         ModelState.Clear();
         var response = await playerHttpClient.DeleteAsync(Team, id);
-        if (!response.HasError) return RedirectToPage();
+        if (!response.HasError) return RedirectToPage(new { PageNumber });
         
         ModelState.AddModelError(string.Empty, response.Message!);
         await LoadItemsAsync();

@@ -40,7 +40,7 @@
                 var player = Model.Items[i];
                 var itemId = player.Id;
                 <tr>
-                    <td>@(i + 1)</td>
+                    <td>@(Model.Offset + i + 1)</td>
                     <td>@player.FirstName</td>
                     <td>@player.LastName</td>
                     <td>@DisplayFormat.Date(player.Birthdate)</td>
@@ -93,11 +93,11 @@
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
                                         @if (player.Active)
                                         {
-                                            <x:form asp-page-handler="disable" asp-route-id="@itemId" method="post" data-loading="true">
+                                            <x:form asp-page-handler="disable" asp-route-id="@itemId" asp-route-pageNumber="@Model.PageNumber" method="post" data-loading="true">
                                                 <button type="submit" class="btn btn-primary">Stattdessen deaktivieren</button>
                                             </x:form>
                                         }
-                                        <x:form asp-page-handler="delete" asp-route-id="@itemId" method="post" data-loading="true">
+                                        <x:form asp-page-handler="delete" asp-route-id="@itemId" asp-route-pageNumber="@Model.PageNumber" method="post" data-loading="true">
                                             <button type="submit" class="btn btn-danger">Endgültig löschen</button>
                                         </x:form>
                                     </div>
@@ -118,8 +118,32 @@
     </table>
 </div>
 
+@if (Model.PageCount > 1)
+{
+    <nav aria-label="Seiten der Spielerübersicht">
+        <ul class="pagination">
+            <li class="page-item @(Model.PageNumber == 1 ? "disabled" : "")">
+                <x:a class="page-link" asp-page="Players" asp-route-team="@Model.Team" asp-route-pageNumber="@(Model.PageNumber - 1)" aria-label="Vorherige Seite">
+                    <span aria-hidden="true">&laquo;</span>
+                </x:a>
+            </li>
+            @for (var pageNumber = 1; pageNumber <= Model.PageCount; pageNumber++)
+            {
+                <li class="page-item @(pageNumber == Model.PageNumber ? "active" : "")" aria-current="@(pageNumber == Model.PageNumber ? "page" : null)">
+                    <x:a class="page-link" asp-page="Players" asp-route-team="@Model.Team" asp-route-pageNumber="@pageNumber">@pageNumber</x:a>
+                </li>
+            }
+            <li class="page-item @(Model.PageNumber == Model.PageCount ? "disabled" : "")">
+                <x:a class="page-link" asp-page="Players" asp-route-team="@Model.Team" asp-route-pageNumber="@(Model.PageNumber + 1)" aria-label="Nächste Seite">
+                    <span aria-hidden="true">&raquo;</span>
+                </x:a>
+            </li>
+        </ul>
+    </nav>
+}
+
 <h3 class="mt-4">Spieler anlegen</h3>
-<x:form asp-page="" method="post">
+<x:form asp-page="" asp-route-pageNumber="@Model.PageNumber" method="post">
     <div class="row g-3 mb-3">
         <div class="col-auto">
             <x:label asp-for="NewPlayer.FirstName" class="form-label">Vorname</x:label>

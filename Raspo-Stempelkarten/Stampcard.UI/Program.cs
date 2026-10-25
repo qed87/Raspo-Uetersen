@@ -106,8 +106,8 @@ app.UseAntiforgery();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapStaticAssets();
-app.MapRazorPages()
-    .WithStaticAssets();
+// stylesheets, scripts and images are public, otherwise the fallback policy hides them from external users of shared stamp cards
+app.MapStaticAssets().AllowAnonymous();
+app.MapRazorPages().WithStaticAssets();
 
 await app.RunAsync();

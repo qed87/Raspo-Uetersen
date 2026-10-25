@@ -14,7 +14,7 @@ internal static class RestClientExtensions
     public static async Task<ResponseWrapperDto<T>> SendAsync<T>(this IRestClient restClient, RestRequest request)
     {
         var response = await restClient.ExecuteAsync<ResponseWrapperDto<T>>(request);
-        return response.IsSuccessful && response.Data is not null
+        return response is { IsSuccessful: true, Data: not null }
             ? response.Data
             : ResponseWrapperDto<T>.Fail(ErrorMessageOf(response));
     }
@@ -25,7 +25,7 @@ internal static class RestClientExtensions
     public static async Task<ResponseWrapperDto> SendAsync(this IRestClient restClient, RestRequest request)
     {
         var response = await restClient.ExecuteAsync<ResponseWrapperDto>(request);
-        return response.IsSuccessful && response.Data is not null
+        return response is { IsSuccessful: true, Data: not null }
             ? response.Data
             : ResponseWrapperDto.Fail(ErrorMessageOf(response));
     }

@@ -36,7 +36,7 @@ public static class ServiceCollectionExtensions
     private static RemoteCertificateValidationCallback? CertificateValidationOf(IServiceProvider sp)
     {
         return sp.GetRequiredService<IHostEnvironment>().IsDevelopment()
-            ? (sender, certificate, chain, errors) => true
+            ? (_, _, _, _) => true
             : null;
     }
 

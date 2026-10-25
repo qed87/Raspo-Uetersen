@@ -69,7 +69,7 @@ public class Index(TeamHttpClient teamHttpClient, StampCardHttpClient stampCardH
             var response = await teamHttpClient.DeleteTeamAsync(id);
             if (!response.HasError) return RedirectToPage();
             await LoadItemsAsync();
-            ModelState.AddModelError(string.Empty, response.Message);
+            ModelState.AddModelError(string.Empty, response.Message ?? "Irgendetwas ging schief...");
             return Page();
         }
         catch (Exception exception) when (exception is not UnauthorizedAccessException)

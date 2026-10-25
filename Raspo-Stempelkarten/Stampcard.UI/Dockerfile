@@ -27,7 +27,10 @@ RUN dotnet build "./Stampcard.UI.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Stampcard.UI.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+# set by the CI from the git tags, shown in the footer; .git is not part of the build context
+ARG APP_VERSION=0.0.0-local
+RUN dotnet publish "./Stampcard.UI.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false \
+    /p:InformationalVersion=$APP_VERSION /p:IncludeSourceRevisionInInformationalVersion=false
 
 FROM base AS final
 WORKDIR /app

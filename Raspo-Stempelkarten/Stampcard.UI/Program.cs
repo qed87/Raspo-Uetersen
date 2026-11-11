@@ -88,15 +88,20 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {    
-    var proxyIp = app.Configuration.GetValue<string>("ProxyIp")!;
-    app.Logger.Log(LogLevel.Information, "Loaded KnownProxies from configuration; IP: {ProxyIp}.", proxyIp);
-    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    // trust the whole docker network of the reverse proxy instead of a single IP, which changes on container recreation
+    var proxyNetworks = app.Configuration.GetSection("KnownProxyNetworks").Get<string[]>() ?? [];
+    app.Logger.Log(LogLevel.Information, "Loaded KnownProxyNetworks from configuration: {ProxyNetworks}.", string.Join(", ", proxyNetworks));
+    var forwardedHeadersOptions = new ForwardedHeadersOptions
     {
-        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost, 
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost,
         RequireHeaderSymmetry = false,
-        ForwardLimit = 2,
-        KnownProxies = { IPAddress.Parse(proxyIp) }
-    });
+        ForwardLimit = 2
+    };
+    foreach (var proxyNetwork in proxyNetworks)
+    {
+        forwardedHeadersOptions.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(proxyNetwork));
+    }
+    app.UseForwardedHeaders(forwardedHeadersOptions);
     app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
